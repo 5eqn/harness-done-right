@@ -94,6 +94,7 @@ Once the user approves the `task.py` specification, do not modify this file agai
 Create a `work.py` file in the same directory:
 - Import all task classes from `task.py`
 - Implement the logic to construct the final task instance, building dependencies as needed
+- If task is very complicated, you don't have to create the final task instance at the first try
 
 #### Step 4: Run and validate
 Execute your code in the HDR virtual environment:
@@ -104,7 +105,7 @@ source /path/to/hdr/hdr-skill/.venv/bin/activate
 # Run your implementation
 python work.py
 ```
-If the code runs without errors, your task is complete.
+If you have attempted to construct the final task instance without placeholder, and the code runs without errors, your task is complete. If encountered error, revise your implementation with the error message and rerun the implementation. If the code runs successfully, but you haven't created the final task instance, it means the prefix works fine, please continue working on the construction of the final task instance.
 
 ## Error Handling
 - **ValidationError**: Thrown by Pydantic when you pass incorrect types to task constructors
