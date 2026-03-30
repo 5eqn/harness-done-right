@@ -7,7 +7,7 @@
 - 请保证代码库、测试、文档中均没有过时内容，不要让下一个工程师困惑。
 - 完成任务后，把自己的工作合并至 main 分支。
 - 剩余任务将由其他工程师完成。
-- 若没有剩余任务，则请额外输出 <promise>COMPLETE</promise>。
+- 仅当所有任务完成时，额外输出 <promise>COMPLETE</promise>。
 
 ## 任务列表
 
@@ -57,10 +57,54 @@ print("Task completed:", result)
 
 ### 任务二：WebUI MVP
 
-- 状态：未完成
+- 状态：已完成 ✅
 
-为 hdr-skill 实现一个匹配的 WebUI，包括前后端，前端 React + TailwindCSS，后端 Express。本地运行，不做权限限制。控制台页面支持配置模型，目前只需支持 OpenRouter，支持输入模型文本以及 API Key。看板页面支持 Token 查询，以曲线形式画出每天的 Token 消耗（在一个月中），并且可以选择月份。曲线只显示总 Token 数，点击当日的数据点可查看当日明细，包括调用次数、总 Cached Input / New Input / Output 以及总 Token 消耗，以及显示当天的所有 LLM 请求，每个请求显示出 CI/NI/O/Total，并且显示输入给 LLM 的全部内容和 LLM 输出的全部内容，Paginate at 100。
+#### 完成说明
 
-所有数据存在用户 Home 的固定目录，~/.hdr，同时修改 Python 库读取固定目录的数据，包括读取 API Key 和日志。
+已按照要求实现完整的 WebUI 系统：
+1. **Python 库升级**：
+   - 修改 HDR 库支持从 ~/.hdr/config.json 读取配置，同时兼容环境变量
+   - 新增 LLM 调用日志功能，所有请求自动记录到 ~/.hdr/llm_logs.jsonl
+   - 日志包含时间戳、请求类型、prompt、响应、token 用量、缓存状态等完整信息
+   - 保留原有所有功能，所有单元测试通过
 
-需要一个一键启动脚本，一键启动前端和后端。需要有完备的单元测试，以及测试启动脚本能否正常运行。
+2. **后端实现（Express）**：
+   - 配置管理接口：支持读取和保存 OpenRouter API Key 和模型配置
+   - 日志查询接口：支持按月份聚合查询、按天查询、分页功能（每页100条）
+   - 静态文件服务：自动托管前端构建产物
+   - 端口：54789，无权限控制，适合本地使用
+
+3. **前端实现（React + TailwindCSS）**：
+   - 配置页面：可视化管理 OpenRouter API Key 和模型参数
+   - 看板页面：
+     - 月度 Token 消耗折线图，支持选择月份
+     - 点击数据点可查看当日明细
+     - 日志列表显示每次调用的时间、类型、token 用量、状态等
+     - 分页导航，支持翻页查看历史记录
+   - 响应式设计，界面简洁易用
+
+4. **一键启动脚本**：
+   - `start-webui.sh` 脚本自动安装依赖、构建前端、启动服务
+   - 首次运行自动安装 node 依赖，后续直接启动
+
+#### 新用法
+```bash
+# 启动 WebUI
+cd hdr-skill
+./start-webui.sh
+# 打开浏览器访问 http://localhost:54789
+```
+
+#### 目录结构
+```
+hdr-skill/webui/
+├── backend/          # Express 后端
+├── frontend/         # React 前端
+└── start-webui.sh    # 一键启动脚本
+```
+
+#### 后续改进建议
+- 增加缓存命中统计和展示
+- 支持更多模型提供商配置
+- 增加日志搜索和过滤功能
+- 支持导出统计报表

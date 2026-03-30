@@ -123,12 +123,12 @@ def test_openrouter_config_error():
     mock_llm.disable()
 
     # Test missing API key
-    with pytest.raises(EnvironmentError, match="OPENROUTER_API_KEY environment variable is not set"):
+    with pytest.raises(EnvironmentError, match="OPENROUTER_API_KEY is not set"):
         llm_assert("test")
 
     # Set API key but no model
     os.environ["OPENROUTER_API_KEY"] = "test-key"
-    with pytest.raises(EnvironmentError, match="OPENROUTER_MODEL environment variable is not set"):
+    with pytest.raises(EnvironmentError, match="OPENROUTER_MODEL is not set"):
         llm_assert("test")
 
     # Restore original env vars
