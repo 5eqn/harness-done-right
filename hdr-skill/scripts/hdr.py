@@ -2,7 +2,7 @@ import os
 import json
 import re
 from datetime import datetime, timezone
-from typing import Any
+from typing import Any, Optional
 import openai
 from pydantic import BaseModel
 from locache import persist
@@ -37,7 +37,7 @@ def log_llm_call(
     output_tokens: int = 0,
     total_tokens: int = 0,
     success: bool = True,
-    error: str = None
+    error: Optional[str] = None
 ):
     """Log LLM call to ~/.hdr/llm_logs.jsonl"""
     log_entry = {
@@ -82,13 +82,13 @@ Score: 5
         ]
     )
 
-    result = response.choices[0].message.content.strip()
+    result = (response.choices[0].message.content or "").strip()
     usage = response.usage
     return (
         result,
-        usage.prompt_tokens,
-        usage.completion_tokens,
-        usage.total_tokens
+        usage.prompt_tokens if usage else 0,
+        usage.completion_tokens if usage else 0,
+        usage.total_tokens if usage else 0
     )
 
 def llm_assert(condition: str) -> None:

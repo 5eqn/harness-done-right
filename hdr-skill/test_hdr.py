@@ -143,7 +143,7 @@ def test_pydantic_type_checking_number():
 
     # Invalid type should throw error (Pydantic validates at instantiation time)
     with pytest.raises(ValidationError, match="Input should be a valid integer"):
-        NumberTask(count="not a number", price=99.9)
+        NumberTask(count="not a number", price=99.9)  # pyright: ignore
 
 def test_pydantic_type_checking_list():
     """Test Pydantic list type validation"""
@@ -154,7 +154,7 @@ def test_pydantic_type_checking_list():
 
     # Invalid list item type should throw error (Pydantic validates at instantiation time)
     with pytest.raises(ValidationError, match="Input should be a valid string"):
-        ListTask(items=["a", 2, "c"], scores=[1, 2, 3])
+        ListTask(items=["a", 2, "c"], scores=[1, 2, 3])  # pyright: ignore
 
 def test_pydantic_nested_type():
     """Test Pydantic nested model type validation"""
@@ -165,7 +165,7 @@ def test_pydantic_nested_type():
 
     # Invalid nested type should throw error (Pydantic validates at instantiation time)
     with pytest.raises(ValidationError, match="Input should be a valid dictionary or instance of NestedItem"):
-        ParentTask(name="test", item="not a NestedItem")
+        ParentTask(name="test", item="not a NestedItem")  # pyright: ignore
 
 if __name__ == "__main__":
     pytest.main([__file__])

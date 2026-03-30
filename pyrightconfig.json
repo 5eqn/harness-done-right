@@ -1,0 +1,7 @@
+{
+  "venvPath": "./hdr-skill",
+  "venv": ".venv",
+  "extraPaths": [
+    "./hdr-skill/scripts"
+  ]
+}
