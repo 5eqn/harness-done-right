@@ -9,6 +9,7 @@ setup(
     install_requires=[
         "openai>=1.0.0",
         "pydantic>=2.0.0",
+        "locache>=0.1.0",
     ],
     classifiers=[
         "Programming Language :: Python :: 3",

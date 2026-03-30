@@ -1,80 +1,66 @@
-🔴 核心功能模块（必须有）
+## 你的任务
 
-  1. 交互式工作台面板
+- 完成下面第一个未完成的任务。一定记住你只应该完成一个任务，不要做少也不要做多！
+- 完成任务前，创建一个新分支。
+- 每个任务应撰写详尽的单元测试，执行测试成功才算完成。
+- 测试成功后，把标记为已完成，并给下一个工程师一段 200 字左右的文档。
+- 请保证代码库、测试、文档中均没有过时内容，不要让下一个工程师困惑。
+- 完成任务后，把自己的工作合并至 main 分支。
+- 剩余任务将由其他工程师完成。
+- 若没有剩余任务，则请额外输出 <promise>COMPLETE</promise>。
 
-  ▎ 对应原有命令行的核心操作能力
-  - 【代码编辑器】内置 Python 编辑器，支持直接编写任务类定义、执行
-  goal/create/get/finish 等API调用，语法高亮+自动补全
-  - 【实时执行反馈】执行结果实时展示，包括：
-    - create 成功/失败提示，LLM校验失败的具体原因和改进建议
-    - 类型错误、对象已消耗等运行时错误的清晰提示
-  - 【工作台状态可视化】
-    - 当前已创建的所有对象列表，展示ID、类型、创建时间、是否已被消耗
-    - 当前设置的目标任务类型、完成进度
-    - 递归任务的依赖关系DAG图（直观展示哪些子任务已完成，哪些还缺）
+## 任务列表
 
-  2. 任务管理模块
+### 任务一：完善 Python 库
 
-  - 【任务定义管理】
-    - 可视化任务类型编辑器，无需写代码即可定义任务类：添加字段、设置字段类型、配
-  置LLM校验规则（llm_assert/llm_check 条件）
-    - 任务模板库：内置通用任务模板（文本人性化、摘要生成、代码审查等），支持保存
-  自定义任务模板复用
-  - 【任务执行管理】
-    - 任务列表：所有任务的状态（待执行/进行中/已完成/失败）、所属Agent、耗时
-    - 失败任务重试：一键重试失败的任务，支持修改参数后重试
-    - 任务批量操作：批量取消、批量重新执行同类任务
+- 状态：已完成 ✅
 
-  3. LLM 配置与监控面板
+#### 完成说明
 
-  ▎ 你提到的OpenRouter配置、token消耗统计都在这里
-  - 【配置管理】
-    - OpenRouter API Key 可视化配置，支持加密存储，一键切换测试/生产模式
-    - 模型选择下拉框，展示所有OpenRouter支持的模型，可配置默认模型、不同任务类型
-  使用的模型
-    - 缓存策略配置：设置LLM请求缓存时长、是否启用缓存
-  - 【Token消耗统计】
-    - 细粒度消耗看板：按维度区分缓存输入token、非缓存输入token、输出token
-    - 多维度统计：按时间（日/周/月）、按任务类型、按Agent、按模型统计消耗
-    - 成本估算：自动换算token消耗为对应费用，设置费用阈值告警
-  - 【Mock模式开关】一键切换Mock LLM/真实LLM模式，Mock响应可可视化配置
+已按照要求重构 HDR Python 库为无状态实现：
+1. **移除所有状态相关代码**：删除了 workbench、consumed 集合、goal 类型管理、pickle 持久化等有状态逻辑
+2. **精简 API**：移除了 `goal()`/`create()`/`get()`/`finish()` 四个 API，现在直接构造对象即可，无需管理状态
+3. **增加 LLM 调用缓存**：集成 `locache` 库，为 `llm_assert()` 和 `llm_check()` 增加 `@persist` 装饰器，自动缓存 LLM 调用结果避免重复请求
+4. **保留核心功能**：完整保留 `llm_assert()`/`llm_check()`/`mock_llm` 功能，Pydantic 类型检查依然自动生效
+5. **简化测试**：删除所有状态相关测试，保留核心功能测试，所有测试已通过
 
-  ---
-  🟡 高级功能模块（建议有）
+#### 新用法示例
+```python
+# task.py - 定义任务结构
+from hdr import BaseModel, llm_assert
 
-  4. Agent 身份与协作模块
+class HumanizeText(BaseModel):
+    original: str
+    humanized: str
 
-  ▎ 你提到的多Agent身份管理
-  - 【Agent身份体系】
-    - Agent注册/管理：每个Agent有独立身份、API密钥、权限等级
-    - 权限控制：区分管理员（可配置系统）、执行Agent（可创建/完成任务）、观察者（
-  仅可查看日志）
-  - 【多Agent协作】
-    - 任务分配：可将大任务拆分为子任务分配给不同Agent执行
-    - 任务审核：关键任务完成后需要审核人确认才会标记为成功
-    - Agent性能排行：统计每个Agent的任务完成率、平均耗时、token消耗效率
+    def __init__(self, **data):
+        super().__init__(**data)
+        llm_assert(f"<a>{self.original}</a> and <b>{self.humanized}</b> conveys the same meaning")
+        llm_assert(f"{self.humanized} reads like natural human-written text")
+```
 
-  5. 日志与审计模块
+```python
+# work.py - 构造任务（完全无状态，可重复运行）
+from hdr import mock_llm
+from task import HumanizeText
 
-  ▎ 你提到的任务日志查看
-  - 【全量操作日志】
-    -
-  所有操作的历史记录：谁在什么时间执行了什么操作（创建任务/定义类型/修改配置等）
-    -
-  任务执行全链路日志：每个任务的完整执行过程、LLM调用详情、参数、返回结果、耗时
-    - LLM调用日志：所有LLM请求的完整报文（prompt、response、token消耗、是否命中
-  缓存）
-  - 【审计能力】
-    - 日志检索：按关键词、时间范围、Agent、任务类型搜索日志
-    - 日志导出：支持导出为CSV/JSON格式用于审计分析
+mock_llm.enable()
+result = HumanizeText(original="Text with AI", humanized="Text without AI")
+print("Task completed:", result)
+```
 
-  6. 数据与持久化管理
+#### 变更说明
+- 无需再管理任务 ID、消费状态、目标类型等，代码更简洁
+- LLM 调用自动缓存，相同查询不会重复消耗 Token
+- 所有类型检查和断言逻辑保持不变，向下兼容任务定义方式
+- 依赖新增 `locache` 包，已添加到 setup.py 依赖列表
 
-  - 【工作台数据管理】
-    - 查看历史所有任务实例，支持筛选、搜索
-    - 数据导出：导出所有任务数据、对象数据为JSON格式
-    - 数据清理：一键清理历史数据、清理已消耗的对象、清理缓存
-  - 【类型系统管理】
-    -
-  所有已定义类型的可视化展示：包括预置类型（str/File/Number等）和自定义任务类型
-    - 类型依赖图：展示类型之间的依赖关系
+### 任务二：WebUI MVP
+
+- 状态：未完成
+
+为 hdr-skill 实现一个匹配的 WebUI，包括前后端，前端 React + TailwindCSS，后端 Express。本地运行，不做权限限制。控制台页面支持配置模型，目前只需支持 OpenRouter，支持输入模型文本以及 API Key。看板页面支持 Token 查询，以曲线形式画出每天的 Token 消耗（在一个月中），并且可以选择月份。曲线只显示总 Token 数，点击当日的数据点可查看当日明细，包括调用次数、总 Cached Input / New Input / Output 以及总 Token 消耗，以及显示当天的所有 LLM 请求，每个请求显示出 CI/NI/O/Total，并且显示输入给 LLM 的全部内容和 LLM 输出的全部内容，Paginate at 100。
+
+所有数据存在用户 Home 的固定目录，~/.hdr，同时修改 Python 库读取固定目录的数据，包括读取 API Key 和日志。
+
+需要一个一键启动脚本，一键启动前端和后端。需要有完备的单元测试，以及测试启动脚本能否正常运行。
