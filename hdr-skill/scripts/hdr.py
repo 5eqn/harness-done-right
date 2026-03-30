@@ -111,11 +111,27 @@ Score: 5
 
     result = (response.choices[0].message.content or "").strip()
     usage = response.usage
+
+    # Log the LLM call (only runs for uncached calls since this function is @persist decorated)
+    input_tokens = usage.prompt_tokens if usage else 0
+    output_tokens = usage.completion_tokens if usage else 0
+    total_tokens = usage.total_tokens if usage else 0
+    log_llm_call(
+        request_type="assert",
+        prompt=condition,
+        response=result,
+        model=model,
+        input_tokens=input_tokens,
+        output_tokens=output_tokens,
+        total_tokens=total_tokens,
+        success=True
+    )
+
     return (
         result,
-        usage.prompt_tokens if usage else 0,
-        usage.completion_tokens if usage else 0,
-        usage.total_tokens if usage else 0
+        input_tokens,
+        output_tokens,
+        total_tokens
     )
 
 def llm_assert(condition: str) -> None:
@@ -128,43 +144,20 @@ def llm_assert(condition: str) -> None:
 
     if not model:
         error_msg = "openrouter_model is not configured. Please configure it in ~/.hdr/config.json before using llm_assert."
-        log_llm_call(
-            request_type="assert",
-            prompt=condition,
-            response="",
-            model="unknown",
-            success=False,
-            error=error_msg
-        )
         raise EnvironmentError(error_msg)
 
     # Handle mock mode
     if model == "mock":
-        log_llm_call(
-            request_type="assert",
-            prompt=condition,
-            response="Mock pass",
-            model="mock",
-            success=True
-        )
         return
 
     # Check for API key
     api_key = config.get("openrouter_api_key")
     if not api_key:
         error_msg = "openrouter_api_key is not configured. Please configure it in ~/.hdr/config.json before using llm_assert."
-        log_llm_call(
-            request_type="assert",
-            prompt=condition,
-            response="",
-            model=model,
-            success=False,
-            error=error_msg
-        )
         raise EnvironmentError(error_msg)
 
     try:
-        result, input_tokens, output_tokens, total_tokens = _llm_assert_call(condition, api_key, model)
+        result, _, _, _ = _llm_assert_call(condition, api_key, model)
 
         # Parse result
         think_match = re.search(r'<think>(.*?)</think>', result, re.DOTALL)
@@ -173,31 +166,9 @@ def llm_assert(condition: str) -> None:
         thinking = think_match.group(1).strip() if think_match else "No thinking provided"
         score = int(score_match.group(1)) if score_match else 0
 
-        success = score == 5
-
-        # Log the call
-        log_llm_call(
-            request_type="assert",
-            prompt=condition,
-            response=result,
-            model=model,
-            input_tokens=input_tokens,
-            output_tokens=output_tokens,
-            total_tokens=total_tokens,
-            success=success
-        )
-
-        if not success:
+        if score != 5:
             raise AssertionError(f"LLM assertion failed with score {score}/5.\nThinking: {thinking}\nCondition: {condition}")
-    except Exception as e:
-        log_llm_call(
-            request_type="assert",
-            prompt=condition,
-            response="",
-            model=model,
-            success=False,
-            error=str(e)
-        )
+    except Exception:
         raise
 
 # Export all public functions
