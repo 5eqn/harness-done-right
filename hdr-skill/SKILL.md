@@ -5,22 +5,30 @@ description: Harness Done Right - Formalize tasks as Python classes, validate wi
 
 # Harness Done Right (HDR) Skill
 
-This skill enables you to formalize any task as a Python class hierarchy, validate task completions using LLM-powered assertions, and execute tasks incrementally with proper dependency management.
+This skill enables you to formalize any task as a Python class hierarchy, validate task completions using LLM-powered assertions, and build complex task structures with automatic dependency validation.
+
+## Design Philosophy
+
+HDR follows a **stateless, pure-functional design** with three core principles:
+1. **Tasks as values**: A completed task is just an instance of a Python class - no hidden state, no workbench, no persistence required
+2. **Validation at construction**: All type checks and LLM assertions run automatically when you create a task instance - if it instantiates successfully, it's valid
+3. **Caching, not state**: Duplicate LLM calls are automatically cached, so you can rerun your code as many times as you want without extra cost or side effects
+
+No global state, no magic ID references, no persistence layer - your code is the single source of truth.
 
 ## Core Concepts
 
 ### Task Definition
-Every task is defined as a Python class with:
-- A constructor that takes parameters representing the task requirements
-- LLM assertions that validate the task is correctly completed
-- Type checking for all parameters
+Every task is defined as a Python class that inherits from `BaseModel` (for automatic type checking):
+- Class fields define the task's required inputs/outputs
+- The constructor runs LLM assertions that validate the task is correctly completed
+- All type checks run automatically at instantiation time
 
-### Workbench
-All completed task instances are stored in a workbench:
-- Each task instance has a unique identifier
-- Instances can be referenced as dependencies for other tasks using `get("<id>")`
-- Each instance can only be used once to avoid circular dependencies
-- All instances are persisted to disk for later use
+### Stateless Execution
+There is no workbench, no `create()/get()/finish()` functions. To complete a task:
+1. Define your task classes with all required validation logic
+2. Construct instances of your task classes directly, passing dependencies as parameters
+3. If the final target instance constructs successfully, your task is complete
 
 ## Core API
 
@@ -40,63 +48,98 @@ class MyTask(BaseModel):
         llm_assert(f"{self.param2} is within expected range")
         llm_assert(f"{self.dependency} is correctly used as input")
 
-# Set the goal task to complete
-goal(MyTask)
+# Construct dependency first
+dependency = OtherTask(value="some value")
 
-# Create a task instance and store it in the workbench (Pydantic uses keyword arguments)
-create("task-id", MyTask(param1="value1", param2=42, dependency=get("other-task-id")))
+# Construct final task (all validation runs automatically)
+result = MyTask(param1="value1", param2=42, dependency=dependency)
 
-# Retrieve a task instance from the workbench
-instance = get("task-id")
-
-# Mark the goal as completed using a matching task instance
-finish(instance)
+# If you reach this line, the task is 100% valid
+print("Task completed:", result)
 ```
 
 ## Built-in Functions
 
+### `BaseModel`
+Base class for all task types. Provides automatic runtime type checking for all fields. Supports all Pydantic types including nested models, lists, dicts, etc.
+
 ### `llm_assert(condition: str) -> None`
-Validates a condition using LLM. Throws an error with LLM explanation if validation fails.
+Validates a condition using LLM. Throws an `AssertionError` with LLM reasoning and score if validation fails. Only passes when LLM gives a perfect score of 5/5. Results are automatically cached to avoid duplicate calls.
 
-### `llm_check(predicate: str, value: Any) -> bool`
-Runs a predicate check using LLM and returns a boolean result.
+### `save_config(config: dict) -> None`
+Saves configuration to `~/.hdr/config.json`. Use this to set OpenRouter credentials or enable mock mode.
 
-### `goal(task_type: Type) -> None`
-Sets the target task type that needs to be completed.
-
-### `create(id: str, instance: Any) -> None`
-Stores a task instance in the workbench with the given ID. Validates all type constraints and assertions before storing.
-
-### `get(id: str) -> Any`
-Retrieves a task instance from the workbench by ID. Marks the instance as consumed so it cannot be reused.
-
-### `finish(instance: Any) -> None`
-Marks the goal as completed using the provided instance, which must match the goal task type.
+### `load_config() -> dict`
+Loads configuration from `~/.hdr/config.json`.
 
 ## LLM Integration
-- By default, uses OpenRouter API for LLM operations
-- Requires `OPENROUTER_API_KEY` environment variable to be set
-- Requires `OPENROUTER_MODEL` environment variable to specify the model to use
-- Will throw clear error messages if required environment variables are missing
+- Uses OpenRouter API for LLM operations
+- Configure via `~/.hdr/config.json` (can be edited manually or via WebUI):
+  - `openrouter_api_key`: Your OpenRouter API key
+  - `openrouter_model`: Model to use (e.g. "anthropic/claude-3-opus")
+- Set `openrouter_model: "mock"` to enable mock mode (no API calls needed, all assertions automatically pass)
 
-## Usage Workflow
+## Recommended Workflow
 
-1. **Define Task Structure**: First, formalize all required task types as Python classes with appropriate assertions
-2. **Validate Task Definition**: Confirm the task structure with the user before proceeding
-3. **Set Goal**: Specify which task type is the final goal to complete
-4. **Build Incrementally**: Create dependencies first, then build up to the goal task
-5. **Validate Each Step**: Each `create()` call automatically runs all assertions and type checks
-6. **Complete Goal**: Use `finish()` with the final goal instance to complete the task
+### 1. Split task definition and implementation
+- **`task.py`**: Define all your task classes here. This file should be immutable once agreed with the user - it represents the formal specification of what needs to be done.
+- **`work.py`**: Import task classes from `task.py` and implement the logic to construct the final task instance.
+
+```python
+# task.py (immutable specification)
+from hdr import BaseModel, llm_assert
+
+class HumanizeText(BaseModel):
+    original: str
+    humanized: str
+
+    def __init__(self, **data):
+        super().__init__(**data)
+        llm_assert(f"<a>{self.original}</a> and <b>{self.humanized}</b> conveys the same meaning")
+        llm_assert(f"{self.humanized} reads like natural human-written text")
+```
+
+```python
+# work.py (implementation)
+from hdr import save_config
+from task import *
+
+# Enable mock mode for development
+save_config({"openrouter_model": "mock"})
+
+# Implement the task
+result = HumanizeText(
+    original="Text with AI generated content that sounds robotic",
+    humanized="Text written in a natural, conversational tone that feels human"
+)
+
+print("Task completed successfully!")
+```
+
+### 2. Run in virtual environment
+Always execute your code in the project's virtual environment to ensure dependencies are correctly installed:
+```bash
+# Activate venv (from hdr-skill directory)
+source .venv/bin/activate
+
+# Run your implementation
+python work.py
+```
+
+### 3. Validate incrementally
+- Build dependencies first, validate they work before moving to higher-level tasks
+- Use mock mode during development to avoid API costs
+- Switch to real LLM mode for final validation
 
 ## Error Handling
-- Type mismatch errors when passing incorrect types to task constructors
-- Instance reuse errors when trying to use the same instance multiple times
-- LLM assertion failures with detailed explanations of what went wrong
-- Missing environment variable errors with configuration instructions
+- **ValidationError**: Thrown by Pydantic when you pass incorrect types to task constructors
+- **AssertionError**: Thrown when an LLM assertion fails, includes reasoning and score
+- **EnvironmentError**: Thrown when OpenRouter configuration is missing or invalid
+- All errors include clear, actionable instructions for fixing the issue
 
 ## Testing
-When testing, use the mock LLM mode to avoid actual API calls:
+Use mock mode for testing to avoid actual API calls:
 ```python
-from hdr import mock_llm
-mock_llm.enable()
+from hdr import save_config
+save_config({"openrouter_model": "mock"})  # All assertions automatically pass
 ```
