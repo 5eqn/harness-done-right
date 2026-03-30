@@ -11,10 +11,6 @@
 ```humanize_text.py
 from hdr import BaseModel, llm_assert
 
-def llm_check_humanized(text: str):
-  # make llm vote on whether this text is AI generated based on some prebuilt principles
-  llm_assert(f"{text} reads like natural human-written text")
-
 # 继承BaseModel获得自动类型检查功能
 class HumanizeText(BaseModel):
     original: str
@@ -23,37 +19,25 @@ class HumanizeText(BaseModel):
     def __init__(self, **data):
         super().__init__(**data)
         llm_assert(f"<a>{self.original}</a> and <b>{self.humanized}</b> conveys the same meaning")
-        llm_check_humanized(self.humanized)
+        llm_assert(f"{self.humanized} reads like natural human-written text")
 ```
 
-Claude 将任务定义和概括含义发给用户检查，用户确认后 Claude 直接调用 Python 库去指定任务为目标：
-
-```
-from hdr import *
-goal(HumanizeText)
-```
-
-接着 Claude 会开始试图完成任务。由于任务数据结构简单，Claude 不需要启动子代理，直接进行完成：
-
-使用 create 试图创建重名对象时会报错，如果失败则会返回报错内容（一般是 LLM 提供的未通过检验原因和改进建议），如果成功则会输出任务状态，并且把对象用 pickle 永久化存储，这样后续可以用 get("a") 读取。若失败，把没通过检验的理由喂给 Claude，Claude 进行重试：
+Claude 将任务定义和概括含义发给用户检查，用户确认后直接构造任务实例即可：
 
 ```python
-from hdr import *
-create("a", HumanizeText(original="Text with AI", humanized="Text without AI"))
+from hdr import mock_llm
+from humanize_text import HumanizeText
+
+# 运行时自动触发类型检查和LLM断言
+result = HumanizeText(original="Text with AI", humanized="Text without AI")
+print("Task completed:", result)
 ```
 
-若成功，进行下一步。最终需要把匹配类型的对象用于完成目标：
+LLM 调用会自动记录日志，可通过 WebUI 查看 token 消耗和调用历史。
 
-```python
-from hdr import *
-finish(get("a"))
-```
+## 嵌套结构
 
-如果类型正确，则会引导 Claude 汇报最终结果，Python 库会留下全量日志，Claude 针对这一任务总结永久性经验。
-
-## 递归调用
-
-比如首先定义了这样的任务：
+支持任意深度的嵌套类型结构，例如：
 
 ```python
 from hdr import *
@@ -83,54 +67,21 @@ class A(BaseModel):
         llm_assert(f"{self.title} is the same as {self.b.title}")
 ```
 
-Claude 发给用户检查，确认后定义任务：
-
-```
-from hdr import *
-goal(A)
-```
-
-这个时候需要递归构建。首先构建 D 存为 "d"：
+直接构造对象即可，所有嵌套类型会自动递归校验：
 
 ```python
-from hdr import *
-create("d", D(value="d-value"))
+result = A(
+    title="Some title",
+    b=B(
+        title="Some title",
+        d=D(value="d-value"),
+        e=E(value=42)
+    ),
+    c=C(data=[1, 2, 3])
+)
 ```
 
-接着构建 E 存为 "e"，再构建 B 存为 "b"：
-
-```python
-from hdr import *
-create("e", E(value=42))
-create("b", B(title="B Title", d=get("d"), e=get("e")))
-```
-
-再构建 C 存为 "c"，这时候要构造 A 则是：
-
-```python
-from hdr import *
-create("c", C(data=[1, 2, 3]))
-create("a", A(title="Some title", b=get("b"), c=get("c")))
-```
-
-这套操作也可以用来处理数组等任意东西。核心就是通过 get 来读取动态对象。每个对象只能被使用一次，例如下面的会报错：
-
-```python
-from hdr import *
-create("b", B(get("d"), get("e")))
-create("b", B(get("d"), get("e")))  # 报错："d" 已被消耗
-```
-
-如果有类型错误，例如下面的也会报错：
-
-```python
-from hdr import *
-create("b", B(get("e"), get("d")))
-```
-
-由于 B 的第一个参数需要 D 类型，但是提供了 get("e") : E，所以调用 create 的时候会报错。get 只是拿出动态对象。
-
-预置类型不仅要有 str，还要有文件、数字等各种东西。hdr 需要有能力在 create 之后把对象永久化存储起来，并且记录详细日志。
+所有 LLM 断言会自动执行，类型错误会立即抛出。
 
 LLM 操作暂时只支持 OpenRouter 就行。
 
@@ -145,6 +96,10 @@ hdr/
     ├── SKILL.md                 # 技能说明文档
     ├── test_hdr.py              # 单元测试
     ├── venv/                    # Python虚拟环境（自动创建）
+    ├── start-webui.sh           # 一键启动WebUI脚本
+    ├── webui/                   # WebUI界面
+    │   ├── backend/             # Express后端
+    │   └── frontend/            # React前端
     └── scripts/
         ├── hdr.py               # HDR核心库
         └── setup.py             # 安装配置
@@ -170,28 +125,46 @@ cd scripts
 pip install -e .
 ```
 
-### 环境变量配置
-需要配置以下环境变量才能使用真实 LLM 功能：
+### 配置方式
+支持两种配置方式（环境变量优先级高于配置文件）：
+
+1. **配置文件**（推荐，可通过WebUI管理）：配置保存在 `~/.hdr/config.json`
+2. **环境变量**：
 ```bash
 export OPENROUTER_API_KEY="your-openrouter-api-key"
 export OPENROUTER_MODEL="anthropic/claude-3-opus"  # 或其他支持的模型
 ```
+
+## WebUI 使用
+```bash
+# 一键启动WebUI（自动安装依赖、构建、启动服务）
+cd hdr-skill
+./start-webui.sh
+
+# 访问 http://localhost:54789
+```
+
+WebUI 功能：
+- **配置页面**：可视化管理 OpenRouter API Key 和模型参数
+- **看板页面**：查看 token 消耗统计、折线图展示月度消耗、查看历史调用明细、分页浏览请求日志
 
 ## API 说明（已实现）
 
 ### 核心API
 | 函数 | 功能 |
 |------|------|
-| `goal(task_type: Type)` | 设置需要完成的目标任务类型 |
-| `create(id: str, instance: Any)` | 创建任务实例并存入工作台 |
-| `get(id: str) -> Any` | 从工作台获取任务实例（标记为已消耗，不可重复使用） |
-| `finish(instance: Any)` | 完成目标任务，实例类型必须匹配目标类型 |
-
-### LLM工具API
-| 函数 | 功能 |
-|------|------|
+| `BaseModel` | 基类，所有任务类继承此类获得自动类型检查能力 |
 | `llm_assert(condition: str)` | 用LLM验证条件是否成立，失败则抛出包含解释的异常 |
 | `llm_check(predicate: str, value: Any) -> bool` | 用LLM检查谓词是否适用于给定值，返回布尔结果 |
+| `load_config()` | 加载配置文件，返回配置字典 |
+| `save_config(config)` | 保存配置到文件 |
+
+### 测试API
+| 函数 | 功能 |
+|------|------|
+| `mock_llm.enable()` | 启用Mock LLM模式，不需要真实API调用 |
+| `mock_llm.disable()` | 禁用Mock LLM模式 |
+| `mock_llm.add_response(response: bool)` | 添加Mock响应，按顺序匹配后续LLM调用 |
 
 ### 测试API
 | 函数 | 功能 |
@@ -225,14 +198,16 @@ python -m pytest test_hdr.py -v
 4. 错误信息必须清晰明确，包含可操作的修复指引
 
 ### 数据持久化
-1. 当前使用pickle进行对象序列化，后续考虑替换为更安全的序列化方式（如dill、JSON Schema等）
-2. 工作bench数据存储在 `.hdr_workbench.pkl`，包含所有任务实例、消费状态和当前目标
-3. 每次调用`goal()`/`create()`/`get()`/`finish()`都会自动保存状态
+1. 所有配置和日志存储在用户主目录 `~/.hdr/` 目录下
+2. `config.json`：保存 OpenRouter API Key、模型等配置
+3. `llm_logs.jsonl`：所有 LLM 调用日志，包含完整的请求、响应和 token 用量
+4. `cache/`：LLM 调用缓存目录，自动避免重复请求相同内容
 
-### 序列化注意事项
-1. 任务类需要定义在模块级别（不能在函数内部定义）才能被正确序列化
-2. 使用Pydantic BaseModel的任务类会自动支持序列化
-3. 工作数据存储在当前目录下的`.hdr_workbench.pkl`文件中，可自行备份或清理
+### LLM 调用日志
+所有 `llm_assert` 和 `llm_check` 调用都会自动记录日志，包含：
+- 时间戳、请求类型、prompt 内容、响应内容
+- Token 用量明细（输入、输出、总计）
+- 缓存状态、调用是否成功、错误信息
 
 ### 类型系统扩展
 1. ✅ 已集成Pydantic实现完整的运行时类型校验，所有继承BaseModel的任务类自动获得类型检查能力
