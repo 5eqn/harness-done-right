@@ -9,22 +9,21 @@
 首先，Claude 在任务定义模式下，把任务形式化为下面的形式：
 
 ```humanize_text.py
-def llm_assert(text: str):
-  # check if prop is true with LLM, if not, throw error based on LLM explanation
+from hdr import BaseModel, llm_assert
 
 def llm_check_humanized(text: str):
   # make llm vote on whether this text is AI generated based on some prebuilt principles
+  llm_assert(f"{text} reads like natural human-written text")
 
-class HumanizeText:
-  def __init__(
-    self,
-    original: str,
-    humanized: str,
-  ):
-    self.original = original
-    self.humanized = humanized
-    llm_assert(f"<a>{original}</a> and <b>{humanized}</b> conveys the same meaning")
-    llm_check_humanized(humanized)
+# 继承BaseModel获得自动类型检查功能
+class HumanizeText(BaseModel):
+    original: str
+    humanized: str
+
+    def __init__(self, **data):
+        super().__init__(**data)
+        llm_assert(f"<a>{self.original}</a> and <b>{self.humanized}</b> conveys the same meaning")
+        llm_check_humanized(self.humanized)
 ```
 
 Claude 将任务定义和概括含义发给用户检查，用户确认后 Claude 直接调用 Python 库去指定任务为目标：
@@ -45,7 +44,7 @@ create("a", HumanizeText("Text with AI", "Text without AI"))
 
 ```python
 from hdr import *
-create("a", HumanizeText("Text with AI", "Text without AI"))
+create("a", HumanizeText(original="Text with AI", humanized="Text without AI"))
 ```
 
 若成功，进行下一步。最终需要把匹配类型的对象用于完成目标：
@@ -62,20 +61,31 @@ finish(get("a"))
 比如首先定义了这样的任务：
 
 ```python
-class A:
-  def __init__(self, title: str, b: B, c: C):
-    self.title = title
-    self.b = b
-    self.c = c
-    llm_assert(f"{title} is the same as {b.title}")
+from hdr import *
 
-class B:
-  def __init__(self, title: str, d: D, e: E):
-    self.title = title
-    self.d = d
-    self.e = e
+# 所有任务类继承BaseModel获得自动类型检查
+class D(BaseModel):
+    value: str
 
-# C, D, E…
+class E(BaseModel):
+    value: int
+
+class B(BaseModel):
+    title: str
+    d: D
+    e: E
+
+class C(BaseModel):
+    data: list[int]
+
+class A(BaseModel):
+    title: str
+    b: B
+    c: C
+
+    def __init__(self, **data):
+        super().__init__(**data)
+        llm_assert(f"{self.title} is the same as {self.b.title}")
 ```
 
 Claude 发给用户检查，确认后定义任务：
@@ -89,21 +99,23 @@ goal(A)
 
 ```python
 from hdr import *
-create("d", D(...))
+create("d", D(value="d-value"))
 ```
 
 接着构建 E 存为 "e"，再构建 B 存为 "b"：
 
 ```python
 from hdr import *
-create("b", B(get("d"), get("e")))
+create("e", E(value=42))
+create("b", B(title="B Title", d=get("d"), e=get("e")))
 ```
 
 再构建 C 存为 "c"，这时候要构造 A 则是：
 
 ```python
 from hdr import *
-create("a", A("Some title", get("b"), get("c")))
+create("c", C(data=[1, 2, 3]))
+create("a", A(title="Some title", b=get("b"), c=get("c")))
 ```
 
 这套操作也可以用来处理数组等任意东西。核心就是通过 get 来读取动态对象。每个对象只能被使用一次，例如下面的会报错：
@@ -200,6 +212,7 @@ python -m pytest test_hdr.py -v
 3. 每次调用`goal()`/`create()`/`get()`/`finish()`都会自动保存状态
 
 ### 类型系统扩展
-1. 现有类型检查仅做基础运行时校验，后续考虑集成pydantic实现完整的类型校验
-2. 预置类型需要扩展支持：File、Path、Number、Boolean、Array、Dict等常用类型
-3. 支持自定义类型的序列化和反序列化
+1. ✅ 已集成Pydantic实现完整的运行时类型校验，所有继承BaseModel的任务类自动获得类型检查能力
+2. 支持所有Pydantic类型：str, int, float, bool, list, dict, datetime等，以及嵌套类型和自定义类型
+3. 预置类型后续扩展支持：File、Path等特殊类型
+4. 自动支持自定义类型的序列化和反序列化（基于Pydantic的model_dump功能）

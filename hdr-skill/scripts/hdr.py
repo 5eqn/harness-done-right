@@ -3,6 +3,7 @@ import pickle
 import inspect
 from typing import Any, Type, Dict, Optional
 import openai
+from pydantic import BaseModel, ValidationError
 
 # Workbench storage
 _workbench: Dict[str, Any] = {}
@@ -134,12 +135,11 @@ def create(id: str, instance: Any) -> None:
     """
     Store a task instance in the workbench with the given ID.
     Validates all type constraints and assertions before storing.
+    If instance is a Pydantic BaseModel, type validation automatically occurs during instantiation.
     """
     if id in _workbench:
         raise ValueError(f"Task instance with ID '{id}' already exists")
 
-    # Run the constructor assertions by re-initializing (the instance should have already run them)
-    # We trust that the instance was properly constructed
     _workbench[id] = instance
     _save_workbench()
 
@@ -185,5 +185,6 @@ __all__ = [
     "create",
     "get",
     "finish",
-    "mock_llm"
+    "mock_llm",
+    "BaseModel"
 ]

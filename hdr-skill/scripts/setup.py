@@ -8,6 +8,7 @@ setup(
     py_modules=["hdr"],
     install_requires=[
         "openai>=1.0.0",
+        "pydantic>=2.0.0",
     ],
     classifiers=[
         "Programming Language :: Python :: 3",

@@ -3,6 +3,8 @@ import tempfile
 import pytest
 import hdr
 from hdr import *
+from hdr import BaseModel
+from pydantic import ValidationError
 
 # Test classes defined at module level for pickling
 class HumanizeText:
@@ -16,9 +18,6 @@ class TestTask:
     def __init__(self, value: int = 0):
         pass
 
-class TypedTask:
-    def __init__(self, name: str, count: int):
-        pass
 
 class FailingTask:
     def __init__(self, value: str):
@@ -49,6 +48,25 @@ class C:
 class A:
     def __init__(self, title: str, b: B, c: C):
         llm_assert(f"{title} matches {b} and {c}")
+
+# Pydantic test classes
+class StringTask(BaseModel):
+    name: str
+
+class NumberTask(BaseModel):
+    count: int
+    price: float
+
+class ListTask(BaseModel):
+    items: list[str]
+    scores: list[int]
+
+class NestedItem(BaseModel):
+    value: int
+
+class ParentTask(BaseModel):
+    item: NestedItem
+    name: str
 
 # Reset state before each test
 @pytest.fixture(autouse=True)
@@ -99,16 +117,6 @@ def test_instance_reuse_error():
     with pytest.raises(ValueError, match="has already been consumed"):
         second = get("test")
 
-def test_type_checking():
-    """Test type checking in constructors (type hints are enforced at runtime)"""
-    mock_llm.enable()
-
-    # This should work
-    create("valid", TypedTask("test", 42))
-
-    # Note: Type hints are not enforced at runtime by default in Python
-    # For full runtime type checking, users would need to use a library like pydantic
-    # This test just confirms basic functionality works
 
 def test_llm_assert_failure():
     """Test that LLM assertion failures throw appropriate errors"""
@@ -214,6 +222,55 @@ def test_llm_check():
 
     assert llm_check("is even", 4) == True
     assert llm_check("is even", 5) == False
+
+def test_pydantic_type_checking_string():
+    """Test Pydantic string type validation"""
+    mock_llm.enable()
+
+    # Valid string should work
+    create("valid-str", StringTask(name="test"))
+    assert get("valid-str").name == "test"
+
+def test_pydantic_type_checking_number():
+    """Test Pydantic numeric type validation"""
+    mock_llm.enable()
+
+    # Valid numbers should work
+    create("valid-num", NumberTask(count=42, price=99.9))
+    instance = get("valid-num")
+    assert instance.count == 42
+    assert instance.price == 99.9
+
+    # Invalid type should throw error (Pydantic validates at instantiation time)
+    with pytest.raises(ValidationError, match="Input should be a valid integer"):
+        NumberTask(count="not a number", price=99.9)
+
+def test_pydantic_type_checking_list():
+    """Test Pydantic list type validation"""
+    mock_llm.enable()
+
+    # Valid lists should work
+    create("valid-list", ListTask(items=["a", "b", "c"], scores=[1, 2, 3]))
+    instance = get("valid-list")
+    assert instance.items == ["a", "b", "c"]
+    assert instance.scores == [1, 2, 3]
+
+    # Invalid list item type should throw error (Pydantic validates at instantiation time)
+    with pytest.raises(ValidationError, match="Input should be a valid string"):
+        ListTask(items=["a", 2, "c"], scores=[1, 2, 3])
+
+def test_pydantic_nested_type():
+    """Test Pydantic nested model type validation"""
+    mock_llm.enable()
+
+    # Valid nested model should work
+    create("nested", NestedItem(value=42))
+    create("parent", ParentTask(name="test", item=get("nested")))
+    assert get("parent").item.value == 42
+
+    # Invalid nested type should throw error (Pydantic validates at instantiation time)
+    with pytest.raises(ValidationError, match="Input should be a valid dictionary or instance of NestedItem"):
+        ParentTask(name="test", item="not a NestedItem")
 
 if __name__ == "__main__":
     pytest.main([__file__])

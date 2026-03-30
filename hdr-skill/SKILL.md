@@ -27,19 +27,24 @@ All completed task instances are stored in a workbench:
 ```python
 from hdr import *
 
-# Define a new task type
-class MyTask:
-  def __init__(self, param1: str, param2: int, dependency: OtherTask):
-    # LLM assertions to validate task completion
-    llm_assert(f"{param1} meets all quality requirements")
-    llm_assert(f"{param2} is within expected range")
-    llm_assert(f"{dependency} is correctly used as input")
+# Define a new task type (inherit from BaseModel for automatic type checking)
+class MyTask(BaseModel):
+    param1: str
+    param2: int
+    dependency: OtherTask
+
+    def __init__(self, **data):
+        super().__init__(**data)
+        # LLM assertions to validate task completion
+        llm_assert(f"{self.param1} meets all quality requirements")
+        llm_assert(f"{self.param2} is within expected range")
+        llm_assert(f"{self.dependency} is correctly used as input")
 
 # Set the goal task to complete
 goal(MyTask)
 
-# Create a task instance and store it in the workbench
-create("task-id", MyTask("value1", 42, get("other-task-id")))
+# Create a task instance and store it in the workbench (Pydantic uses keyword arguments)
+create("task-id", MyTask(param1="value1", param2=42, dependency=get("other-task-id")))
 
 # Retrieve a task instance from the workbench
 instance = get("task-id")
