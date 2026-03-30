@@ -25,7 +25,7 @@ Every task is defined as a Python class that inherits from `BaseModel` (for auto
 - All type checks run automatically at instantiation time
 
 ### Stateless Execution
-There is no workbench, no `create()/get()/finish()` functions. To complete a task:
+To complete a task:
 1. Define your task classes with all required validation logic
 2. Construct instances of your task classes directly, passing dependencies as parameters
 3. If the final target instance constructs successfully, your task is complete
@@ -66,19 +66,6 @@ Base class for all task types. Provides automatic runtime type checking for all 
 ### `llm_assert(condition: str) -> None`
 Validates a condition using LLM. Throws an `AssertionError` with LLM reasoning and score if validation fails. Only passes when LLM gives a perfect score of 5/5. Results are automatically cached to avoid duplicate calls.
 
-### `save_config(config: dict) -> None`
-Saves configuration to `~/.hdr/config.json`. Use this to set OpenRouter credentials or enable mock mode.
-
-### `load_config() -> dict`
-Loads configuration from `~/.hdr/config.json`.
-
-## LLM Integration
-- Uses OpenRouter API for LLM operations
-- Configure via `~/.hdr/config.json` (can be edited manually or via WebUI):
-  - `openrouter_api_key`: Your OpenRouter API key
-  - `openrouter_model`: Model to use (e.g. "anthropic/claude-3-opus")
-- Set `openrouter_model: "mock"` to enable mock mode (no API calls needed, all assertions automatically pass)
-
 ## Recommended Workflow
 
 ### 1. Split task definition and implementation
@@ -104,9 +91,6 @@ class HumanizeText(BaseModel):
 from hdr import save_config
 from task import *
 
-# Enable mock mode for development
-save_config({"openrouter_model": "mock"})
-
 # Implement the task
 result = HumanizeText(
     original="Text with AI generated content that sounds robotic",
@@ -128,18 +112,9 @@ python work.py
 
 ### 3. Validate incrementally
 - Build dependencies first, validate they work before moving to higher-level tasks
-- Use mock mode during development to avoid API costs
-- Switch to real LLM mode for final validation
 
 ## Error Handling
 - **ValidationError**: Thrown by Pydantic when you pass incorrect types to task constructors
 - **AssertionError**: Thrown when an LLM assertion fails, includes reasoning and score
 - **EnvironmentError**: Thrown when OpenRouter configuration is missing or invalid
 - All errors include clear, actionable instructions for fixing the issue
-
-## Testing
-Use mock mode for testing to avoid actual API calls:
-```python
-from hdr import save_config
-save_config({"openrouter_model": "mock"})  # All assertions automatically pass
-```
