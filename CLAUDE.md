@@ -25,8 +25,11 @@ class HumanizeText(BaseModel):
 Claude 将任务定义和概括含义发给用户检查，用户确认后直接构造任务实例即可：
 
 ```python
-from hdr import mock_llm
+from hdr import save_config
 from humanize_text import HumanizeText
+
+# 启用Mock模式
+save_config({"openrouter_model": "mock"})
 
 # 运行时自动触发类型检查和LLM断言
 result = HumanizeText(original="Text with AI", humanized="Text without AI")
@@ -126,14 +129,10 @@ pip install -e .
 ```
 
 ### 配置方式
-支持两种配置方式（环境变量优先级高于配置文件）：
-
-1. **配置文件**（推荐，可通过WebUI管理）：配置保存在 `~/.hdr/config.json`
-2. **环境变量**：
-```bash
-export OPENROUTER_API_KEY="your-openrouter-api-key"
-export OPENROUTER_MODEL="anthropic/claude-3-opus"  # 或其他支持的模型
-```
+配置方式：
+**配置文件**（可通过WebUI管理）：配置保存在 `~/.hdr/config.json`，包含以下字段：
+- `openrouter_api_key`: OpenRouter API Key
+- `openrouter_model`: 模型名称，设置为 `"mock"` 时启用Mock模式（无需API Key，所有断言自动通过）
 
 ## WebUI 使用
 ```bash
@@ -154,32 +153,15 @@ WebUI 功能：
 | 函数 | 功能 |
 |------|------|
 | `BaseModel` | 基类，所有任务类继承此类获得自动类型检查能力 |
-| `llm_assert(condition: str)` | 用LLM验证条件是否成立，失败则抛出包含解释的异常 |
-| `llm_check(predicate: str, value: Any) -> bool` | 用LLM检查谓词是否适用于给定值，返回布尔结果 |
+| `llm_assert(condition: str)` | 用LLM验证条件是否成立，仅当LLM评分为5分时通过，失败则抛出包含LLM思考过程和分数的异常 |
 | `load_config()` | 加载配置文件，返回配置字典 |
 | `save_config(config)` | 保存配置到文件 |
 
-### 测试API
-| 函数 | 功能 |
-|------|------|
-| `mock_llm.enable()` | 启用Mock LLM模式，不需要真实API调用 |
-| `mock_llm.disable()` | 禁用Mock LLM模式 |
-| `mock_llm.add_response(response: bool)` | 添加Mock响应，按顺序匹配后续LLM调用 |
-
-### 测试API
-| 函数 | 功能 |
-|------|------|
-| `mock_llm.enable()` | 启用Mock LLM模式，不需要真实API调用 |
-| `mock_llm.disable()` | 禁用Mock LLM模式 |
-| `mock_llm.add_response(response: bool)` | 添加Mock响应，按顺序匹配后续LLM调用 |
-
-### Mock LLM使用说明
+### Mock模式使用说明
 在开发和测试时使用Mock模式可以避免真实API调用：
 ```python
-from hdr import mock_llm
-mock_llm.enable()  # 启用Mock模式，所有LLM调用默认通过
-mock_llm.add_response(False)  # 自定义下一次LLM调用返回失败
-mock_llm.disable()  # 禁用Mock模式
+from hdr import save_config
+save_config({"openrouter_model": "mock"})  # 启用Mock模式，所有LLM断言自动通过
 ```
 
 ## 测试运行
@@ -204,7 +186,7 @@ python -m pytest test_hdr.py -v
 4. `cache/`：LLM 调用缓存目录，自动避免重复请求相同内容
 
 ### LLM 调用日志
-所有 `llm_assert` 和 `llm_check` 调用都会自动记录日志，包含：
+所有 `llm_assert` 调用都会自动记录日志，包含：
 - 时间戳、请求类型、prompt 内容、响应内容
 - Token 用量明细（输入、输出、总计）
 - 缓存状态、调用是否成功、错误信息

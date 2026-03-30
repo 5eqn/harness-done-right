@@ -108,3 +108,48 @@ hdr-skill/webui/
 - 支持更多模型提供商配置
 - 增加日志搜索和过滤功能
 - 支持导出统计报表
+
+### 任务三：精简 API
+
+- 状态：已完成 ✅
+
+#### 完成说明
+已按照要求完成API精简工作：
+1. **移除多余API**：删除了 `llm_check()` 和 `mock_llm` 类，仅保留 `llm_assert` 作为唯一的LLM相关API
+2. **移除环境变量支持**：配置仅从 `~/.hdr/config.json` 读取，不再支持环境变量
+3. **Mock模式简化**：通过配置文件中 `openrouter_model` 设置为 `"mock"` 即可启用Mock模式，自动通过所有断言
+4. **LLM断言增强**：
+   - 新的提示词要求LLM先输出思考过程（<think>标签），再输出1-5分的评分
+   - 仅当评分为5分时断言通过，否则抛出包含思考内容和分数的错误信息
+5. **日志优化**：
+   - 移除缓存相关日志字段，缓存请求不会产生日志
+   - 新增 `model` 字段记录使用的模型，Mock模式会显示为"mock"
+   - 保留`type`字段方便未来扩展
+6. **测试改进**：
+   - 所有测试使用临时目录`/tmp`作为配置目录，不影响用户本地配置
+   - 移除所有`mock_llm`相关测试代码
+   - 更新配置错误测试匹配新的错误提示
+
+#### 新用法示例
+```python
+from hdr import BaseModel, llm_assert, save_config
+
+# Mock模式（用于测试）
+save_config({"openrouter_model": "mock"})
+# 自动通过所有断言
+llm_assert("2 + 2 = 4")
+
+# 生产模式
+save_config({
+    "openrouter_api_key": "your-key",
+    "openrouter_model": "anthropic/claude-3-opus"
+})
+llm_assert("<a>Hello</a> and <b>Hi</b> have the same meaning")
+```
+
+#### 变更说明
+- API更加简洁，仅保留核心断言功能
+- 错误信息更丰富，包含LLM思考过程和评分，方便Agent迭代
+- Mock模式更简单，无需调用额外方法
+- 配置管理更统一，仅使用配置文件
+- 所有单元测试通过，保持向后兼容任务定义方式

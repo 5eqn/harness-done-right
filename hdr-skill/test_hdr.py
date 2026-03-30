@@ -1,5 +1,7 @@
 import os
+import json
 import pytest
+import tempfile
 import hdr
 from hdr import *
 from hdr import BaseModel
@@ -64,16 +66,33 @@ class ParentTask(BaseModel):
     item: NestedItem
     name: str
 
-# Reset state before each test
+# Reset HDR config directory to tmp before each test
 @pytest.fixture(autouse=True)
-def reset_state():
-    hdr._mock_mode = False
-    hdr._mock_responses.clear()
+def reset_config():
+    # Create tmp directory for test config
+    with tempfile.TemporaryDirectory() as tmpdir:
+        # Override HDR_DIR for tests
+        original_hdr_dir = hdr.HDR_DIR
+        original_config_file = hdr.CONFIG_FILE
+        original_log_file = hdr.LOG_FILE
+
+        hdr.HDR_DIR = tmpdir
+        hdr.CONFIG_FILE = os.path.join(tmpdir, "config.json")
+        hdr.LOG_FILE = os.path.join(tmpdir, "llm_logs.jsonl")
+
+        # Create mock config
+        config = {"openrouter_model": "mock"}
+        hdr.save_config(config)
+
+        yield
+
+        # Restore original paths
+        hdr.HDR_DIR = original_hdr_dir
+        hdr.CONFIG_FILE = original_config_file
+        hdr.LOG_FILE = original_log_file
 
 def test_basic_task_flow():
     """Test the basic stateless task creation flow from the example"""
-    mock_llm.enable()
-
     # Directly create task instance (no goal/create/get/finish needed)
     instance = HumanizeText("Text with AI", "Text without AI")
 
@@ -81,18 +100,8 @@ def test_basic_task_flow():
     assert instance.original == "Text with AI"
     assert instance.humanized == "Text without AI"
 
-def test_llm_assert_failure():
-    """Test that LLM assertion failures throw appropriate errors"""
-    mock_llm.enable()
-    mock_llm.add_response(False)  # First assertion fails
-
-    with pytest.raises(AssertionError, match="Mock LLM assertion failed"):
-        FailingTask("invalid")
-
 def test_recursive_dependencies():
     """Test recursive stateless task construction from the example"""
-    mock_llm.enable()
-
     # Directly build dependencies without state
     d = D("d-value")
     e = E(42)
@@ -109,59 +118,24 @@ def test_recursive_dependencies():
 
 def test_openrouter_config_error():
     """Test that appropriate errors are thrown when OpenRouter config is missing"""
-    # Save original env vars
-    original_key = os.getenv("OPENROUTER_API_KEY")
-    original_model = os.getenv("OPENROUTER_MODEL")
-
-    # Clear env vars
-    if "OPENROUTER_API_KEY" in os.environ:
-        del os.environ["OPENROUTER_API_KEY"]
-    if "OPENROUTER_MODEL" in os.environ:
-        del os.environ["OPENROUTER_MODEL"]
-
-    # Disable mock mode to trigger real API check
-    mock_llm.disable()
-
-    # Test missing API key
-    with pytest.raises(EnvironmentError, match="OPENROUTER_API_KEY is not set"):
+    # Test missing model
+    hdr.save_config({})
+    with pytest.raises(EnvironmentError, match="openrouter_model is not configured"):
         llm_assert("test")
 
-    # Set API key but no model
-    os.environ["OPENROUTER_API_KEY"] = "test-key"
-    with pytest.raises(EnvironmentError, match="OPENROUTER_MODEL is not set"):
+    # Test model set to non-mock but no API key
+    hdr.save_config({"openrouter_model": "anthropic/claude-3-opus"})
+    with pytest.raises(EnvironmentError, match="openrouter_api_key is not configured"):
         llm_assert("test")
-
-    # Restore original env vars
-    if original_key:
-        os.environ["OPENROUTER_API_KEY"] = original_key
-    elif "OPENROUTER_API_KEY" in os.environ:
-        del os.environ["OPENROUTER_API_KEY"]
-    if original_model:
-        os.environ["OPENROUTER_MODEL"] = original_model
-    elif "OPENROUTER_MODEL" in os.environ:
-        del os.environ["OPENROUTER_MODEL"]
-
-def test_llm_check():
-    """Test llm_check functionality"""
-    mock_llm.enable()
-    mock_llm.add_response(True)
-    mock_llm.add_response(False)
-
-    assert llm_check("is even", 4) == True
-    assert llm_check("is even", 5) == False
 
 def test_pydantic_type_checking_string():
     """Test Pydantic string type validation"""
-    mock_llm.enable()
-
     # Valid string should work
     instance = StringTask(name="test")
     assert instance.name == "test"
 
 def test_pydantic_type_checking_number():
     """Test Pydantic numeric type validation"""
-    mock_llm.enable()
-
     # Valid numbers should work
     instance = NumberTask(count=42, price=99.9)
     assert instance.count == 42
@@ -173,8 +147,6 @@ def test_pydantic_type_checking_number():
 
 def test_pydantic_type_checking_list():
     """Test Pydantic list type validation"""
-    mock_llm.enable()
-
     # Valid lists should work
     instance = ListTask(items=["a", "b", "c"], scores=[1, 2, 3])
     assert instance.items == ["a", "b", "c"]
@@ -186,8 +158,6 @@ def test_pydantic_type_checking_list():
 
 def test_pydantic_nested_type():
     """Test Pydantic nested model type validation"""
-    mock_llm.enable()
-
     # Valid nested model should work
     nested = NestedItem(value=42)
     parent = ParentTask(name="test", item=nested)
