@@ -167,5 +167,48 @@ def test_pydantic_nested_type():
     with pytest.raises(ValidationError, match="Input should be a valid dictionary or instance of NestedItem"):
         ParentTask(name="test", item="not a NestedItem")  # pyright: ignore
 
+
+def test_quote_function():
+    """Test quote function for various types"""
+    # Test string
+    assert quote("test string") == "<quote>test string</quote>"
+
+    # Test number types
+    assert quote(42) == "<quote>42</quote>"
+    assert quote(3.14) == "<quote>3.14</quote>"
+    assert quote(True) == "<quote>True</quote>"
+
+    # Test list
+    assert quote([1, 2, 3]) == "<quote>[\n  1,\n  2,\n  3\n]</quote>"
+
+    # Test dict
+    test_dict = {"key": "value", "number": 42}
+    quoted_dict = quote(test_dict)
+    assert quoted_dict.startswith("<quote>")
+    assert quoted_dict.endswith("</quote>")
+    assert "\"key\": \"value\"" in quoted_dict
+    assert "\"number\": 42" in quoted_dict
+
+    # Test Pydantic model
+    nested = NestedItem(value=42)
+    quoted_model = quote(nested)
+    assert quoted_model.startswith("<quote>")
+    assert quoted_model.endswith("</quote>")
+    assert "\"value\": 42" in quoted_model
+
+    # Test nested Pydantic model
+    parent = ParentTask(name="test", item=nested)
+    quoted_parent = quote(parent)
+    assert quoted_parent.startswith("<quote>")
+    assert quoted_parent.endswith("</quote>")
+    assert "\"name\": \"test\"" in quoted_parent
+    assert "\"item\": {" in quoted_parent
+    assert "\"value\": 42" in quoted_parent
+
+    # Test that quote works in llm_assert (mock mode)
+    task = StringTask(name="test task")
+    llm_assert(f"{quote(task.name)} is a valid task name")
+    llm_assert(f"{quote(task)} has a valid name field")
+
 if __name__ == "__main__":
     pytest.main([__file__])

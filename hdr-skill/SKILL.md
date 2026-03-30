@@ -66,7 +66,46 @@ Base class for all task types. Provides automatic runtime type checking for all 
 ### `llm_assert(condition: str) -> None`
 Validates a condition using LLM. Throws an `AssertionError` with LLM reasoning and score if validation fails. Only passes when LLM gives a perfect score of 5/5. Results are automatically cached to avoid duplicate calls.
 
+### `quote(obj: Any) -> str`
+Safely quote any object for use in `llm_assert` conditions, preventing prompt injection attacks. Automatically handles:
+- Simple types (strings, numbers, booleans)
+- Complex Pydantic models (dumps to pretty JSON)
+- Lists, dicts, and other JSON-serializable objects
+- All quoted content is wrapped in `<quote>` tags and treated as literal text by the LLM
+
+Always use `quote()` when embedding values or objects in `llm_assert` conditions.
+
 ## Recommended Workflow
+
+### Agent Execution Steps (any working directory)
+Follow this exact step-by-step process for every task:
+
+#### Step 1: Create task specification file
+Create a `task.py` file in your current working directory with all task definitions:
+- Import `BaseModel`, `llm_assert`, and `quote` from `hdr`
+- Define all required task classes with proper type annotations
+- Add all necessary `llm_assert` validations in the `__init__` method, using `quote()` for all embedded values/objects
+- Present this file to the user for approval before proceeding
+
+#### Step 2: Get user confirmation
+Once the user approves the `task.py` specification, do not modify this file again for the rest of the task.
+
+#### Step 3: Create implementation file
+Create a `work.py` file in the same directory:
+- Import all task classes from `task.py`
+- Implement the logic to construct the final task instance, building dependencies as needed
+- Use mock mode during development: `save_config({"openrouter_model": "mock"})` to avoid real API calls
+
+#### Step 4: Run and validate
+Execute your code in the HDR virtual environment:
+```bash
+# Activate HDR venv
+source /path/to/hdr/hdr-skill/.venv/bin/activate
+
+# Run your implementation
+python work.py
+```
+If the code runs without errors, your task is complete.
 
 ### 1. Split task definition and implementation
 - **`task.py`**: Define all your task classes here. This file should be immutable once agreed with the user - it represents the formal specification of what needs to be done.
@@ -74,7 +113,7 @@ Validates a condition using LLM. Throws an `AssertionError` with LLM reasoning a
 
 ```python
 # task.py (immutable specification)
-from hdr import BaseModel, llm_assert
+from hdr import BaseModel, llm_assert, quote
 
 class HumanizeText(BaseModel):
     original: str
@@ -82,8 +121,8 @@ class HumanizeText(BaseModel):
 
     def __init__(self, **data):
         super().__init__(**data)
-        llm_assert(f"<a>{self.original}</a> and <b>{self.humanized}</b> conveys the same meaning")
-        llm_assert(f"{self.humanized} reads like natural human-written text")
+        llm_assert(f"{quote(self.original)} and {quote(self.humanized)} conveys the same meaning")
+        llm_assert(f"{quote(self.humanized)} reads like natural human-written text")
 ```
 
 ```python

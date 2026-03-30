@@ -34,3 +34,4 @@ Usage section has 2 code examples
 - `work.py` imports from `task.py` and implements the solution
 - No state is persisted between runs - you can execute `work.py` as many times as you want
 - LLM calls are automatically cached, so repeated runs are fast
+- Use the `quote()` function in `llm_assert` to safely embed values and objects, preventing prompt injection attacks and ensuring LLM correctly interprets your data
