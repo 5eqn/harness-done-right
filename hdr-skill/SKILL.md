@@ -105,7 +105,10 @@ source /path/to/hdr/hdr-skill/.venv/bin/activate
 # Run your implementation
 python work.py
 ```
-If you have attempted to construct the final task instance without placeholder, and the code runs without errors, your task is complete. If encountered error, revise your implementation with the error message and rerun the implementation. If the code runs successfully, but you haven't created the final task instance, it means the prefix works fine, please continue working on the construction of the final task instance.
+- If you have attempted to construct the final task instance without placeholder, and the code runs without errors, your task is complete. 
+- If encountered error, revise your implementation in `work.py` with the error message and rerun the implementation.
+- If the code runs successfully, but you haven't created the final task instance, it means the prefix works fine, please continue working on the construction of the final task instance in `work.py`.
+- If you think the error reason does not make sense, you think the problem is not in your `work.py` but in `task.py`, request with user to go back to edit `task.py`. User will tell you whether they think the problem is in the task `task.py` or in your work `work.py`.
 
 ## Error Handling
 - **ValidationError**: Thrown by Pydantic when you pass incorrect types to task constructors
