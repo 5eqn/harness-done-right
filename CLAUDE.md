@@ -35,11 +35,6 @@ goal(HumanizeText)
 
 接着 Claude 会开始试图完成任务。由于任务数据结构简单，Claude 不需要启动子代理，直接进行完成：
 
-```
-from hdr import *
-create("a", HumanizeText("Text with AI", "Text without AI"))
-```
-
 使用 create 试图创建重名对象时会报错，如果失败则会返回报错内容（一般是 LLM 提供的未通过检验原因和改进建议），如果成功则会输出任务状态，并且把对象用 pickle 永久化存储，这样后续可以用 get("a") 读取。若失败，把没通过检验的理由喂给 Claude，Claude 进行重试：
 
 ```python
@@ -141,6 +136,20 @@ LLM 操作暂时只支持 OpenRouter 就行。
 
 ---
 
+## 项目结构
+
+```
+hdr/
+├── CLAUDE.md                    # 项目说明文档
+└── hdr-skill/                   # HDR技能包
+    ├── SKILL.md                 # 技能说明文档
+    ├── test_hdr.py              # 单元测试
+    ├── venv/                    # Python虚拟环境（自动创建）
+    └── scripts/
+        ├── hdr.py               # HDR核心库
+        └── setup.py             # 安装配置
+```
+
 ## 开发环境配置
 
 ### 虚拟环境配置
@@ -175,7 +184,7 @@ export OPENROUTER_MODEL="anthropic/claude-3-opus"  # 或其他支持的模型
 |------|------|
 | `goal(task_type: Type)` | 设置需要完成的目标任务类型 |
 | `create(id: str, instance: Any)` | 创建任务实例并存入工作台 |
-| `get(id: str) -> Any` | 从工作台获取任务实例（标记为已消耗，不可重复使用），别名 `with_` |
+| `get(id: str) -> Any` | 从工作台获取任务实例（标记为已消耗，不可重复使用） |
 | `finish(instance: Any)` | 完成目标任务，实例类型必须匹配目标类型 |
 
 ### LLM工具API
@@ -190,6 +199,15 @@ export OPENROUTER_MODEL="anthropic/claude-3-opus"  # 或其他支持的模型
 | `mock_llm.enable()` | 启用Mock LLM模式，不需要真实API调用 |
 | `mock_llm.disable()` | 禁用Mock LLM模式 |
 | `mock_llm.add_response(response: bool)` | 添加Mock响应，按顺序匹配后续LLM调用 |
+
+### Mock LLM使用说明
+在开发和测试时使用Mock模式可以避免真实API调用：
+```python
+from hdr import mock_llm
+mock_llm.enable()  # 启用Mock模式，所有LLM调用默认通过
+mock_llm.add_response(False)  # 自定义下一次LLM调用返回失败
+mock_llm.disable()  # 禁用Mock模式
+```
 
 ## 测试运行
 ```bash
@@ -210,6 +228,11 @@ python -m pytest test_hdr.py -v
 1. 当前使用pickle进行对象序列化，后续考虑替换为更安全的序列化方式（如dill、JSON Schema等）
 2. 工作bench数据存储在 `.hdr_workbench.pkl`，包含所有任务实例、消费状态和当前目标
 3. 每次调用`goal()`/`create()`/`get()`/`finish()`都会自动保存状态
+
+### 序列化注意事项
+1. 任务类需要定义在模块级别（不能在函数内部定义）才能被正确序列化
+2. 使用Pydantic BaseModel的任务类会自动支持序列化
+3. 工作数据存储在当前目录下的`.hdr_workbench.pkl`文件中，可自行备份或清理
 
 ### 类型系统扩展
 1. ✅ 已集成Pydantic实现完整的运行时类型校验，所有继承BaseModel的任务类自动获得类型检查能力
