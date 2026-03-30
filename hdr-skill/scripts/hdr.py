@@ -81,8 +81,8 @@ def log_llm_call(
         f.write(json.dumps(log_entry) + "\n")
 
 @persist
-def _llm_assert_call(condition: str, api_key: str, model: str) -> tuple[str, int, int, int]:
-    """Internal cached LLM call for llm_assert"""
+def _llm_assert(condition: str, api_key: str, model: str) -> tuple[str, int, int, int, int]:
+    """Internal cached LLM assertion that returns parsed thinking and score"""
     client = openai.OpenAI(
         base_url="https://openrouter.ai/api/v1",
         api_key=api_key,
@@ -130,6 +130,17 @@ After evaluating both sides, the condition is completely true.
             print("\n")
             result = result.strip()
 
+            # Parse score and thinking
+            score_match = re.search(r'<score>(\d+)</score>', result, re.DOTALL)
+            if not score_match:
+                raise ValueError(f"Failed to parse score from LLM response: {result}")
+
+            score = int(score_match.group(1))
+            if score not in (1, 2, 3, 4, 5):
+                raise ValueError(f"Invalid score {score} received, must be between 1 and 5")
+
+            thinking = result.split("<score>")[0].strip() if "<score>" in result else result
+
             # Log the LLM call (only runs for uncached calls since this function is @persist decorated)
             input_tokens = usage.prompt_tokens if usage else 0
             output_tokens = usage.completion_tokens if usage else 0
@@ -146,17 +157,18 @@ After evaluating both sides, the condition is completely true.
             )
 
             return (
-                result,
+                thinking,
+                score,
                 input_tokens,
                 output_tokens,
                 total_tokens
             )
         except Exception as e:
             if attempt < max_retries - 1:
-                print(f"LLM call failed (attempt {attempt + 1}/{max_retries}): {str(e)}. Retrying...")
+                print(f"LLM assertion failed (attempt {attempt + 1}/{max_retries}): {str(e)}. Retrying...")
                 time.sleep(1)  # Wait 1 second before retrying
             else:
-                print(f"LLM call failed after {max_retries} attempts: {str(e)}")
+                print(f"LLM assertion failed after {max_retries} attempts: {str(e)}")
                 raise
 
 def llm_assert(condition: str) -> None:
@@ -181,19 +193,10 @@ def llm_assert(condition: str) -> None:
         error_msg = "openrouter_api_key is not configured. Please configure it in ~/.hdr/config.json before using llm_assert."
         raise EnvironmentError(error_msg)
 
-    try:
-        result, _, _, _ = _llm_assert_call(condition, api_key, model)
+    thinking, score, _, _, _ = _llm_assert(condition, api_key, model)
 
-        # Parse result
-        score_match = re.search(r'<score>(\d+)</score>', result, re.DOTALL)
-
-        thinking = result.split("<score>")[0].strip() if "<score>" in result else result
-        score = int(score_match.group(1)) if score_match else 0
-
-        if score != 5:
-            raise AssertionError(f"LLM assertion failed with score {score}/5.\nThinking: {thinking}\nCondition: {condition}")
-    except Exception:
-        raise
+    if score != 5:
+        raise AssertionError(f"LLM assertion failed with score {score}/5.\nThinking: {thinking}\nScore: {score}/5")
 
 # Export all public functions
 __all__ = [

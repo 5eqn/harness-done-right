@@ -103,6 +103,7 @@ Execute your code in the HDR virtual environment:
 source /path/to/hdr/hdr-skill/.venv/bin/activate
 
 # Run your implementation
+# This may run for a very long time, do not set timeout
 python work.py
 ```
 - If you have attempted to construct the final task instance without placeholder, and the code runs without errors, your task is complete. 
