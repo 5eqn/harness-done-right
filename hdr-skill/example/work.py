@@ -2,11 +2,7 @@
 Task implementation - this file builds the final task instance
 Import all task types from task.py (which should not be modified)
 """
-from hdr import save_config
 from task import *
-
-# Enable mock mode for development (no real LLM calls)
-save_config({"openrouter_model": "mock"})
 
 print("Building documentation components...")
 

@@ -34,5 +34,3 @@ Usage section has 2 code examples
 - `work.py` imports from `task.py` and implements the solution
 - No state is persisted between runs - you can execute `work.py` as many times as you want
 - LLM calls are automatically cached, so repeated runs are fast
-- Use mock mode during development to avoid API costs
-- Switch to a real model by updating `save_config()` in `work.py` for final validation

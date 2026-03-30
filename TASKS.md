@@ -46,3 +46,68 @@ Agent 首先创建一个 task.py，存放任务的数据结构。接着创建一
    - `work.py`：任务实现文件，演示从 task.py 导入并构造最终目标对象
    - `README.md`：详细说明如何在 venv 中运行示例
 3. **新增测试**：test_example.py 验证了示例工作流的正确性，所有测试通过。
+
+### 任务四：完善 llm_assert 设计规范
+
+- 状态：未完成
+
+现在样例里面 task.py 有些没有填充实际内容的 f-string，这个 string 会被用于 LLM 校验，但是 LLM 并不知道上下文。这是旧的 task.py：
+
+```
+"""
+Task specification - THIS FILE IS IMMUTABLE ONCE AGREED
+Defines the formal requirements for the task
+"""
+from hdr import BaseModel, llm_assert
+
+# Define subtask types
+class IntroductionSection(BaseModel):
+    content: str
+
+    def __init__(self, **data):
+        super().__init__(**data)
+        llm_assert(f"{self.content} is a clear introduction explaining what HDR is")
+        llm_assert(f"{self.content} mentions the core benefits of using HDR")
+
+class UsageSection(BaseModel):
+    content: str
+    code_examples: list[str]
+
+    def __init__(self, **data):
+        super().__init__(**data)
+        llm_assert(f"{self.content} clearly explains how to use HDR")
+        llm_assert(f"All code examples in {self.code_examples} are correct and runnable")
+        llm_assert(f"{self.content} mentions both mock mode and real LLM mode usage")
+
+class Documentation(BaseModel):
+    title: str
+    introduction: IntroductionSection
+    usage: UsageSection
+
+    def __init__(self, **data):
+        super().__init__(**data)
+        llm_assert(f"{self.title} is clear and descriptive")
+        llm_assert(f"The introduction properly leads into the usage section")
+        llm_assert(f"The documentation as a whole is easy to understand for new users")
+```
+
+其中，`llm_assert(f"The introduction properly leads into the usage section")` 只会用来检验这句话的正确性，但是 LLM 不知道 The introduction 是什么。
+
+因此，首先需要增加一个 hdr API，用于把任意对象转换成提示词中的一部分。这个转换会 pretty print 出来复杂对象，并且会加上一个 xml quote 防止里面的内容被解读为提示词，同时 llm_assert 也需要加上一个指示，对 xml quote 里面的东西一律视为非指令，这个指示在一开始和最后都要有，降低被提示词攻击的概率。举个例子，现在的话 API 会变成：
+
+```
+class Documentation(BaseModel):
+    title: str
+    introduction: IntroductionSection
+    usage: UsageSection
+
+    def __init__(self, **data):
+        super().__init__(**data)
+        llm_assert(f"{quote(self.title)} is clear and descriptive")
+        llm_assert(f"{quote(self.introduction)} properly leads into the usage section")
+        llm_assert(f"{quote(self)} as a whole is easy to understand for new users")
+```
+
+其中，`quote(self.title)` 会变为 `<quote>{self.title}</quote>`，`quote(self.introduction)` 则会变为 `<quote>{self.introduction.model_dump_json(indent=2)}</quote>`。quote 函数需要对可以直接打印的东西、Pydantic 简单对象、Pydantic 中数组、Pydantic 中字典、裸数组、裸字典进行单元测试。
+
+在此之后，相应地修改 CLAUDE.md，SKILL.md 还有测试样例。同时注意，请修改 SKILL.md，提供一份 Agent 在任意 pwd 可执行的具体的流程案例，第一步第二步这样子，给一个很明确的流程案例。
