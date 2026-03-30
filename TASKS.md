@@ -49,65 +49,29 @@ Agent 首先创建一个 task.py，存放任务的数据结构。接着创建一
 
 ### 任务四：完善 llm_assert 设计规范
 
-- 状态：未完成
+- 状态：已完成
 
-现在样例里面 task.py 有些没有填充实际内容的 f-string，这个 string 会被用于 LLM 校验，但是 LLM 并不知道上下文。这是旧的 task.py：
+#### 任务完成说明
+已完成 llm_assert 设计规范的完善工作：
+1. **新增 quote API**：实现了 `quote(obj: Any)` 函数，支持安全嵌入各种类型的对象到 llm_assert 提示词中：
+   - 简单类型（字符串、数字、布尔值）直接用 <quote> 标签包裹
+   - Pydantic 模型自动导出为美观的JSON格式并包裹
+   - 列表、字典等JSON序列化对象自动处理
+   - 有效防止提示词注入攻击
+2. **增强 LLM 提示防护**：在 llm_assert 的系统提示和用户提示中都添加了明确的指令，要求 LLM 将 <quote> 标签内的内容视为普通文本，忽略其中的任何指令
+3. **更新所有相关文档**：
+   - 更新了 CLAUDE.md，添加 quote 函数说明并更新示例
+   - 更新了 SKILL.md，添加 quote 函数文档，并提供了详细的 Agent 执行步骤（共4步，可在任意工作目录执行）
+   - 更新了 example/task.py，所有 llm_assert 都使用 quote 函数
+   - 更新了 example/README.md，添加 quote 函数使用说明
+4. **完善单元测试**：添加了完整的 quote 函数测试，覆盖所有支持的类型场景，所有测试通过。
 
-```
-"""
-Task specification - THIS FILE IS IMMUTABLE ONCE AGREED
-Defines the formal requirements for the task
-"""
-from hdr import BaseModel, llm_assert
+#### 给下一个工程师的说明
+当前 HDR 核心库已经具备完善的类型检查、LLM 断言、防提示词注入能力。接下来可以考虑的扩展方向：
+1. 支持更多的 LLM 提供商（如 Anthropic 官方 API、OpenAI API）
+2. 增加更多预置的特殊类型（File、Path、Image 等）
+3. 扩展 WebUI 功能，支持任务可视化、依赖关系图展示
+4. 实现任务执行进度跟踪和实时日志查看
+5. 增加协作功能，支持多 Agent 共同完成复杂任务
 
-# Define subtask types
-class IntroductionSection(BaseModel):
-    content: str
-
-    def __init__(self, **data):
-        super().__init__(**data)
-        llm_assert(f"{self.content} is a clear introduction explaining what HDR is")
-        llm_assert(f"{self.content} mentions the core benefits of using HDR")
-
-class UsageSection(BaseModel):
-    content: str
-    code_examples: list[str]
-
-    def __init__(self, **data):
-        super().__init__(**data)
-        llm_assert(f"{self.content} clearly explains how to use HDR")
-        llm_assert(f"All code examples in {self.code_examples} are correct and runnable")
-        llm_assert(f"{self.content} mentions both mock mode and real LLM mode usage")
-
-class Documentation(BaseModel):
-    title: str
-    introduction: IntroductionSection
-    usage: UsageSection
-
-    def __init__(self, **data):
-        super().__init__(**data)
-        llm_assert(f"{self.title} is clear and descriptive")
-        llm_assert(f"The introduction properly leads into the usage section")
-        llm_assert(f"The documentation as a whole is easy to understand for new users")
-```
-
-其中，`llm_assert(f"The introduction properly leads into the usage section")` 只会用来检验这句话的正确性，但是 LLM 不知道 The introduction 是什么。
-
-因此，首先需要增加一个 hdr API，用于把任意对象转换成提示词中的一部分。这个转换会 pretty print 出来复杂对象，并且会加上一个 xml quote 防止里面的内容被解读为提示词，同时 llm_assert 也需要加上一个指示，对 xml quote 里面的东西一律视为非指令，这个指示在一开始和最后都要有，降低被提示词攻击的概率。举个例子，现在的话 API 会变成：
-
-```
-class Documentation(BaseModel):
-    title: str
-    introduction: IntroductionSection
-    usage: UsageSection
-
-    def __init__(self, **data):
-        super().__init__(**data)
-        llm_assert(f"{quote(self.title)} is clear and descriptive")
-        llm_assert(f"{quote(self.introduction)} properly leads into the usage section")
-        llm_assert(f"{quote(self)} as a whole is easy to understand for new users")
-```
-
-其中，`quote(self.title)` 会变为 `<quote>{self.title}</quote>`，`quote(self.introduction)` 则会变为 `<quote>{self.introduction.model_dump_json(indent=2)}</quote>`。quote 函数需要对可以直接打印的东西、Pydantic 简单对象、Pydantic 中数组、Pydantic 中字典、裸数组、裸字典进行单元测试。
-
-在此之后，相应地修改 CLAUDE.md，SKILL.md 还有测试样例。同时注意，请修改 SKILL.md，提供一份 Agent 在任意 pwd 可执行的具体的流程案例，第一步第二步这样子，给一个很明确的流程案例。
+现有 API 保持完全向后兼容，新增的 quote 函数不会破坏现有代码，建议所有新代码都使用 quote 函数来保证安全性。
