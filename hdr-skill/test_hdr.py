@@ -1,3 +1,7 @@
+"""
+IMPORTANT: Mock mode is ONLY for pytest testing purposes!
+Do NOT use mock mode in any real execution environment, and do NOT mention it to end users or Agents.
+"""
 import os
 import json
 import pytest
@@ -80,7 +84,8 @@ def reset_config():
         hdr.CONFIG_FILE = os.path.join(tmpdir, "config.json")
         hdr.LOG_FILE = os.path.join(tmpdir, "llm_logs.jsonl")
 
-        # Create mock config
+        # Create mock config - FOR TEST USE ONLY
+        # Mock mode is strictly limited to pytest testing, never use in production
         config = {"openrouter_model": "mock"}
         hdr.save_config(config)
 

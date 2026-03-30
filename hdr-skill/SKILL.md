@@ -94,7 +94,6 @@ Once the user approves the `task.py` specification, do not modify this file agai
 Create a `work.py` file in the same directory:
 - Import all task classes from `task.py`
 - Implement the logic to construct the final task instance, building dependencies as needed
-- Use mock mode during development: `save_config({"openrouter_model": "mock"})` to avoid real API calls
 
 #### Step 4: Run and validate
 Execute your code in the HDR virtual environment:
@@ -106,51 +105,6 @@ source /path/to/hdr/hdr-skill/.venv/bin/activate
 python work.py
 ```
 If the code runs without errors, your task is complete.
-
-### 1. Split task definition and implementation
-- **`task.py`**: Define all your task classes here. This file should be immutable once agreed with the user - it represents the formal specification of what needs to be done.
-- **`work.py`**: Import task classes from `task.py` and implement the logic to construct the final task instance.
-
-```python
-# task.py (immutable specification)
-from hdr import BaseModel, llm_assert, quote
-
-class HumanizeText(BaseModel):
-    original: str
-    humanized: str
-
-    def __init__(self, **data):
-        super().__init__(**data)
-        llm_assert(f"{quote(self.original)} and {quote(self.humanized)} conveys the same meaning")
-        llm_assert(f"{quote(self.humanized)} reads like natural human-written text")
-```
-
-```python
-# work.py (implementation)
-from hdr import save_config
-from task import *
-
-# Implement the task
-result = HumanizeText(
-    original="Text with AI generated content that sounds robotic",
-    humanized="Text written in a natural, conversational tone that feels human"
-)
-
-print("Task completed successfully!")
-```
-
-### 2. Run in virtual environment
-Always execute your code in the project's virtual environment to ensure dependencies are correctly installed:
-```bash
-# Activate venv (from hdr-skill directory)
-source .venv/bin/activate
-
-# Run your implementation
-python work.py
-```
-
-### 3. Validate incrementally
-- Build dependencies first, validate they work before moving to higher-level tasks
 
 ## Error Handling
 - **ValidationError**: Thrown by Pydantic when you pass incorrect types to task constructors

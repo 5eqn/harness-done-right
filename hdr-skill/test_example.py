@@ -19,7 +19,8 @@ def test_example_workflow():
         hdr.CONFIG_FILE = os.path.join(tmpdir, "config.json")
         hdr.LOG_FILE = os.path.join(tmpdir, "llm_logs.jsonl")
 
-        # Enable mock mode
+        # Enable mock mode - FOR TEST USE ONLY
+        # Mock mode is strictly limited to pytest testing, never use in production
         save_config({"openrouter_model": "mock"})
 
         # Import example modules (must import after config is set)

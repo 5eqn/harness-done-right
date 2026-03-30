@@ -21,7 +21,6 @@ class UsageSection(BaseModel):
         super().__init__(**data)
         llm_assert(f"{quote(self.content)} clearly explains how to use HDR")
         llm_assert(f"All code examples in {quote(self.code_examples)} are correct and runnable")
-        llm_assert(f"{quote(self.content)} mentions both mock mode and real LLM mode usage")
 
 class Documentation(BaseModel):
     title: str

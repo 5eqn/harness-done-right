@@ -12,9 +12,9 @@ intro = IntroductionSection(
 )
 
 usage = UsageSection(
-    content="To use HDR, first define your task classes as subclasses of BaseModel, adding llm_assert calls in the constructor to validate completion. Then construct instances of your classes directly - if instantiation succeeds, your task is complete. Use mock mode during development to avoid API costs, then switch to a real model for final validation.",
+    content="To use HDR, first define your task classes as subclasses of BaseModel, adding llm_assert calls in the constructor to validate completion. Then construct instances of your classes directly - if instantiation succeeds, your task is complete. Configure your OpenRouter API key and model in the settings before running your code.",
     code_examples=[
-        "class MyTask(BaseModel):\n    field: str\n    def __init__(self, **data):\n        super().__init__(**data)\n        llm_assert(f\"{self.field} is valid\")",
+        "class MyTask(BaseModel):\n    field: str\n    def __init__(self, **data):\n        super().__init__(**data)\n        llm_assert(f\"{quote(self.field)} is valid\")",
         "instance = MyTask(field=\"test value\")"
     ]
 )
