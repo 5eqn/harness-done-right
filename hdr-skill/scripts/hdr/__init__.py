@@ -6,11 +6,15 @@ from typing import Any
 
 from pydantic import BaseModel
 
+# Base directory for all HDR temporary files
+_BASE_TMP_DIR = "/tmp/claude/hdr"
+os.makedirs(_BASE_TMP_DIR, exist_ok=True)
+
 # Global commit hash for checkout - determines where Claude Code runs
 _current_commit: str = ""
 
 # Cache directory for verify results (commit-aware)
-_CACHE_DIR = os.path.join("/tmp", "hdr_verify_cache")
+_CACHE_DIR = os.path.join(_BASE_TMP_DIR, "hdr_verify_cache")
 os.makedirs(_CACHE_DIR, exist_ok=True)
 
 # Internal mock mode flag - for testing only
@@ -35,7 +39,7 @@ def checkout(commit: str) -> str:
     Set up the working directory for a given git commit.
 
     Uses git archive to extract the repository state at the given commit
-    to /tmp/{commit}. If already extracted, returns the cached directory.
+    to {_BASE_TMP_DIR}/{commit}. If already extracted, returns the cached directory.
 
     All subsequent Claude Code operations will run in this directory.
 
@@ -43,16 +47,16 @@ def checkout(commit: str) -> str:
         commit: The git commit hash (or empty string for no commit)
 
     Returns:
-        The path to the working directory (/tmp/{commit} or /tmp/{empty})
+        The path to the working directory ({_BASE_TMP_DIR}/{commit} or {_BASE_TMP_DIR}/hdr_no_commit)
     """
     global _current_commit
 
     if commit:
         _current_commit = commit
-        target_dir = f"/tmp/{commit}"
+        target_dir = os.path.join(_BASE_TMP_DIR, commit)
     else:
         _current_commit = ""
-        target_dir = "/tmp/hdr_no_commit"
+        target_dir = os.path.join(_BASE_TMP_DIR, "hdr_no_commit")
 
     if os.path.exists(target_dir):
         return target_dir

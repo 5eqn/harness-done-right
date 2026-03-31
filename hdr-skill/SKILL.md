@@ -33,7 +33,7 @@ Before running any task, call `checkout(commit)` to set up the working directory
 from hdr import checkout
 
 # Set up working directory for a specific git commit
-# This extracts the repository state to /tmp/{commit}
+# This extracts the repository state to /tmp/claude/hdr/{commit}
 work_dir = checkout("abc123def...")
 
 # Or with no commit (empty string), creates a clean temp directory
@@ -41,7 +41,7 @@ work_dir = checkout("")
 ```
 
 The checkout function:
-- Uses `git archive` to extract the repository state at the given commit to `/tmp/{commit}`
+- Uses `git archive` to extract the repository state at the given commit to `/tmp/claude/hdr/{commit}`
 - If already extracted, returns the cached directory without re-extracting
 - All subsequent Claude Code operations run in this directory
 - Verification cache is commit-aware to avoid cross-commit contamination
@@ -93,7 +93,7 @@ print("Task completed:", result)
 ## Built-in Functions
 
 ### `checkout(commit: str) -> str`
-Sets up the working directory for a given git commit. Uses `git archive` to extract the repository state to `/tmp/{commit}`. Returns the working directory path. If already extracted, returns the cached directory.
+Sets up the working directory for a given git commit. Uses `git archive` to extract the repository state to `/tmp/claude/hdr/{commit}`. Returns the working directory path. If already extracted, returns the cached directory.
 
 ### `get_current_commit() -> str`
 Returns the current commit hash that was set via `checkout()`.

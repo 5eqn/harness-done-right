@@ -175,9 +175,9 @@ def test_checkout_no_commit():
     # Reset global commit state
     hdr._current_commit = ""
 
-    # Checkout with empty string should create /tmp/hdr_no_commit
+    # Checkout with empty string should create /tmp/claude/hdr/hdr_no_commit
     work_dir = checkout("")
-    assert work_dir == "/tmp/hdr_no_commit"
+    assert work_dir == "/tmp/claude/hdr/hdr_no_commit"
     assert os.path.exists(work_dir)
     assert os.path.isdir(work_dir)
 
@@ -194,9 +194,9 @@ def test_checkout_with_commit():
     # Reset global commit state
     hdr._current_commit = ""
 
-    # Checkout should extract to /tmp/{commit}
+    # Checkout should extract to /tmp/claude/hdr/{commit}
     work_dir = checkout(result)
-    assert work_dir == f"/tmp/{result}"
+    assert work_dir == f"/tmp/claude/hdr/{result}"
     assert os.path.exists(work_dir)
     assert os.path.isdir(work_dir)
 
