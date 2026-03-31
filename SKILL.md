@@ -158,7 +158,7 @@ python work.py
 ```
 
 Notice:
-- If unable to import hdr, ask the user to rerun you with `uv run claude`
+- If unable to import hdr, ask the user to rerun you inside correct virtual environment.
 - If you have attempted to construct the final task instance without placeholder, and the code runs without errors, your task is complete.
 - If encountered error, revise your implementation in `work.py` with the error message and rerun the implementation.
 - If the code runs successfully, but you haven't created the final task instance, it means the prefix works fine, please continue working on the construction of the final task instance in `work.py`.

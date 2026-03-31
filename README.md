@@ -7,5 +7,6 @@
 ```bash
 uv venv .venv
 uv pip install -e ".[dev]"
-uv run claude
+source .venv/bin/activate
+claude
 ```

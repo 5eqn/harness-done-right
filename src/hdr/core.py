@@ -39,13 +39,11 @@ def checkout(commit: str = "", path: str = "") -> None:
     """
     Set up the working directory for a given git commit.
 
-    Uses git archive to extract the repository state at the given commit
-    to {_BASE_TMP_DIR}/{escaped_path_prefix}_{commit}. If already extracted, uses the cached directory.
-
+    Extracts the repository state at the given commit to a temp directory.
     The directory is stored internally and can be retrieved with get_checkout_dir().
 
     Args:
-        commit: The git commit hash (empty string for no commit creates a unique temp directory)
+        commit: The git commit hash (empty string creates a unique temp directory)
         path: Optional relative path from the calling python's pwd, where git archive will run.
               Must be a relative path, not absolute.
     """
@@ -55,29 +53,16 @@ def checkout(commit: str = "", path: str = "") -> None:
     if path and os.path.isabs(path):
         raise ValueError(f"path must be a relative path, got absolute path: {path}")
 
-    # Compute the absolute path for the working directory (where git archive runs)
-    # This is only used for the directory name prefix when path is provided
+    # Compute the target directory name
     if path:
-        abs_path = os.path.abspath(os.path.join(os.getcwd(), path))
-        # Escape the absolute path to create a directory name prefix
-        # Replace / with _ for directory name safety
-        escaped_abs_path = abs_path.replace("/", "_")
+        escaped_abs_path = os.path.abspath(os.path.join(os.getcwd(), path)).replace("/", "_")
+        target_dir = os.path.join(_BASE_TMP_DIR, f"{escaped_abs_path}_{commit}") if commit else \
+                     os.path.join(_BASE_TMP_DIR, f"{escaped_abs_path}_no_commit")
     else:
-        escaped_abs_path = None
+        target_dir = os.path.join(_BASE_TMP_DIR, commit) if commit else \
+                     os.path.join(_BASE_TMP_DIR, "hdr_no_commit")
 
-    if commit:
-        _current_commit = commit
-        if escaped_abs_path:
-            target_dir = os.path.join(_BASE_TMP_DIR, f"{escaped_abs_path}_{commit}")
-        else:
-            target_dir = os.path.join(_BASE_TMP_DIR, commit)
-    else:
-        _current_commit = ""
-        if escaped_abs_path:
-            target_dir = os.path.join(_BASE_TMP_DIR, f"{escaped_abs_path}_no_commit")
-        else:
-            target_dir = os.path.join(_BASE_TMP_DIR, "hdr_no_commit")
-
+    _current_commit = commit
     _current_checkout_dir = target_dir
 
     if os.path.exists(target_dir):
@@ -86,38 +71,13 @@ def checkout(commit: str = "", path: str = "") -> None:
     os.makedirs(target_dir, exist_ok=True)
 
     if commit:
-        # Use git archive to extract the commit state
-        # cwd is the parent of the hdr package directory (repo root)
-        cwd = os.path.dirname(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
+        cwd = os.path.join(os.getcwd(), path) if path else os.getcwd()
 
-        # If path is specified, use it as cwd for git archive
-        if path:
-            cwd = os.path.join(os.getcwd(), path)
-
-        # Check if we're in a git repository
-        check_result = subprocess.run(
-            ["git", "rev-parse", "--git-dir"],
-            capture_output=True,
-            cwd=cwd
-        )
-        if check_result.returncode != 0:
-            raise RuntimeError(
-                f"Not a git repository: {cwd}\n\n"
-                "Please run this from within a git repository, or initialize one with:\n"
-                "  git init\n"
-                "  git commit -m 'Initial commit'"
-            )
-
-        result = subprocess.run(
-            ["git", "archive", "--format", "tar", commit],
-            capture_output=True,
-            cwd=cwd
-        )
-        if result.returncode == 0:
-            import tarfile
-            import io
-            with tarfile.open(fileobj=io.BytesIO(result.stdout), mode='r') as tar:
-                tar.extractall(target_dir, filter=tarfile.data_filter)
+        cmd = f"git archive --format=tar {commit} | tar -xf - -C {target_dir}"
+        print(f"[HDR] Running subprocess: cwd={cwd} cmd={cmd}")
+        result = subprocess.run(["bash", "-c", cmd], capture_output=True, cwd=cwd)
+        if result.returncode != 0:
+            raise RuntimeError(f"git archive failed: {result.stderr.decode() if result.stderr else result.stdout.decode()}")
 
 
 def get_checkout_dir() -> str:
@@ -163,11 +123,13 @@ def quote(obj: Any) -> str:
     return f"<quote>{content}</quote>"
 
 
-def _verify(condition: str) -> tuple[str, int]:
-    """Internal verify function that calls Claude Code CLI and returns thinking and score"""
+def verify(condition: str) -> None:
+    """
+    Validate a condition using Claude Code. Throws an error with explanation if validation fails.
+    """
     # Return mock result if mock mode is enabled
     if _mock_mode:
-        return ("Mock reasoning", 5)
+        return
 
     # Create cache key that includes checkout directory for isolation across checkouts
     checkout_dir = get_checkout_dir()
@@ -178,24 +140,25 @@ def _verify(condition: str) -> tuple[str, int]:
     if os.path.exists(cache_file):
         with open(cache_file, "r") as f:
             cached = json.load(f)
-            return cached["thinking"], cached["score"]
-
-    schema = json.dumps({
-        "type": "object",
-        "properties": {
-            "thinking": {
-                "type": "string",
-                "description": "Your reasoning about the condition"
+            thinking = cached["thinking"]
+            score = cached["score"]
+    else:
+        schema = json.dumps({
+            "type": "object",
+            "properties": {
+                "thinking": {
+                    "type": "string",
+                    "description": "Your reasoning about the condition"
+                },
+                "score": {
+                    "type": "integer",
+                    "description": "Score from 1 to 5 indicating how well the condition is satisfied (5=completely satisfied, 1=completely unsatisfied)"
+                }
             },
-            "score": {
-                "type": "integer",
-                "description": "Score from 1 to 5 indicating how well the condition is satisfied (5=completely satisfied, 1=completely unsatisfied)"
-            }
-        },
-        "required": ["thinking", "score"]
-    })
+            "required": ["thinking", "score"]
+        })
 
-    prompt = f"""Evaluate this condition:
+        prompt = f"""Evaluate this condition:
 
 {condition}
 
@@ -203,45 +166,37 @@ First, think carefully about the condition using first principles, considering b
 Then, output a JSON object with your thinking and a score from 1 to 5 where 5 means completely satisfied and 1 means completely unsatisfied.
 Only output a score of 5 if the condition is 100% true with no exceptions."""
 
-    cmd = [
-        "claude",
-        prompt,
-        "--bare",
-        "-p",
-        "--tools", "Read",
-        "--allowedTools", "Read",
-        "--permission-mode", "dontAsk",
-        "--max-turns", "10",
-        "--output-format", "json",
-        "--json-schema", schema
-    ]
+        cmd = [
+            "claude",
+            prompt,
+            "--bare",
+            "-p",
+            "--tools", "Read",
+            "--allowedTools", "Read",
+            "--permission-mode", "dontAsk",
+            "--max-turns", "10",
+            "--output-format", "json",
+            "--json-schema", schema
+        ]
 
-    result = subprocess.run(cmd, capture_output=True, text=True)
+        print(f"[HDR] Running subprocess: cwd={checkout_dir} cmd={' '.join(cmd)}")
+        result = subprocess.run(cmd, capture_output=True, text=True, cwd=checkout_dir)
 
-    if result.returncode != 0:
-        raise RuntimeError(f"Claude Code CLI failed: {result.stderr}")
+        if result.returncode != 0:
+            raise RuntimeError(f"Claude Code CLI failed: {result.stderr}")
 
-    output = json.loads(result.stdout)
+        output = json.loads(result.stdout)
 
-    if "error" in output:
-        raise RuntimeError(f"Claude Code error: {output['error']}")
+        if "error" in output:
+            raise RuntimeError(f"Claude Code error: {output['error']}")
 
-    structured = output.get("structured_output", {})
-    thinking = structured.get("thinking", "")
-    score = structured.get("score", 0)
+        structured = output.get("structured_output", {})
+        thinking = structured.get("thinking", "")
+        score = structured.get("score", 0)
 
-    # Cache the result
-    with open(cache_file, "w") as f:
-        json.dump({"thinking": thinking, "score": score}, f)
-
-    return thinking, score
-
-
-def verify(condition: str) -> None:
-    """
-    Validate a condition using Claude Code. Throws an error with explanation if validation fails.
-    """
-    thinking, score = _verify(condition)
+        # Cache the result
+        with open(cache_file, "w") as f:
+            json.dump({"thinking": thinking, "score": score}, f)
 
     if score != 5:
         raise AssertionError(f"Verification failed with score {score}/5.\nThinking: {thinking}\nScore: {score}/5")
