@@ -10,8 +10,9 @@ from pydantic import BaseModel
 _BASE_TMP_DIR = "/tmp/claude/hdr"
 os.makedirs(_BASE_TMP_DIR, exist_ok=True)
 
-# Global commit hash for checkout - determines where Claude Code runs
-_current_commit: str = ""
+# Default directory when path is not specified
+_DEFAULT_DIR = "/tmp/claude/hdr/default"
+os.makedirs(_DEFAULT_DIR, exist_ok=True)
 
 # Internal checkout directory - stored for verify to access
 _current_checkout_dir: str = ""
@@ -35,7 +36,7 @@ def set_mock_mode(enabled: bool) -> None:
     _mock_mode = enabled
 
 
-def checkout(commit: str = "", path: str = "") -> None:
+def checkout(commit: str, path: str = "") -> None:
     """
     Set up the working directory for a given git commit.
 
@@ -43,11 +44,11 @@ def checkout(commit: str = "", path: str = "") -> None:
     The directory is stored internally and can be retrieved with get_checkout_dir().
 
     Args:
-        commit: The git commit hash (empty string creates a unique temp directory)
+        commit: The git commit hash
         path: Optional relative path from the calling python's pwd, where git archive will run.
               Must be a relative path, not absolute.
     """
-    global _current_commit, _current_checkout_dir
+    global _current_checkout_dir
 
     # Validate path is relative (not absolute)
     if path and os.path.isabs(path):
@@ -56,28 +57,24 @@ def checkout(commit: str = "", path: str = "") -> None:
     # Compute the target directory name
     if path:
         escaped_abs_path = os.path.abspath(os.path.join(os.getcwd(), path)).replace("/", "_")
-        target_dir = os.path.join(_BASE_TMP_DIR, f"{escaped_abs_path}_{commit}") if commit else \
-                     os.path.join(_BASE_TMP_DIR, f"{escaped_abs_path}_no_commit")
+        target_dir = os.path.join(_BASE_TMP_DIR, f"{escaped_abs_path}_{commit}")
     else:
-        target_dir = os.path.join(_BASE_TMP_DIR, commit) if commit else \
-                     os.path.join(_BASE_TMP_DIR, "hdr_no_commit")
+        target_dir = os.path.join(_BASE_TMP_DIR, commit)
 
-    _current_commit = commit
     _current_checkout_dir = target_dir
 
+    # Exit if archive target exists
     if os.path.exists(target_dir):
         return
 
+    # Archive target if not exists
     os.makedirs(target_dir, exist_ok=True)
-
-    if commit:
-        cwd = os.path.join(os.getcwd(), path) if path else os.getcwd()
-
-        cmd = f"git archive --format=tar {commit} | tar -xf - -C {target_dir}"
-        print(f"[HDR] Running subprocess: cwd={cwd} cmd={cmd}")
-        result = subprocess.run(["bash", "-c", cmd], capture_output=True, cwd=cwd)
-        if result.returncode != 0:
-            raise RuntimeError(f"git archive failed: {result.stderr.decode() if result.stderr else result.stdout.decode()}")
+    cwd = os.path.join(os.getcwd(), path) if path else os.getcwd()
+    cmd = f"git archive --format=tar {commit} | tar -xf - -C {target_dir}"
+    print(f"[HDR] Running subprocess: cwd={cwd} cmd={cmd}")
+    result = subprocess.run(["bash", "-c", cmd], capture_output=True, cwd=cwd)
+    if result.returncode != 0:
+        raise RuntimeError(f"git archive failed: {result.stderr.decode() if result.stderr else result.stdout.decode()}")
 
 
 def get_checkout_dir() -> str:
@@ -85,7 +82,7 @@ def get_checkout_dir() -> str:
     Get the current checkout directory.
 
     If checkout() has been called, returns that directory.
-    Otherwise, creates a uniquely named empty directory.
+    Otherwise, returns the default directory.
 
     Returns:
         The path to the working directory
@@ -95,12 +92,7 @@ def get_checkout_dir() -> str:
     if _current_checkout_dir:
         return _current_checkout_dir
 
-    # Create a unique temp directory if checkout hasn't been called
-    import tempfile
-    unique_dir = tempfile.mkdtemp(prefix="hdr_no_checkout_", dir=_BASE_TMP_DIR)
-    _current_checkout_dir = unique_dir
-    os.makedirs(unique_dir, exist_ok=True)
-    return unique_dir
+    return _DEFAULT_DIR
 
 
 def quote(obj: Any) -> str:

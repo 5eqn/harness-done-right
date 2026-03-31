@@ -169,30 +169,6 @@ def test_quote_function():
     verify(f"{quote(task)} has a valid name field")
 
 
-def test_checkout_no_commit():
-    """Test checkout with empty string creates working directory"""
-    # Checkout with empty string should create /tmp/claude/hdr/hdr_no_commit
-    checkout("")
-    work_dir = get_checkout_dir()
-    assert work_dir == "/tmp/claude/hdr/hdr_no_commit"
-    assert os.path.exists(work_dir)
-    assert os.path.isdir(work_dir)
-
-
-def test_checkout_with_commit():
-    """Test checkout with a commit hash uses git archive"""
-    # Get current commit from git
-    result = os.popen("git rev-parse HEAD").read().strip()
-    assert result, "Should have a git commit"
-
-    # Checkout should extract to /tmp/claude/hdr/{commit}
-    checkout(result)
-    work_dir = get_checkout_dir()
-    assert work_dir == f"/tmp/claude/hdr/{result}"
-    assert os.path.exists(work_dir)
-    assert os.path.isdir(work_dir)
-
-
 def test_checkout_caching():
     """Test that checkout doesn't re-extract if already done"""
     # Get current commit from git
@@ -212,26 +188,6 @@ def test_checkout_caching():
     work_dir2 = get_checkout_dir()
     assert work_dir1 == work_dir2
     assert os.path.exists(test_marker)  # Marker should still exist
-
-
-def test_checkout_no_duplicate_extraction():
-    """Test that repeated checkout doesn't re-extract"""
-    result = os.popen("git rev-parse HEAD").read().strip()
-
-    # Create a marker file
-    checkout(result)
-    work_dir = get_checkout_dir()
-    marker = os.path.join(work_dir, ".test_marker")
-
-    # Write a marker file
-    with open(marker, "w") as f:
-        f.write("test")
-
-    # Checkout again
-    checkout(result)
-
-    # Marker should still exist (if re-extracted, it would be gone)
-    assert os.path.exists(marker)
 
 
 def test_checkout_path_must_be_relative():
@@ -260,17 +216,6 @@ def test_checkout_with_path():
     assert result in work_dir
     # The path "src" should result in a directory name containing something like "_..._src_"
     assert "_src_" in work_dir or work_dir.endswith(f"_src_{result}") or "_src_" in work_dir.replace(f"_{result}", "")
-
-
-def test_checkout_no_commit_with_path():
-    """Test checkout with empty commit and path parameter"""
-    # Checkout with empty string and path
-    checkout("", path="src")
-    work_dir = get_checkout_dir()
-
-    # Directory should have escaped path prefix
-    assert work_dir.startswith("/tmp/claude/hdr/")
-    assert "_src_" in work_dir or work_dir.endswith("_src_no_commit") or "_src_" in work_dir.replace("_no_commit", "")
 
 
 class TestFile:
