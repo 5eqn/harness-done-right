@@ -11,6 +11,7 @@ from hdr.core import (
     quote,
     checkout,
     set_mock_mode,
+    get_checkout_dir,
 )
 
 __all__ = [
@@ -19,4 +20,5 @@ __all__ = [
     "quote",
     "checkout",
     "set_mock_mode",
+    "get_checkout_dir",
 ]

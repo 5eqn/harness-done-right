@@ -21,11 +21,13 @@ HDR follows a **stateless, pure-functional design** with three core principles:
 Before running any task, call `checkout(commit)` to set up the working directory:
 
 ```python
-from hdr import checkout
+from hdr import checkout, get_checkout_dir
 
 # Set up working directory for a specific git commit
 # This extracts the repository state to /tmp/claude/hdr/{commit}
-work_dir = checkout("abc123def...")
+checkout("abc123def...")
+# Get the current checkout directory
+work_dir = get_checkout_dir()
 ```
 
 The checkout function:
@@ -80,11 +82,11 @@ print("Task completed:", result)
 
 ## Built-in Functions
 
-### `checkout(commit: str) -> str`
-Sets up the working directory for a given git commit. Uses `git archive` to extract the repository state to `/tmp/claude/hdr/{commit}`. Returns the working directory path. If already extracted, returns the cached directory.
+### `checkout(commit: str) -> None`
+Sets up the working directory for a given git commit. Uses `git archive` to extract the repository state to `/tmp/claude/hdr/{commit}`. The directory is stored internally and can be retrieved with `get_checkout_dir()`.
 
-### `get_current_commit() -> str`
-Returns the current commit hash that was set via `checkout()`.
+### `get_checkout_dir() -> str`
+Returns the current checkout directory. If `checkout()` has been called, returns that directory. Otherwise, creates a uniquely named empty directory in `/tmp/claude/hdr/`.
 
 ### `BaseModel`
 Base class for all task types. Provides automatic runtime type checking for all fields. Supports all Pydantic types including nested models, lists, dicts, etc.
@@ -126,8 +128,9 @@ Follow this exact step-by-step process for every task:
 #### Step 1: Set up working directory
 Call `checkout(commit)` with the git commit hash to set up the working directory:
 ```python
-from hdr import checkout
-work_dir = checkout("your-commit-hash")
+from hdr import checkout, get_checkout_dir
+checkout("your-commit-hash")
+work_dir = get_checkout_dir()
 ```
 
 #### Step 2: Create task specification file

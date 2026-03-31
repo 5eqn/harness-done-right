@@ -13,6 +13,9 @@ os.makedirs(_BASE_TMP_DIR, exist_ok=True)
 # Global commit hash for checkout - determines where Claude Code runs
 _current_commit: str = ""
 
+# Internal checkout directory - stored for verify to access
+_current_checkout_dir: str = ""
+
 # Cache directory for verify results (commit-aware)
 _CACHE_DIR = os.path.join(_BASE_TMP_DIR, "hdr_verify_cache")
 os.makedirs(_CACHE_DIR, exist_ok=True)
@@ -32,22 +35,19 @@ def set_mock_mode(enabled: bool) -> None:
     _mock_mode = enabled
 
 
-def checkout(commit: str = "") -> str:
+def checkout(commit: str = "") -> None:
     """
     Set up the working directory for a given git commit.
 
     Uses git archive to extract the repository state at the given commit
-    to {_BASE_TMP_DIR}/{commit}. If already extracted, returns the cached directory.
+    to {_BASE_TMP_DIR}/{commit}. If already extracted, uses the cached directory.
 
-    All subsequent Claude Code operations will run in this directory.
+    The directory is stored internally and can be retrieved with get_checkout_dir().
 
     Args:
         commit: The git commit hash (empty string for no commit creates a unique temp directory)
-
-    Returns:
-        The path to the working directory ({_BASE_TMP_DIR}/{commit} or {_BASE_TMP_DIR}/hdr_no_commit)
     """
-    global _current_commit
+    global _current_commit, _current_checkout_dir
 
     if commit:
         _current_commit = commit
@@ -56,8 +56,10 @@ def checkout(commit: str = "") -> str:
         _current_commit = ""
         target_dir = os.path.join(_BASE_TMP_DIR, "hdr_no_commit")
 
+    _current_checkout_dir = target_dir
+
     if os.path.exists(target_dir):
-        return target_dir
+        return
 
     os.makedirs(target_dir, exist_ok=True)
 
@@ -74,7 +76,28 @@ def checkout(commit: str = "") -> str:
             with tarfile.open(fileobj=io.BytesIO(result.stdout), mode='r') as tar:
                 tar.extractall(target_dir)
 
-    return target_dir
+
+def get_checkout_dir() -> str:
+    """
+    Get the current checkout directory.
+
+    If checkout() has been called, returns that directory.
+    Otherwise, creates a uniquely named empty directory.
+
+    Returns:
+        The path to the working directory
+    """
+    global _current_checkout_dir
+
+    if _current_checkout_dir:
+        return _current_checkout_dir
+
+    # Create a unique temp directory if checkout hasn't been called
+    import tempfile
+    unique_dir = tempfile.mkdtemp(prefix="hdr_no_checkout_", dir=_BASE_TMP_DIR)
+    _current_checkout_dir = unique_dir
+    os.makedirs(unique_dir, exist_ok=True)
+    return unique_dir
 
 
 def quote(obj: Any) -> str:
@@ -103,9 +126,9 @@ def _verify(condition: str) -> tuple[str, int]:
     if _mock_mode:
         return ("Mock reasoning", 5)
 
-    # Create cache key that includes commit hash for isolation across checkouts
-    commit_key = _current_commit if _current_commit else "no_commit"
-    cache_key = hashlib.md5(f"{commit_key}:{condition}".encode()).hexdigest()
+    # Create cache key that includes checkout directory for isolation across checkouts
+    checkout_dir = get_checkout_dir()
+    cache_key = hashlib.md5(f"{checkout_dir}:{condition}".encode()).hexdigest()
     cache_file = os.path.join(_CACHE_DIR, f"{cache_key}.json")
 
     # Return cached result if available

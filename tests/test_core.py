@@ -9,6 +9,7 @@ import os
 import pytest
 import hdr
 from hdr import *
+from hdr import BaseModel, get_checkout_dir
 from hdr import BaseModel
 from hdr.tasks.std import File
 from pydantic import ValidationError
@@ -171,7 +172,8 @@ def test_quote_function():
 def test_checkout_no_commit():
     """Test checkout with empty string creates working directory"""
     # Checkout with empty string should create /tmp/claude/hdr/hdr_no_commit
-    work_dir = checkout("")
+    checkout("")
+    work_dir = get_checkout_dir()
     assert work_dir == "/tmp/claude/hdr/hdr_no_commit"
     assert os.path.exists(work_dir)
     assert os.path.isdir(work_dir)
@@ -184,7 +186,8 @@ def test_checkout_with_commit():
     assert result, "Should have a git commit"
 
     # Checkout should extract to /tmp/claude/hdr/{commit}
-    work_dir = checkout(result)
+    checkout(result)
+    work_dir = get_checkout_dir()
     assert work_dir == f"/tmp/claude/hdr/{result}"
     assert os.path.exists(work_dir)
     assert os.path.isdir(work_dir)
@@ -196,7 +199,8 @@ def test_checkout_caching():
     result = os.popen("git rev-parse HEAD").read().strip()
 
     # First checkout
-    work_dir1 = checkout(result)
+    checkout(result)
+    work_dir1 = get_checkout_dir()
 
     # Modify a file in the extracted directory (if it were re-extracted, it would be overwritten)
     test_marker = os.path.join(work_dir1, ".checkout_marker")
@@ -204,7 +208,8 @@ def test_checkout_caching():
         f.write("marker")
 
     # Second checkout should return same directory without re-extracting
-    work_dir2 = checkout(result)
+    checkout(result)
+    work_dir2 = get_checkout_dir()
     assert work_dir1 == work_dir2
     assert os.path.exists(test_marker)  # Marker should still exist
 
@@ -214,7 +219,8 @@ def test_checkout_no_duplicate_extraction():
     result = os.popen("git rev-parse HEAD").read().strip()
 
     # Create a marker file
-    work_dir = checkout(result)
+    checkout(result)
+    work_dir = get_checkout_dir()
     marker = os.path.join(work_dir, ".test_marker")
 
     # Write a marker file
