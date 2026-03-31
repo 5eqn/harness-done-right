@@ -112,7 +112,7 @@ def test_pydantic_type_checking_number():
     assert instance.price == 99.9
 
     with pytest.raises(ValidationError, match="Input should be a valid integer"):
-        NumberTask(count="not a number", price=99.9)
+        NumberTask(count="not a number", price=99.9)  # type: ignore[reportArgumentType]
 
 def test_pydantic_type_checking_list():
     """Test Pydantic list type validation"""
@@ -121,7 +121,7 @@ def test_pydantic_type_checking_list():
     assert instance.scores == [1, 2, 3]
 
     with pytest.raises(ValidationError, match="Input should be a valid string"):
-        ListTask(items=["a", 2, "c"], scores=[1, 2, 3])
+        ListTask(items=["a", 2, "c"], scores=[1, 2, 3])  # type: ignore[reportArgumentType]
 
 def test_pydantic_nested_type():
     """Test Pydantic nested model type validation"""
@@ -130,7 +130,7 @@ def test_pydantic_nested_type():
     assert parent.item.value == 42
 
     with pytest.raises(ValidationError, match="Input should be a valid dictionary or instance of NestedItem"):
-        ParentTask(name="test", item="not a NestedItem")
+        ParentTask(name="test", item="not a NestedItem")  # type: ignore[reportArgumentType]
 
 
 def test_quote_function():

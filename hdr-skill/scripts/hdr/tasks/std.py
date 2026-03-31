@@ -5,7 +5,7 @@ These tasks cover typical file operations, content validation, and transformatio
 All tasks use relative paths by preference, as they are more portable and make
 projects easier to share and version control.
 """
-from hdr import BaseModel, verify, quote
+from .. import BaseModel, verify, quote
 
 
 class File(BaseModel):
