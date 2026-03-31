@@ -74,7 +74,7 @@ def checkout(commit: str = "") -> None:
             import tarfile
             import io
             with tarfile.open(fileobj=io.BytesIO(result.stdout), mode='r') as tar:
-                tar.extractall(target_dir)
+                tar.extractall(target_dir, filter=tarfile.data_filter)
 
 
 def get_checkout_dir() -> str:
