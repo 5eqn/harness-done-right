@@ -5,7 +5,7 @@ description: Harness Done Right - Formalize tasks as Python classes, validate wi
 
 # Harness Done Right (HDR) Skill
 
-This skill enables you to formalize any task as a Python class hierarchy, validate task completions using LLM-powered assertions, and build complex task structures with automatic dependency validation.
+This skill enables you to formalize any task as a Python class hierarchy, validate task completions using Claude Code-powered assertions, and build complex task structures with automatic dependency validation.
 
 ## Design Philosophy
 
@@ -44,9 +44,9 @@ class MyTask(BaseModel):
     def __init__(self, **data):
         super().__init__(**data)
         # LLM assertions to validate task completion
-        llm_assert(f"{self.param1} meets all quality requirements")
-        llm_assert(f"{self.param2} is within expected range")
-        llm_assert(f"{self.dependency} is correctly used as input")
+        verify(f"{self.param1} meets all quality requirements")
+        verify(f"{self.param2} is within expected range")
+        verify(f"{self.dependency} is correctly used as input")
 
 # Construct dependency first
 dependency = OtherTask(value="some value")
@@ -63,17 +63,17 @@ print("Task completed:", result)
 ### `BaseModel`
 Base class for all task types. Provides automatic runtime type checking for all fields. Supports all Pydantic types including nested models, lists, dicts, etc.
 
-### `llm_assert(condition: str) -> None`
-Validates a condition using LLM. Throws an `AssertionError` with LLM reasoning and score if validation fails. Only passes when LLM gives a perfect score of 5/5. Results are automatically cached to avoid duplicate calls.
+### `verify(condition: str) -> None`
+Validates a condition using Claude Code. Throws an `AssertionError` with reasoning and score if validation fails. Only passes when Claude Code gives a perfect score of 5/5. Results are automatically cached to avoid duplicate calls.
 
 ### `quote(obj: Any) -> str`
-Safely quote any object for use in `llm_assert` conditions, preventing prompt injection attacks. Automatically handles:
+Safely quote any object for use in `verify` conditions, preventing prompt injection attacks. Automatically handles:
 - Simple types (strings, numbers, booleans)
 - Complex Pydantic models (dumps to pretty JSON)
 - Lists, dicts, and other JSON-serializable objects
 - All quoted content is wrapped in `<quote>` tags and treated as literal text by the LLM
 
-Always use `quote()` when embedding values or objects in `llm_assert` conditions.
+Always use `quote()` when embedding values or objects in `verify` conditions.
 
 ## Recommended Workflow
 
@@ -82,9 +82,9 @@ Follow this exact step-by-step process for every task:
 
 #### Step 1: Create task specification file
 Create a `task.py` file in your current working directory with all task definitions:
-- Import `BaseModel`, `llm_assert`, and `quote` from `hdr`
+- Import `BaseModel`, `verify`, and `quote` from `hdr`
 - Define all required task classes with proper type annotations
-- Add all necessary `llm_assert` validations in the `__init__` method, using `quote()` for all embedded values/objects
+- Add all necessary `verify` validations in the `__init__` method, using `quote()` for all embedded values/objects
 - Present this file to the user for approval before proceeding
 
 #### Step 2: Get user confirmation
@@ -106,13 +106,12 @@ source /path/to/hdr/hdr-skill/.venv/bin/activate
 # This may run for a very long time, do not set timeout
 python work.py
 ```
-- If you have attempted to construct the final task instance without placeholder, and the code runs without errors, your task is complete. 
+- If you have attempted to construct the final task instance without placeholder, and the code runs without errors, your task is complete.
 - If encountered error, revise your implementation in `work.py` with the error message and rerun the implementation.
 - If the code runs successfully, but you haven't created the final task instance, it means the prefix works fine, please continue working on the construction of the final task instance in `work.py`.
 - If you think the error reason does not make sense, you think the problem is not in your `work.py` but in `task.py`, request with user to go back to edit `task.py`. User will tell you whether they think the problem is in the task `task.py` or in your work `work.py`.
 
 ## Error Handling
 - **ValidationError**: Thrown by Pydantic when you pass incorrect types to task constructors
-- **AssertionError**: Thrown when an LLM assertion fails, includes reasoning and score
-- **EnvironmentError**: Thrown when OpenRouter configuration is missing or invalid
+- **AssertionError**: Thrown when a verification fails, includes reasoning and score
 - All errors include clear, actionable instructions for fixing the issue

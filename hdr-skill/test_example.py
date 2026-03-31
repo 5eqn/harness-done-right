@@ -1,10 +1,17 @@
 """
-Test the example workflow to ensure it works correctly
+Test the example workflow to ensure it works correctly.
+
+IMPORTANT: Mock mode is ONLY for pytest testing purposes!
+Do NOT use mock mode in any real execution environment.
 """
 import os
 import tempfile
 import hdr
 from hdr import save_config
+
+# Enable mock mode for tests
+# WARNING: Mock mode should ONLY be used in pytest unit tests
+hdr.set_mock_mode(True)
 
 def test_example_workflow():
     """Test that the example pattern works correctly"""
@@ -13,18 +20,14 @@ def test_example_workflow():
         # Override HDR paths for test
         original_hdr_dir = hdr.HDR_DIR
         original_config_file = hdr.CONFIG_FILE
-        original_log_file = hdr.LOG_FILE
 
         hdr.HDR_DIR = tmpdir
         hdr.CONFIG_FILE = os.path.join(tmpdir, "config.json")
-        hdr.LOG_FILE = os.path.join(tmpdir, "llm_logs.jsonl")
 
-        # Enable mock mode - FOR TEST USE ONLY
-        # Mock mode is strictly limited to pytest testing, never use in production
-        save_config({"openrouter_model": "mock"})
+        save_config({})
 
         # Import example modules (must import after config is set)
-        from example.task import IntroductionSection, UsageSection, Documentation
+        from example.introduction_writing.task import IntroductionSection, UsageSection, Documentation
 
         # Test constructing subtasks
         intro = IntroductionSection(
@@ -55,7 +58,6 @@ def test_example_workflow():
         # Restore original paths
         hdr.HDR_DIR = original_hdr_dir
         hdr.CONFIG_FILE = original_config_file
-        hdr.LOG_FILE = original_log_file
 
     print("✅ Example workflow test passed!")
 

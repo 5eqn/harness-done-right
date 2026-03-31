@@ -7,7 +7,6 @@ setup(
     packages=find_packages(),
     py_modules=["hdr"],
     install_requires=[
-        "openai>=1.0.0",
         "pydantic>=2.0.0",
         "locache>=0.1.0",
     ],
