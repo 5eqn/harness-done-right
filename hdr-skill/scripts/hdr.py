@@ -1,15 +1,17 @@
 import os
 import json
 import subprocess
+import hashlib
 from typing import Any
 
 from pydantic import BaseModel
 
-# HDR directory configuration
-HDR_DIR = os.path.expanduser("~/.hdr")
-CONFIG_FILE = os.path.join(HDR_DIR, "config.json")
+# Global commit hash for checkout - determines where Claude Code runs
+_current_commit: str = ""
 
-os.makedirs(HDR_DIR, exist_ok=True)
+# Cache directory for verify results (commit-aware)
+_CACHE_DIR = os.path.join("/tmp", "hdr_verify_cache")
+os.makedirs(_CACHE_DIR, exist_ok=True)
 
 # Internal mock mode flag - for testing only
 # NEVER use mock mode in production or real execution environments
@@ -24,19 +26,53 @@ def set_mock_mode(enabled: bool) -> None:
     global _mock_mode
     _mock_mode = enabled
 
-def load_config():
-    """Load configuration from ~/.hdr/config.json"""
-    config = {}
-    if os.path.exists(CONFIG_FILE):
-        with open(CONFIG_FILE, "r") as f:
-            config = json.load(f)
-    return config
+def get_current_commit() -> str:
+    """Return the current commit hash."""
+    return _current_commit
 
-def save_config(config):
-    """Save configuration to ~/.hdr/config.json"""
-    os.makedirs(HDR_DIR, exist_ok=True)
-    with open(CONFIG_FILE, "w") as f:
-        json.dump(config, f, indent=2)
+def checkout(commit: str) -> str:
+    """
+    Set up the working directory for a given git commit.
+
+    Uses git archive to extract the repository state at the given commit
+    to /tmp/{commit}. If already extracted, returns the cached directory.
+
+    All subsequent Claude Code operations will run in this directory.
+
+    Args:
+        commit: The git commit hash (or empty string for no commit)
+
+    Returns:
+        The path to the working directory (/tmp/{commit} or /tmp/{empty})
+    """
+    global _current_commit
+
+    if commit:
+        _current_commit = commit
+        target_dir = f"/tmp/{commit}"
+    else:
+        _current_commit = ""
+        target_dir = "/tmp/hdr_no_commit"
+
+    if os.path.exists(target_dir):
+        return target_dir
+
+    os.makedirs(target_dir, exist_ok=True)
+
+    if commit:
+        # Use git archive to extract the commit state
+        result = subprocess.run(
+            ["git", "archive", "--format", "tar", commit],
+            capture_output=True,
+            cwd=os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
+        )
+        if result.returncode == 0:
+            import tarfile
+            import io
+            with tarfile.open(fileobj=io.BytesIO(result.stdout), mode='r') as tar:
+                tar.extractall(target_dir)
+
+    return target_dir
 
 def quote(obj: Any) -> str:
     """
@@ -63,6 +99,17 @@ def _verify(condition: str) -> tuple[str, int]:
     # Return mock result if mock mode is enabled
     if _mock_mode:
         return ("Mock reasoning", 5)
+
+    # Create cache key that includes commit hash for isolation across checkouts
+    commit_key = _current_commit if _current_commit else "no_commit"
+    cache_key = hashlib.md5(f"{commit_key}:{condition}".encode()).hexdigest()
+    cache_file = os.path.join(_CACHE_DIR, f"{cache_key}.json")
+
+    # Return cached result if available
+    if os.path.exists(cache_file):
+        with open(cache_file, "r") as f:
+            cached = json.load(f)
+            return cached["thinking"], cached["score"]
 
     schema = json.dumps({
         "type": "object",
@@ -114,6 +161,10 @@ Only output a score of 5 if the condition is 100% true with no exceptions."""
     thinking = structured.get("thinking", "")
     score = structured.get("score", 0)
 
+    # Cache the result
+    with open(cache_file, "w") as f:
+        json.dump({"thinking": thinking, "score": score}, f)
+
     return thinking, score
 
 
@@ -131,8 +182,6 @@ __all__ = [
     "verify",
     "quote",
     "BaseModel",
-    "load_config",
-    "save_config",
-    "HDR_DIR",
-    "CONFIG_FILE"
+    "checkout",
+    "get_current_commit",
 ]

@@ -25,8 +25,10 @@ class HumanizeText(BaseModel):
 Claude 将任务定义和概括含义发给用户检查，用户确认后直接构造任务实例即可：
 
 ```python
-from hdr import save_config
-from humanize_text import HumanizeText
+from hdr import checkout, BaseModel, verify, quote
+
+# 首先设置工作目录
+checkout("your-git-commit-hash")
 
 # 运行时自动触发类型检查和LLM断言
 result = HumanizeText(original="Text with AI", humanized="Text without AI")
@@ -93,13 +95,12 @@ cd scripts
 pip install -e .
 ```
 
-### 2. 配置项目路径
+### 2. 设置工作目录
 ```python
-from hdr import save_config
+from hdr import checkout
 
-save_config({
-    "project_path": "/path/to/your/project"  # Claude Code将在此目录运行
-})
+# 设置工作目录（零配置）
+work_dir = checkout("your-git-commit-hash")
 ```
 
 ### 3. 定义并运行任务
@@ -139,6 +140,9 @@ hdr/
     ├── test_hdr.py              # 单元测试
     └── scripts/
         ├── hdr.py               # HDR核心库
+        ├── tasks/               # 标准任务库
+        │   ├── __init__.py
+        │   └── std.py           # 常用任务类型（File等）
         └── setup.py             # 安装配置
 ```
 
@@ -162,26 +166,23 @@ cd scripts
 pip install -e .
 ```
 
-### 配置方式
-**配置文件**：配置保存在 `~/.hdr/config.json`，包含以下字段：
-- `project_path`: 项目路径，Claude Code 将在此目录运行
-
 ## 功能特性（已实现）
 
 ### 核心功能
+- ✅ **零配置**：无需配置文件，直接使用checkout API设置工作目录
 - ✅ **类型安全**：基于Pydantic实现完整的运行时类型校验，自动校验任务类的字段类型、嵌套结构
 - ✅ **LLM断言**：使用`verify`通过Claude Code验证自定义条件，仅当评分为5分时通过，失败抛出包含完整思考过程的异常
-- ✅ **自动缓存**：相同的verify请求自动缓存，避免重复调用
+- ✅ **自动缓存**：相同的verify请求自动缓存（按commit隔离），避免重复调用
 - ✅ **提示词安全**：`quote`函数自动处理任意类型对象，防止提示词注入攻击
 
 ### 核心API
 | 函数 | 功能 |
 |------|------|
+| `checkout(commit: str)` | 设置工作目录，使用git archive将commit状态提取到/tmp/{commit} |
+| `get_current_commit()` | 获取当前commit hash |
 | `BaseModel` | 基类，所有任务类继承此类获得自动类型检查能力 |
 | `verify(condition: str)` | 用Claude Code验证条件是否成立，仅当评分为5分时通过，失败则抛出包含思考过程和分数的异常 |
 | `quote(obj: Any)` | 安全地将任意对象转换为可嵌入提示词的格式，防止提示词注入，自动处理字符串、数字、Pydantic模型、列表、字典等 |
-| `load_config()` | 加载配置文件，返回配置字典 |
-| `save_config(config)` | 保存配置到文件 |
 
 
 ## 测试运行
@@ -199,16 +200,12 @@ python -m pytest test_hdr.py -v
 3. 所有持久化操作保持幂等性，避免重复执行导致数据损坏
 4. 错误信息必须清晰明确，包含可操作的修复指引
 
-### 数据持久化
-1. 所有配置存储在用户主目录 `~/.hdr/` 目录下
-2. `config.json`：保存项目路径等配置
-
 ### 验证特性
-- **缓存机制**：相同的`verify`请求自动缓存，缓存命中时直接返回结果，不产生新的Claude调用
+- **缓存机制**：相同的`verify`请求自动缓存（按commit隔离），缓存命中时直接返回结果，不产生新的Claude调用
 - **错误处理**：验证失败时抛出包含Claude思考过程和分数的AssertionError
 
 ### 类型系统扩展
 1. ✅ 已集成Pydantic实现完整的运行时类型校验，所有继承BaseModel的任务类自动获得类型检查能力
 2. 支持所有Pydantic类型：str, int, float, bool, list, dict, datetime等，以及嵌套类型和自定义类型
-3. 预置类型后续扩展支持：File、Path等特殊类型
+3. ✅ 预置标准任务类型：通过`hdr.tasks.std`使用File、Readme、PythonFile等常用任务
 4. 自动支持自定义类型的序列化和反序列化（基于Pydantic的model_dump功能）
