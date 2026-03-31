@@ -71,25 +71,27 @@ print("Task Verified:", result)
 
 ```text
 hdr/
-└── hdr-skill/
-    ├── scripts/
-    │   ├── hdr/            # HDR package
-    │   │   ├── __init__.py    # Core logic & LLM bridge
-    │   │   └── tasks/      # Standard task types
-    │   │       ├── __init__.py
-    │   │       └── std.py      # File, PythonFile, etc.
-    │   └── setup.py        # Installation
-    ├── test_hdr.py         # Unit tests
-    └── test_example.py     # Example workflow tests
+└── hdr-skill/              # Project root (Claude Code skill)
+    ├── src/
+    │   └── hdr/            # Main package
+    │       ├── __init__.py # Re-exports from core
+    │       ├── core.py     # Core logic & LLM bridge
+    │       └── tasks/      # Standard task types
+    │           ├── __init__.py
+    │           └── std.py  # File, PythonFile, etc.
+    ├── tests/              # Unit tests
+    │   └── test_core.py
+    └── examples/           # Example workflows
+        └── introduction_writing/
 ```
 
 ## Quick Setup
 ```bash
 cd hdr-skill
-python3 -m venv .venv
+uv venv .venv
 source .venv/bin/activate
-pip install pydantic locache pytest
-pip install -e scripts/
+uv pip install pydantic locache pytest
+uv pip install -e .
 ```
 
 ## Usage in Claude Code

@@ -6,10 +6,7 @@ Do NOT use mock mode in any real execution environment.
 Mock mode should never be mentioned to end users or in production documentation.
 """
 import os
-import json
-import hashlib
 import pytest
-import tempfile
 import hdr
 from hdr import *
 from hdr import BaseModel
@@ -173,17 +170,11 @@ def test_quote_function():
 
 def test_checkout_no_commit():
     """Test checkout with empty string creates working directory"""
-    # Reset global commit state
-    hdr._current_commit = ""
-
     # Checkout with empty string should create /tmp/claude/hdr/hdr_no_commit
     work_dir = checkout("")
     assert work_dir == "/tmp/claude/hdr/hdr_no_commit"
     assert os.path.exists(work_dir)
     assert os.path.isdir(work_dir)
-
-    # Verify commit state is updated
-    assert get_current_commit() == ""
 
 
 def test_checkout_with_commit():
@@ -192,26 +183,17 @@ def test_checkout_with_commit():
     result = os.popen("git rev-parse HEAD").read().strip()
     assert result, "Should have a git commit"
 
-    # Reset global commit state
-    hdr._current_commit = ""
-
     # Checkout should extract to /tmp/claude/hdr/{commit}
     work_dir = checkout(result)
     assert work_dir == f"/tmp/claude/hdr/{result}"
     assert os.path.exists(work_dir)
     assert os.path.isdir(work_dir)
 
-    # Verify commit state is updated
-    assert get_current_commit() == result
-
 
 def test_checkout_caching():
     """Test that checkout doesn't re-extract if already done"""
     # Get current commit from git
     result = os.popen("git rev-parse HEAD").read().strip()
-
-    # Reset global commit state
-    hdr._current_commit = ""
 
     # First checkout
     work_dir1 = checkout(result)
@@ -230,7 +212,6 @@ def test_checkout_caching():
 def test_checkout_no_duplicate_extraction():
     """Test that repeated checkout doesn't re-extract"""
     result = os.popen("git rev-parse HEAD").read().strip()
-    hdr._current_commit = ""
 
     # Create a marker file
     work_dir = checkout(result)
@@ -247,54 +228,14 @@ def test_checkout_no_duplicate_extraction():
     assert os.path.exists(marker)
 
 
-def test_verify_cache_is_commit_aware():
-    """Test that verify cache is isolated per commit"""
-    # Note: In mock mode, _verify returns early without writing to cache.
-    # This test verifies the cache key generation is commit-aware.
-
-    # Reset state
-    hdr._current_commit = ""
-
-    # Change commit
-    result = os.popen("git rev-parse HEAD").read().strip()
-    checkout(result)
-
-    # Verify the commit key is used in cache key generation
-    commit_key = hdr._current_commit if hdr._current_commit else "no_commit"
-    expected_key = f"{result}:test condition 1"
-
-    cache_key = hashlib.md5(expected_key.encode()).hexdigest()
-    cache_file = os.path.join(hdr._CACHE_DIR, f"{cache_key}.json")
-
-    # The cache key should include the commit hash
-    assert result in cache_key or result in expected_key, "Cache key should be commit-aware"
-
-    # Verify the global state is correctly updated
-    assert hdr._current_commit == result, "Global commit state should be updated"
-
-
-def test_checkout_updates_global_state():
-    """Test that checkout correctly updates the global commit state"""
-    hdr._current_commit = ""
-
-    # Empty commit
-    checkout("")
-    assert hdr._current_commit == ""
-
-    # With commit
-    result = os.popen("git rev-parse HEAD").read().strip()
-    checkout(result)
-    assert hdr._current_commit == result
-
-
 class TestFile:
     """Unit tests for File task class"""
 
     def test_file_exists_with_existing_file(self):
         """Test File validation passes when file exists and exists=True"""
         # This file exists in the repo
-        f = File(path="test_hdr.py", exists=True)
-        assert f.path == "test_hdr.py"
+        f = File(path="tests/test_core.py", exists=True)
+        assert f.path == "tests/test_core.py"
         assert f.exists is True
 
     def test_file_exists_with_nonexistent_file(self):
@@ -311,11 +252,11 @@ class TestFile:
     def test_file_not_exists_when_file_does_exist(self):
         """Test File validation fails when file exists but exists=False"""
         with pytest.raises(AssertionError, match="should not exist"):
-            File(path="test_hdr.py", exists=False)
+            File(path="tests/test_core.py", exists=False)
 
     def test_file_default_exists_true(self):
         """Test File defaults to exists=True"""
-        f = File(path="test_hdr.py")
+        f = File(path="tests/test_core.py")
         assert f.exists is True
 
 

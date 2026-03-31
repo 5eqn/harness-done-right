@@ -7,7 +7,7 @@ projects easier to share and version control.
 """
 import os
 
-from .. import BaseModel
+from hdr.core import BaseModel
 
 
 class File(BaseModel):

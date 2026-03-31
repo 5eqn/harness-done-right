@@ -21,6 +21,7 @@ os.makedirs(_CACHE_DIR, exist_ok=True)
 # NEVER use mock mode in production or real execution environments
 _mock_mode = False
 
+
 def set_mock_mode(enabled: bool) -> None:
     """
     Toggle mock mode for testing purposes.
@@ -30,11 +31,8 @@ def set_mock_mode(enabled: bool) -> None:
     global _mock_mode
     _mock_mode = enabled
 
-def get_current_commit() -> str:
-    """Return the current commit hash."""
-    return _current_commit
 
-def checkout(commit: str) -> str:
+def checkout(commit: str = "") -> str:
     """
     Set up the working directory for a given git commit.
 
@@ -44,7 +42,7 @@ def checkout(commit: str) -> str:
     All subsequent Claude Code operations will run in this directory.
 
     Args:
-        commit: The git commit hash (or empty string for no commit)
+        commit: The git commit hash (empty string for no commit creates a unique temp directory)
 
     Returns:
         The path to the working directory ({_BASE_TMP_DIR}/{commit} or {_BASE_TMP_DIR}/hdr_no_commit)
@@ -68,7 +66,7 @@ def checkout(commit: str) -> str:
         result = subprocess.run(
             ["git", "archive", "--format", "tar", commit],
             capture_output=True,
-            cwd=os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
+            cwd=os.path.dirname(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
         )
         if result.returncode == 0:
             import tarfile
@@ -77,6 +75,7 @@ def checkout(commit: str) -> str:
                 tar.extractall(target_dir)
 
     return target_dir
+
 
 def quote(obj: Any) -> str:
     """
@@ -180,12 +179,3 @@ def verify(condition: str) -> None:
 
     if score != 5:
         raise AssertionError(f"Verification failed with score {score}/5.\nThinking: {thinking}\nScore: {score}/5")
-
-# Export all public functions
-__all__ = [
-    "verify",
-    "quote",
-    "BaseModel",
-    "checkout",
-    "get_current_commit",
-]
