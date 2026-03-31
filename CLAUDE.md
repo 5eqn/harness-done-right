@@ -70,33 +70,16 @@ print("Task Verified:", result)
 ## Project Structure
 
 ```text
-hdr/
-└── hdr-skill/              # Project root (Claude Code skill)
-    ├── src/
-    │   └── hdr/            # Main package
-    │       ├── __init__.py # Re-exports from core
-    │       ├── core.py     # Core logic & LLM bridge
-    │       └── tasks/      # Standard task types
-    │           ├── __init__.py
-    │           └── std.py  # File, PythonFile, etc.
-    ├── tests/              # Unit tests
-    │   └── test_core.py
-    └── examples/           # Example workflows
-        └── introduction_writing/
+hdr-skill/              # Project root (Claude Code skill)
+├── src/
+│   └── hdr/            # Main package
+│       ├── __init__.py # Re-exports from core
+│       ├── core.py     # Core logic & LLM bridge
+│       └── tasks/      # Standard task types
+│           ├── __init__.py
+│           └── std.py  # File, PythonFile, etc.
+├── tests/              # Unit tests
+│   └── test_core.py
+└── examples/           # Example workflows
+    └── introduction_writing/
 ```
-
-## Quick Setup
-```bash
-cd hdr-skill
-uv venv .venv
-source .venv/bin/activate
-uv pip install pydantic locache pytest
-uv pip install -e .
-```
-
-## Usage in Claude Code
-When Claude Code is instructed to complete a task with HDR, it should:
-1. Define the task class in a `.py` file.
-2. Present the schema to the user for approval.
-3. Write the implementation logic that instantiates the class.
-4. Run the script to finalize and verify the work.
