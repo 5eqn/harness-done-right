@@ -154,8 +154,8 @@ def verify(condition: str) -> None:
 
 {condition}
 
-First, think carefully about the condition using first principles, considering both supporting and opposing arguments to ensure a fair and balanced evaluation.
-Then, output a JSON object with your thinking and a score from 1 to 5 where 5 means completely satisfied and 1 means completely unsatisfied.
+First, think carefully about the condition using first principles, considering both supporting and opposing arguments to ensure a fair and balanced evaluation. 
+Then, output a JSON object with your thinking (about 100 words) and a score from 1 to 5 where 5 means completely satisfied and 1 means completely unsatisfied.
 Only output a score of 5 if the condition is 100% true with no exceptions."""
 
         cmd = [
@@ -172,7 +172,9 @@ Only output a score of 5 if the condition is 100% true with no exceptions."""
         ]
 
         print(f"[HDR] Running subprocess: cwd={checkout_dir} cmd={' '.join(cmd)}")
-        result = subprocess.run(cmd, capture_output=True, text=True, cwd=checkout_dir)
+        env = os.environ.copy()
+        env["MAX_THINKING_TOKENS"] = "0"
+        result = subprocess.run(cmd, env=env, capture_output=True, text=True, cwd=checkout_dir)
 
         if result.returncode != 0:
             raise RuntimeError(f"Claude Code CLI failed: {result.stderr}")

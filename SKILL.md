@@ -152,8 +152,7 @@ Create a `work.py` file in the same directory:
 #### Step 5: Run and validate
 Execute your code:
 ```bash
-# Run your implementation
-# This may run for a very long time, do not set timeout
+# Run your implementation (timeout 30 minutes)
 python work.py
 ```
 

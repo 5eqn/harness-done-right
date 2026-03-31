@@ -12,7 +12,7 @@ print("Building documentation components...")
 
 # Build dependency instances first
 intro = IntroductionSection(
-    content="""HDR is a Python library for formalizing tasks as code, with AI-powered validation, automatic type checking, AI call caching, and predictable stateless workflows."""
+    content="""Harness Done Right (HDR) is a Python library that lets you define any task as a Python class. For example, if you want to validate a summary, you write: class SummarizeText(BaseModel): original_text: str; summary: str, then HDR automatically checks that your summary is valid using AI. HDR solves the problem of writing one-off validation scripts by providing a clean, reusable pattern with automatic type checking and AI verification built in."""
 )
 
 usage = UsageSection(
