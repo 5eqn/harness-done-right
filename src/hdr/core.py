@@ -94,6 +94,20 @@ def checkout(commit: str = "", path: str = "") -> None:
         if path:
             cwd = os.path.join(os.getcwd(), path)
 
+        # Check if we're in a git repository
+        check_result = subprocess.run(
+            ["git", "rev-parse", "--git-dir"],
+            capture_output=True,
+            cwd=cwd
+        )
+        if check_result.returncode != 0:
+            raise RuntimeError(
+                f"Not a git repository: {cwd}\n\n"
+                "Please run this from within a git repository, or initialize one with:\n"
+                "  git init\n"
+                "  git commit -m 'Initial commit'"
+            )
+
         result = subprocess.run(
             ["git", "archive", "--format", "tar", commit],
             capture_output=True,
