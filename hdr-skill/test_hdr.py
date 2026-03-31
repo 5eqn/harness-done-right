@@ -13,6 +13,7 @@ import tempfile
 import hdr
 from hdr import *
 from hdr import BaseModel
+from hdr.tasks.std import File
 from pydantic import ValidationError
 
 # Enable mock mode for all tests
@@ -284,6 +285,38 @@ def test_checkout_updates_global_state():
     result = os.popen("git rev-parse HEAD").read().strip()
     checkout(result)
     assert hdr._current_commit == result
+
+
+class TestFile:
+    """Unit tests for File task class"""
+
+    def test_file_exists_with_existing_file(self):
+        """Test File validation passes when file exists and exists=True"""
+        # This file exists in the repo
+        f = File(path="test_hdr.py", exists=True)
+        assert f.path == "test_hdr.py"
+        assert f.exists is True
+
+    def test_file_exists_with_nonexistent_file(self):
+        """Test File validation fails when file does not exist and exists=True"""
+        with pytest.raises(AssertionError, match="does not exist"):
+            File(path="nonexistent_file_12345.txt", exists=True)
+
+    def test_file_not_exists_when_file_does_not_exist(self):
+        """Test File validation passes when file does not exist and exists=False"""
+        f = File(path="nonexistent_file_12345.txt", exists=False)
+        assert f.path == "nonexistent_file_12345.txt"
+        assert f.exists is False
+
+    def test_file_not_exists_when_file_does_exist(self):
+        """Test File validation fails when file exists but exists=False"""
+        with pytest.raises(AssertionError, match="should not exist"):
+            File(path="test_hdr.py", exists=False)
+
+    def test_file_default_exists_true(self):
+        """Test File defaults to exists=True"""
+        f = File(path="test_hdr.py")
+        assert f.exists is True
 
 
 if __name__ == "__main__":
