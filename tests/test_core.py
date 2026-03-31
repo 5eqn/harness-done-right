@@ -234,6 +234,45 @@ def test_checkout_no_duplicate_extraction():
     assert os.path.exists(marker)
 
 
+def test_checkout_path_must_be_relative():
+    """Test that path parameter must be a relative path, not absolute"""
+    result = os.popen("git rev-parse HEAD").read().strip()
+
+    # Absolute path should raise ValueError
+    with pytest.raises(ValueError, match="path must be a relative path"):
+        checkout(result, path="/absolute/path")
+
+    with pytest.raises(ValueError, match="path must be a relative path"):
+        checkout(result, path="/tmp/foo")
+
+
+def test_checkout_with_path():
+    """Test checkout with path parameter uses escaped path as directory prefix"""
+    result = os.popen("git rev-parse HEAD").read().strip()
+
+    # Checkout with a relative path
+    checkout(result, path="src")
+    work_dir = get_checkout_dir()
+
+    # Directory should have escaped absolute path prefix
+    # The prefix should contain the escaped current working directory + "src"
+    assert work_dir.startswith("/tmp/claude/hdr/")
+    assert result in work_dir
+    # The path "src" should result in a directory name containing something like "_..._src_"
+    assert "_src_" in work_dir or work_dir.endswith(f"_src_{result}") or "_src_" in work_dir.replace(f"_{result}", "")
+
+
+def test_checkout_no_commit_with_path():
+    """Test checkout with empty commit and path parameter"""
+    # Checkout with empty string and path
+    checkout("", path="src")
+    work_dir = get_checkout_dir()
+
+    # Directory should have escaped path prefix
+    assert work_dir.startswith("/tmp/claude/hdr/")
+    assert "_src_" in work_dir or work_dir.endswith("_src_no_commit") or "_src_" in work_dir.replace("_no_commit", "")
+
+
 class TestFile:
     """Unit tests for File task class"""
 

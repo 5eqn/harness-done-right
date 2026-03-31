@@ -35,26 +35,48 @@ def set_mock_mode(enabled: bool) -> None:
     _mock_mode = enabled
 
 
-def checkout(commit: str = "") -> None:
+def checkout(commit: str = "", path: str = "") -> None:
     """
     Set up the working directory for a given git commit.
 
     Uses git archive to extract the repository state at the given commit
-    to {_BASE_TMP_DIR}/{commit}. If already extracted, uses the cached directory.
+    to {_BASE_TMP_DIR}/{escaped_path_prefix}_{commit}. If already extracted, uses the cached directory.
 
     The directory is stored internally and can be retrieved with get_checkout_dir().
 
     Args:
         commit: The git commit hash (empty string for no commit creates a unique temp directory)
+        path: Optional relative path from the calling python's pwd, where git archive will run.
+              Must be a relative path, not absolute.
     """
     global _current_commit, _current_checkout_dir
 
+    # Validate path is relative (not absolute)
+    if path and os.path.isabs(path):
+        raise ValueError(f"path must be a relative path, got absolute path: {path}")
+
+    # Compute the absolute path for the working directory (where git archive runs)
+    # This is only used for the directory name prefix when path is provided
+    if path:
+        abs_path = os.path.abspath(os.path.join(os.getcwd(), path))
+        # Escape the absolute path to create a directory name prefix
+        # Replace / with _ for directory name safety
+        escaped_abs_path = abs_path.replace("/", "_")
+    else:
+        escaped_abs_path = None
+
     if commit:
         _current_commit = commit
-        target_dir = os.path.join(_BASE_TMP_DIR, commit)
+        if escaped_abs_path:
+            target_dir = os.path.join(_BASE_TMP_DIR, f"{escaped_abs_path}_{commit}")
+        else:
+            target_dir = os.path.join(_BASE_TMP_DIR, commit)
     else:
         _current_commit = ""
-        target_dir = os.path.join(_BASE_TMP_DIR, "hdr_no_commit")
+        if escaped_abs_path:
+            target_dir = os.path.join(_BASE_TMP_DIR, f"{escaped_abs_path}_no_commit")
+        else:
+            target_dir = os.path.join(_BASE_TMP_DIR, "hdr_no_commit")
 
     _current_checkout_dir = target_dir
 
@@ -65,10 +87,17 @@ def checkout(commit: str = "") -> None:
 
     if commit:
         # Use git archive to extract the commit state
+        # cwd is the parent of the hdr package directory (repo root)
+        cwd = os.path.dirname(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
+
+        # If path is specified, use it as cwd for git archive
+        if path:
+            cwd = os.path.join(os.getcwd(), path)
+
         result = subprocess.run(
             ["git", "archive", "--format", "tar", commit],
             capture_output=True,
-            cwd=os.path.dirname(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
+            cwd=cwd
         )
         if result.returncode == 0:
             import tarfile
