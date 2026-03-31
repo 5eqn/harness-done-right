@@ -14,15 +14,6 @@ HDR follows a **stateless, pure-functional design** with three core principles:
 2. **Validation at construction**: All type checks and LLM assertions run automatically when you create a task instance - if it instantiates successfully, it's valid
 3. **Caching, not state**: Duplicate LLM calls are automatically cached by commit, so you can rerun your code as many times as you want without extra cost or side effects
 
-No global state, no magic ID references, no persistence layer - your code is the single source of truth.
-
-## Zero Configuration
-
-HDR requires no configuration files or project paths. Everything is handled through the API:
-- No `~/.hdr/config.json` needed
-- No project path configuration required
-- Simply import and use
-
 ## Core Concepts
 
 ### Checkout API
@@ -35,16 +26,13 @@ from hdr import checkout
 # Set up working directory for a specific git commit
 # This extracts the repository state to /tmp/claude/hdr/{commit}
 work_dir = checkout("abc123def...")
-
-# Or with no commit (empty string), creates a clean temp directory
-work_dir = checkout("")
 ```
 
 The checkout function:
 - Uses `git archive` to extract the repository state at the given commit to `/tmp/claude/hdr/{commit}`
 - If already extracted, returns the cached directory without re-extracting
 - All subsequent Claude Code operations run in this directory
-- Verification cache is commit-aware to avoid cross-commit contamination
+- Verification cache is commit-aware to avoid cross-commit contamination. If you don't have to change the commit, don't change it.
 
 ### Task Definition
 Every task is defined as a Python class that inherits from `BaseModel` (for automatic type checking):
@@ -126,7 +114,7 @@ file_task = File(path="README.md", exists=True)
 # Validate a README exists and is properly formatted
 readme = Readme(path="README.md")
 
-# Validate a Python file is syntactically valid
+# Validate a Python file contains no warning or error
 py_file = PythonFile(path="src/main.py")
 ```
 
@@ -159,15 +147,15 @@ Create a `work.py` file in the same directory:
 - If task is very complicated, you don't have to create the final task instance at the first try
 
 #### Step 5: Run and validate
-Execute your code in the HDR virtual environment:
+Execute your code:
 ```bash
-# Activate HDR venv
-source /path/to/hdr/hdr-skill/.venv/bin/activate
-
 # Run your implementation
 # This may run for a very long time, do not set timeout
 python work.py
 ```
+
+Notice:
+- If unable to import hdr, ask the user to rerun you with `uv run claude`
 - If you have attempted to construct the final task instance without placeholder, and the code runs without errors, your task is complete.
 - If encountered error, revise your implementation in `work.py` with the error message and rerun the implementation.
 - If the code runs successfully, but you haven't created the final task instance, it means the prefix works fine, please continue working on the construction of the final task instance in `work.py`.
