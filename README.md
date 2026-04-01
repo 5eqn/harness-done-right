@@ -27,10 +27,6 @@ class HumanizeText(BaseModel):
 你的 Agent 运行脚本来执行并验证任务：
 
 ```python
-# 设置环境变量：
-# export ANTHROPIC_API_KEY="你的 API 密钥"
-# export ANTHROPIC_MODEL="claude-4.6-sonnet"  # 可选，默认为 claude-4.6-sonnet
-
 # 实例化时会触发 Pydantic 类型检查以及 LLM 验证
 result = HumanizeText(
     original="AI 生成的技术术语...",
