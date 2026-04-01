@@ -5,11 +5,9 @@ IMPORTANT: Mock mode is ONLY for pytest testing purposes!
 Do NOT use mock mode in any real execution environment.
 Mock mode should never be mentioned to end users or in production documentation.
 """
-import os
 import pytest
 import hdr
 from hdr import *
-from hdr import BaseModel, get_checkout_dir
 from hdr import BaseModel
 from hdr.tasks.std import File
 from pydantic import ValidationError
@@ -17,6 +15,7 @@ from pydantic import ValidationError
 # Enable mock mode for all tests
 # WARNING: Mock mode should ONLY be used in pytest unit tests
 hdr.set_mock_mode(True)
+
 
 # Test classes
 class HumanizeText:
@@ -26,19 +25,23 @@ class HumanizeText:
         verify(f"<a>{original}</a> and <b>{humanized}</b> conveys the same meaning")
         verify(f"{humanized} reads like natural human-written text")
 
+
 class FailingTask:
     def __init__(self, value: str):
         verify(f"{value} is valid")
+
 
 class D:
     def __init__(self, value: str):
         self.value = value
         verify(f"{value} is a valid D")
 
+
 class E:
     def __init__(self, value: int):
         self.value = value
         verify(f"{value} is a valid E")
+
 
 class B:
     def __init__(self, d: D, e: E):
@@ -46,10 +49,12 @@ class B:
         self.e = e
         verify(f"{d.value} and {e.value} are properly combined into B")
 
+
 class C:
     def __init__(self, data: list):
         self.data = data
         verify(f"{data} is valid for C")
+
 
 class A:
     def __init__(self, title: str, b: B, c: C):
@@ -58,24 +63,30 @@ class A:
         self.c = c
         verify(f"{title} matches {b.d.value} and {c.data}")
 
+
 # Pydantic test classes
 class StringTask(BaseModel):
     name: str
+
 
 class NumberTask(BaseModel):
     count: int
     price: float
 
+
 class ListTask(BaseModel):
     items: list[str]
     scores: list[int]
 
+
 class NestedItem(BaseModel):
     value: int
+
 
 class ParentTask(BaseModel):
     item: NestedItem
     name: str
+
 
 def test_basic_task_flow():
     """Test the basic stateless task creation flow from the example"""
@@ -84,6 +95,7 @@ def test_basic_task_flow():
     assert isinstance(instance, HumanizeText)
     assert instance.original == "Text with AI"
     assert instance.humanized == "Text without AI"
+
 
 def test_recursive_dependencies():
     """Test recursive stateless task construction from the example"""
@@ -99,10 +111,12 @@ def test_recursive_dependencies():
     assert a.b.e.value == 42
     assert a.c.data == [1, 2, 3]
 
+
 def test_pydantic_type_checking_string():
     """Test Pydantic string type validation"""
     instance = StringTask(name="test")
     assert instance.name == "test"
+
 
 def test_pydantic_type_checking_number():
     """Test Pydantic numeric type validation"""
@@ -113,6 +127,7 @@ def test_pydantic_type_checking_number():
     with pytest.raises(ValidationError, match="Input should be a valid integer"):
         NumberTask(count="not a number", price=99.9)  # type: ignore[reportArgumentType]
 
+
 def test_pydantic_type_checking_list():
     """Test Pydantic list type validation"""
     instance = ListTask(items=["a", "b", "c"], scores=[1, 2, 3])
@@ -121,6 +136,7 @@ def test_pydantic_type_checking_list():
 
     with pytest.raises(ValidationError, match="Input should be a valid string"):
         ListTask(items=["a", 2, "c"], scores=[1, 2, 3])  # type: ignore[reportArgumentType]
+
 
 def test_pydantic_nested_type():
     """Test Pydantic nested model type validation"""
@@ -146,76 +162,27 @@ def test_quote_function():
     quoted_dict = quote(test_dict)
     assert quoted_dict.startswith("<quote>")
     assert quoted_dict.endswith("</quote>")
-    assert "\"key\": \"value\"" in quoted_dict
-    assert "\"number\": 42" in quoted_dict
+    assert '"key": "value"' in quoted_dict
+    assert '"number": 42' in quoted_dict
 
     nested = NestedItem(value=42)
     quoted_model = quote(nested)
     assert quoted_model.startswith("<quote>")
     assert quoted_model.endswith("</quote>")
-    assert "\"value\": 42" in quoted_model
+    assert '"value": 42' in quoted_model
 
     parent = ParentTask(name="test", item=nested)
     quoted_parent = quote(parent)
     assert quoted_parent.startswith("<quote>")
     assert quoted_parent.endswith("</quote>")
-    assert "\"name\": \"test\"" in quoted_parent
-    assert "\"item\": {" in quoted_parent
-    assert "\"value\": 42" in quoted_parent
+    assert '"name": "test"' in quoted_parent
+    assert '"item": {' in quoted_parent
+    assert '"value": 42' in quoted_parent
 
     # Test that quote works in verify (mock mode)
     task = StringTask(name="test task")
     verify(f"{quote(task.name)} is a valid task name")
     verify(f"{quote(task)} has a valid name field")
-
-
-def test_checkout_caching():
-    """Test that checkout doesn't re-extract if already done"""
-    # Get current commit from git
-    result = os.popen("git rev-parse HEAD").read().strip()
-
-    # First checkout
-    checkout(result)
-    work_dir1 = get_checkout_dir()
-
-    # Modify a file in the extracted directory (if it were re-extracted, it would be overwritten)
-    test_marker = os.path.join(work_dir1, ".checkout_marker")
-    with open(test_marker, "w") as f:
-        f.write("marker")
-
-    # Second checkout should return same directory without re-extracting
-    checkout(result)
-    work_dir2 = get_checkout_dir()
-    assert work_dir1 == work_dir2
-    assert os.path.exists(test_marker)  # Marker should still exist
-
-
-def test_checkout_path_must_be_relative():
-    """Test that path parameter must be a relative path, not absolute"""
-    result = os.popen("git rev-parse HEAD").read().strip()
-
-    # Absolute path should raise ValueError
-    with pytest.raises(ValueError, match="path must be a relative path"):
-        checkout(result, path="/absolute/path")
-
-    with pytest.raises(ValueError, match="path must be a relative path"):
-        checkout(result, path="/tmp/foo")
-
-
-def test_checkout_with_path():
-    """Test checkout with path parameter uses escaped path as directory prefix"""
-    result = os.popen("git rev-parse HEAD").read().strip()
-
-    # Checkout with a relative path
-    checkout(result, path="src")
-    work_dir = get_checkout_dir()
-
-    # Directory should have escaped absolute path prefix
-    # The prefix should contain the escaped current working directory + "src"
-    assert work_dir.startswith("/tmp/claude/hdr/")
-    assert result in work_dir
-    # The path "src" should result in a directory name containing something like "_..._src_"
-    assert "_src_" in work_dir or work_dir.endswith(f"_src_{result}") or "_src_" in work_dir.replace(f"_{result}", "")
 
 
 class TestFile:

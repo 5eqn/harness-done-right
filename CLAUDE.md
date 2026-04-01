@@ -32,9 +32,9 @@ class HumanizeText(BaseModel):
 Claude runs the script to perform and verify the task:
 
 ```python
-from hdr import checkout
-
-checkout("current-git-hash")
+# Set up environment variables:
+# export ANTHROPIC_API_KEY="your-api-key"
+# export ANTHROPIC_MODEL="claude-4.6-sonnet"  # optional, defaults to claude-4.6-sonnet
 
 # Instantiation triggers Pydantic type checks and LLM verification
 result = HumanizeText(
@@ -50,9 +50,9 @@ print("Task Verified:", result)
 
 *   **Type Safety**: Built on **Pydantic** for runtime type and schema validation.
 *   **LLM Assertions**: `verify(condition)` calls Claude to score the result (1-5). Only a score of **5** passes; otherwise, it throws an error with the reasoning.
-*   **Commit-Based Caching**: Verification results are cached per git commit to prevent redundant LLM calls.
+*   **Message-Based Caching**: Verification results are cached by condition to prevent redundant LLM calls.
 *   **Prompt Safety**: `quote(obj)` handles any data type safely to prevent prompt injection.
-*   **Zero Config**: Use `checkout(commit)` to isolate and prepare the workspace instantly.
+*   **Environment Configuration**: API key and model can be configured via environment variables.
 
 ---
 
@@ -60,9 +60,8 @@ print("Task Verified:", result)
 
 | Function | Description |
 | :--- | :--- |
-| `checkout(commit)` | Extracts the specified git commit to a temporary workspace. |
 | `BaseModel` | Base class for all tasks; provides automatic schema validation. |
-| `verify(condition)` | Uses Claude to validate a condition. Fails if score < 5. |
+| `verify(condition)` | Uses Claude to validate a condition. Fails if score < 5. Requires `ANTHROPIC_API_KEY` environment variable. |
 | `quote(obj)` | Safely serializes objects (str, dict, models) for LLM prompts. |
 
 ---

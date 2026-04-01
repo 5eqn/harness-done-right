@@ -5,36 +5,16 @@ description: Harness Done Right - Formalize tasks as Python classes, validate wi
 
 # Harness Done Right (HDR) Skill
 
-This skill enables you to formalize any task as a Python class hierarchy, validate task completions using Claude Code-powered assertions, and build complex task structures with automatic dependency validation.
+This skill enables you to formalize any task as a Python class hierarchy, validate task completions using Claude-powered assertions, and build complex task structures with automatic dependency validation.
 
 ## Design Philosophy
 
 HDR follows a **stateless, pure-functional design** with three core principles:
 1. **Tasks as values**: A completed task is just an instance of a Python class - no hidden state, no workbench, no persistence required
 2. **Validation at construction**: All type checks and LLM assertions run automatically when you create a task instance - if it instantiates successfully, it's valid
-3. **Caching, not state**: Duplicate LLM calls are automatically cached by commit, so you can rerun your code as many times as you want without extra cost or side effects
+3. **Caching, not state**: Duplicate LLM calls are automatically cached by condition, so you can rerun your code as many times as you want without extra cost or side effects
 
 ## Core Concepts
-
-### Checkout API
-
-Before running any task, call `checkout(commit)` to set up the working directory:
-
-```python
-from hdr import checkout, get_checkout_dir
-
-# Set up working directory for a specific git commit
-# This extracts the repository state to /tmp/claude/hdr/{commit}
-checkout("abc123def...")
-# Get the current checkout directory
-work_dir = get_checkout_dir()
-```
-
-The checkout function:
-- Uses `git archive` to extract the repository state at the given commit to `/tmp/claude/hdr/{commit}`
-- If already extracted, returns the cached directory without re-extracting
-- All subsequent Claude Code operations run in this directory
-- Verification cache is commit-aware to avoid cross-commit contamination. If you don't have to change the commit, don't change it.
 
 ### Task Definition
 Every task is defined as a Python class that inherits from `BaseModel` (for automatic type checking):
@@ -44,18 +24,14 @@ Every task is defined as a Python class that inherits from `BaseModel` (for auto
 
 ### Stateless Execution
 To complete a task:
-1. Call `checkout(commit)` to set up the working directory
-2. Define your task classes with all required validation logic
-3. Construct instances of your task classes directly, passing dependencies as parameters
-4. If the final target instance constructs successfully, your task is complete
+1. Define your task classes with all required validation logic
+2. Construct instances of your task classes directly, passing dependencies as parameters
+3. If the final target instance constructs successfully, your task is complete
 
 ## Core API
 
 ```python
 from hdr import *
-
-# Set up working directory (do this first)
-checkout("your-git-commit-hash")
 
 # Define a new task type (inherit from BaseModel for automatic type checking)
 class MyTask(BaseModel):
@@ -82,17 +58,16 @@ print("Task completed:", result)
 
 ## Built-in Functions
 
-### `checkout(commit: str) -> None`
-Sets up the working directory for a given git commit. Uses `git archive` to extract the repository state to `/tmp/claude/hdr/{commit}`. The directory is stored internally and can be retrieved with `get_checkout_dir()`.
-
-### `get_checkout_dir() -> str`
-Returns the current checkout directory. If `checkout()` has been called, returns that directory. Otherwise, creates a uniquely named empty directory in `/tmp/claude/hdr/`.
-
 ### `BaseModel`
 Base class for all task types. Provides automatic runtime type checking for all fields. Supports all Pydantic types including nested models, lists, dicts, etc.
 
 ### `verify(condition: str) -> None`
-Validates a condition using Claude Code. Throws an `AssertionError` with reasoning and score if validation fails. Only passes when Claude Code gives a perfect score of 5/5. Results are automatically cached (commit-aware) to avoid duplicate calls.
+Validates a condition using Claude. Throws an `AssertionError` with reasoning and score if validation fails. Only passes when Claude gives a perfect score of 5/5. Results are automatically cached by condition to avoid duplicate calls.
+
+Configuration via environment variables:
+- `ANTHROPIC_API_KEY`: Your Anthropic API key (required)
+- `ANTHROPIC_BASE_URL`: The base URL for the API (optional)
+- `ANTHROPIC_MODEL`: The model name to use (optional, defaults to claude-4.6-sonnet)
 
 ### `quote(obj: Any) -> str`
 Safely quote any object for use in `verify` conditions, preventing prompt injection attacks. Automatically handles:
@@ -108,16 +83,10 @@ Always use `quote()` when embedding values or objects in `verify` conditions.
 HDR includes a standard library of common task types in `hdr.tasks.std`:
 
 ```python
-from hdr.tasks import File, Readme, PythonFile
+from hdr.tasks import File
 
 # Validate a file exists (prefer relative paths)
 file_task = File(path="README.md", exists=True)
-
-# Validate a README exists and is properly formatted
-readme = Readme(path="README.md")
-
-# Validate a Python file contains no warning or error
-py_file = PythonFile(path="src/main.py")
 ```
 
 ## Recommended Workflow
@@ -125,31 +94,23 @@ py_file = PythonFile(path="src/main.py")
 ### Agent Execution Steps (any working directory)
 Follow this exact step-by-step process for every task:
 
-#### Step 1: Set up working directory
-Call `checkout(commit)` with the git commit hash to set up the working directory:
-```python
-from hdr import checkout, get_checkout_dir
-checkout("your-commit-hash")
-work_dir = get_checkout_dir()
-```
-
-#### Step 2: Create task specification file
+#### Step 1: Create task specification file
 Create a `task.py` file in your current working directory with all task definitions:
 - Import `BaseModel`, `verify`, and `quote` from `hdr`
 - Define all required task classes with proper type annotations
 - Add all necessary `verify` validations in the `__init__` method, using `quote()` for all embedded values/objects
 - Present this file to the user for approval before proceeding
 
-#### Step 3: Get user confirmation
+#### Step 2: Get user confirmation
 Once the user approves the `task.py` specification, do not modify this file again for the rest of the task.
 
-#### Step 4: Create implementation file
+#### Step 3: Create implementation file
 Create a `work.py` file in the same directory:
 - Import all task classes from `task.py`
 - Implement the logic to construct the final task instance, building dependencies as needed
 - If task is very complicated, you don't have to create the final task instance at the first try
 
-#### Step 5: Run and validate
+#### Step 4: Run and validate
 Execute your code:
 ```bash
 # Run your implementation (timeout 30 minutes)
@@ -166,4 +127,5 @@ Notice:
 ## Error Handling
 - **ValidationError**: Thrown by Pydantic when you pass incorrect types to task constructors
 - **AssertionError**: Thrown when a verification fails, includes reasoning and score
+- **EnvironmentError**: Thrown when required environment variables (like ANTHROPIC_API_KEY) are not set
 - All errors include clear, actionable instructions for fixing the issue

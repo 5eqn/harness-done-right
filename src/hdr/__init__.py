@@ -9,16 +9,12 @@ from pydantic import BaseModel
 from hdr.core import (
     verify,
     quote,
-    checkout,
     set_mock_mode,
-    get_checkout_dir,
 )
 
 __all__ = [
     "BaseModel",
     "verify",
     "quote",
-    "checkout",
     "set_mock_mode",
-    "get_checkout_dir",
 ]

@@ -1,12 +1,8 @@
 """
 Task implementation - builds final task instance
 Import task types from task.py (do not modify)
-Runs in /tmp/claude/hdr/hdr_no_commit (empty working dir)
 """
-from hdr import checkout
 from task import *
-
-checkout("daf6d5ee1139a06ed861426b6f794e0add67f6ad")
 
 print("Building documentation components...")
 

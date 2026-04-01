@@ -1,28 +1,16 @@
 import os
 import json
-import subprocess
 import hashlib
 from typing import Any
 
+import anthropic
 from pydantic import BaseModel
 
-# Base directory for all HDR temporary files
-_BASE_TMP_DIR = "/tmp/claude/hdr"
-os.makedirs(_BASE_TMP_DIR, exist_ok=True)
-
-# Default directory when path is not specified
-_DEFAULT_DIR = "/tmp/claude/hdr/default"
-os.makedirs(_DEFAULT_DIR, exist_ok=True)
-
-# Internal checkout directory - stored for verify to access
-_current_checkout_dir: str = ""
-
-# Cache directory for verify results (commit-aware)
-_CACHE_DIR = os.path.join(_BASE_TMP_DIR, "hdr_verify_cache")
+# Cache directory for verify results (message-based)
+_CACHE_DIR = "/tmp/claude/hdr_verify_cache"
 os.makedirs(_CACHE_DIR, exist_ok=True)
 
 # Internal mock mode flag - for testing only
-# NEVER use mock mode in production or real execution environments
 _mock_mode = False
 
 
@@ -30,69 +18,21 @@ def set_mock_mode(enabled: bool) -> None:
     """
     Toggle mock mode for testing purposes.
     WARNING: Mock mode should ONLY be used in pytest unit tests.
-    In mock mode, verify() returns mock results instead of calling Claude CLI.
+    In mock mode, verify() returns mock results instead of calling the LLM API.
     """
     global _mock_mode
     _mock_mode = enabled
 
 
-def checkout(commit: str, path: str = "") -> None:
-    """
-    Set up the working directory for a given git commit.
-
-    Extracts the repository state at the given commit to a temp directory.
-    The directory is stored internally and can be retrieved with get_checkout_dir().
-
-    Args:
-        commit: The git commit hash
-        path: Optional relative path from the calling python's pwd, where git archive will run.
-              Must be a relative path, not absolute.
-    """
-    global _current_checkout_dir
-
-    # Validate path is relative (not absolute)
-    if path and os.path.isabs(path):
-        raise ValueError(f"path must be a relative path, got absolute path: {path}")
-
-    # Compute the target directory name
-    if path:
-        escaped_abs_path = os.path.abspath(os.path.join(os.getcwd(), path)).replace("/", "_")
-        target_dir = os.path.join(_BASE_TMP_DIR, f"{escaped_abs_path}_{commit}")
-    else:
-        target_dir = os.path.join(_BASE_TMP_DIR, commit)
-
-    _current_checkout_dir = target_dir
-
-    # Exit if archive target exists
-    if os.path.exists(target_dir):
-        return
-
-    # Archive target if not exists
-    os.makedirs(target_dir, exist_ok=True)
-    cwd = os.path.join(os.getcwd(), path) if path else os.getcwd()
-    cmd = f"git archive --format=tar {commit} | tar -xf - -C {target_dir}"
-    print(f"[HDR] Running subprocess: cwd={cwd} cmd={cmd}")
-    result = subprocess.run(["bash", "-c", cmd], capture_output=True, cwd=cwd)
-    if result.returncode != 0:
-        raise RuntimeError(f"git archive failed: {result.stderr.decode() if result.stderr else result.stdout.decode()}")
-
-
-def get_checkout_dir() -> str:
-    """
-    Get the current checkout directory.
-
-    If checkout() has been called, returns that directory.
-    Otherwise, returns the default directory.
-
-    Returns:
-        The path to the working directory
-    """
-    global _current_checkout_dir
-
-    if _current_checkout_dir:
-        return _current_checkout_dir
-
-    return _DEFAULT_DIR
+def _get_api_key() -> str:
+    """Get API key from environment or raise error."""
+    api_key = os.environ.get("ANTHROPIC_API_KEY")
+    if not api_key:
+        raise EnvironmentError(
+            "ANTHROPIC_API_KEY is not set. Please ask the user to provide their Anthropic API key "
+            "by setting the ANTHROPIC_API_KEY environment variable."
+        )
+    return api_key
 
 
 def quote(obj: Any) -> str:
@@ -117,80 +57,96 @@ def quote(obj: Any) -> str:
 
 def verify(condition: str) -> None:
     """
-    Validate a condition using Claude Code. Throws an error with explanation if validation fails.
+    Validate a condition using Claude. Throws an error with explanation if validation fails.
+
+    Reads API configuration from environment variables:
+    - ANTHROPIC_API_KEY: Your Anthropic API key (required)
+    - ANTHROPIC_BASE_URL: The base URL for the API (optional, defaults to Anthropic's API)
+    - ANTHROPIC_MODEL: The model name to use (optional, defaults to claude-4.6-sonnet)
     """
     # Return mock result if mock mode is enabled
     if _mock_mode:
         return
 
-    # Create cache key that includes checkout directory for isolation across checkouts
-    checkout_dir = get_checkout_dir()
-    cache_key = hashlib.md5(f"{checkout_dir}:{condition}".encode()).hexdigest()
+    api_key = _get_api_key()
+    base_url = os.environ.get("ANTHROPIC_BASE_URL", "https://api.anthropic.com")
+    model = os.environ.get("ANTHROPIC_MODEL", "claude-4.6-sonnet")
+
+    # Create cache key based solely on the condition
+    cache_key = hashlib.md5(condition.encode()).hexdigest()
     cache_file = os.path.join(_CACHE_DIR, f"{cache_key}.json")
 
     # Return cached result if available
     if os.path.exists(cache_file):
         with open(cache_file, "r") as f:
             cached = json.load(f)
-            thinking = cached["thinking"]
+            description = cached["description"]
             score = cached["score"]
     else:
-        schema = json.dumps({
-            "type": "object",
-            "properties": {
-                "thinking": {
-                    "type": "string",
-                    "description": "Your reasoning about the condition"
-                },
-                "score": {
-                    "type": "integer",
-                    "description": "Score from 1 to 5 indicating how well the condition is satisfied (5=completely satisfied, 1=completely unsatisfied)"
-                }
-            },
-            "required": ["thinking", "score"]
-        })
-
         prompt = f"""Evaluate this condition:
 
 {condition}
 
-First, think carefully about the condition using first principles, considering both supporting and opposing arguments to ensure a fair and balanced evaluation. 
-Then, output a JSON object with your thinking (about 100 words) and a score from 1 to 5 where 5 means completely satisfied and 1 means completely unsatisfied.
-Only output a score of 5 if the condition is 100% true with no exceptions."""
+First, output a brief description of your evaluation (under 100 words).
+Then, output your final score using the format: <score>N</score> where N is a number from 1 to 5 (5=completely satisfied, 1=completely unsatisfied).
+Only give a score of 5 if the condition is 100% true with no exceptions."""
 
-        cmd = [
-            "claude",
-            prompt,
-            "--bare",
-            "-p",
-            "--tools", "Read",
-            "--allowedTools", "Read",
-            "--permission-mode", "dontAsk",
-            "--max-turns", "10",
-            "--output-format", "json",
-            "--json-schema", schema
-        ]
+        client = anthropic.Anthropic(
+            api_key=api_key,
+            base_url=base_url,
+        )
 
-        print(f"[HDR] Running subprocess: cwd={checkout_dir} cmd={' '.join(cmd)}")
-        env = os.environ.copy()
-        env["MAX_THINKING_TOKENS"] = "0"
-        result = subprocess.run(cmd, env=env, capture_output=True, text=True, cwd=checkout_dir)
+        message = client.messages.create(
+            model=model,
+            max_tokens=1000,
+            messages=[
+                {
+                    "role": "user",
+                    "content": [
+                        {
+                            "type": "text",
+                            "text": prompt
+                        }
+                    ]
+                }
+            ]
+        )
 
-        if result.returncode != 0:
-            raise RuntimeError(f"Claude Code CLI failed: {result.stderr}")
+        text = ""
+        description = ""
+        score = 0
 
-        output = json.loads(result.stdout)
+        for block in message.content:
+            if block.type == "thinking":
+                print(f"Thinking:\n{block.thinking}\n")
+            elif block.type == "text":
+                text = block.text
+                print(f"Text:\n{block.text}\n")
 
-        if "error" in output:
-            raise RuntimeError(f"Claude Code error: {output['error']}")
+        # Parse description (everything before <score>)
+        if "<score>" in text:
+            description = text[:text.index("<score>")].strip()
+        else:
+            description = text.strip()
 
-        structured = output.get("structured_output", {})
-        thinking = structured.get("thinking", "")
-        score = structured.get("score", 0)
+        # Parse score from text output
+        if "<score>" in text and "</score>" in text:
+            start = text.index("<score>") + len("<score>")
+            end = text.index("</score>")
+            try:
+                score = int(text[start:end].strip())
+            except ValueError:
+                raise ValueError(f"Failed to parse score from LLM output: {text}")
+        else:
+            raise ValueError(f"No <score> tag found in LLM output: {text}")
 
-        # Cache the result
+        # Validate score range
+        if score < 1 or score > 5:
+            raise ValueError(f"Score {score} is out of range (1-5). LLM output: {text}")
+
+        # Cache the result (only description and score)
         with open(cache_file, "w") as f:
-            json.dump({"thinking": thinking, "score": score}, f)
+            json.dump({"description": description, "score": score}, f)
 
     if score != 5:
-        raise AssertionError(f"Verification failed with score {score}/5.\nThinking: {thinking}\nScore: {score}/5")
+        raise AssertionError(f"Verification failed with score {score}/5.\nDescription: {description}")
