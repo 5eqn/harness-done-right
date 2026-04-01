@@ -33,7 +33,7 @@ Claude runs the script to perform and verify the task:
 
 ```python
 # Set up environment variables:
-# export ANTHROPIC_API_KEY="your-api-key"
+# export ANTHROPIC_AUTH_TOKEN="your-api-key"
 # export ANTHROPIC_MODEL="claude-4.6-sonnet"  # optional, defaults to claude-4.6-sonnet
 
 # Instantiation triggers Pydantic type checks and LLM verification
@@ -61,7 +61,7 @@ print("Task Verified:", result)
 | Function | Description |
 | :--- | :--- |
 | `BaseModel` | Base class for all tasks; provides automatic schema validation. |
-| `verify(condition)` | Uses Claude to validate a condition. Fails if score < 5. Requires `ANTHROPIC_API_KEY` environment variable. |
+| `verify(condition)` | Uses Claude to validate a condition. Fails if score < 5. Requires `ANTHROPIC_AUTH_TOKEN` environment variable. |
 | `quote(obj)` | Safely serializes objects (str, dict, models) for LLM prompts. |
 
 ---

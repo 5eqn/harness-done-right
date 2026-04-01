@@ -26,11 +26,11 @@ def set_mock_mode(enabled: bool) -> None:
 
 def _get_api_key() -> str:
     """Get API key from environment or raise error."""
-    api_key = os.environ.get("ANTHROPIC_API_KEY")
+    api_key = os.environ.get("ANTHROPIC_AUTH_TOKEN")
     if not api_key:
         raise EnvironmentError(
-            "ANTHROPIC_API_KEY is not set. Please ask the user to provide their Anthropic API key "
-            "by setting the ANTHROPIC_API_KEY environment variable."
+            "ANTHROPIC_AUTH_TOKEN is not set. Please ask the user to provide their Anthropic API key "
+            "by setting the ANTHROPIC_AUTH_TOKEN environment variable."
         )
     return api_key
 
@@ -60,7 +60,7 @@ def verify(condition: str) -> None:
     Validate a condition using Claude. Throws an error with explanation if validation fails.
 
     Reads API configuration from environment variables:
-    - ANTHROPIC_API_KEY: Your Anthropic API key (required)
+    - ANTHROPIC_AUTH_TOKEN: Your Anthropic API key (required)
     - ANTHROPIC_BASE_URL: The base URL for the API (optional, defaults to Anthropic's API)
     - ANTHROPIC_MODEL: The model name to use (optional, defaults to claude-4.6-sonnet)
     """

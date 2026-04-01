@@ -65,7 +65,7 @@ Base class for all task types. Provides automatic runtime type checking for all 
 Validates a condition using Claude. Throws an `AssertionError` with reasoning and score if validation fails. Only passes when Claude gives a perfect score of 5/5. Results are automatically cached by condition to avoid duplicate calls.
 
 Configuration via environment variables:
-- `ANTHROPIC_API_KEY`: Your Anthropic API key (required)
+- `ANTHROPIC_AUTH_TOKEN`: Your Anthropic API key (required)
 - `ANTHROPIC_BASE_URL`: The base URL for the API (optional)
 - `ANTHROPIC_MODEL`: The model name to use (optional, defaults to claude-4.6-sonnet)
 
@@ -127,5 +127,5 @@ Notice:
 ## Error Handling
 - **ValidationError**: Thrown by Pydantic when you pass incorrect types to task constructors
 - **AssertionError**: Thrown when a verification fails, includes reasoning and score
-- **EnvironmentError**: Thrown when required environment variables (like ANTHROPIC_API_KEY) are not set
+- **EnvironmentError**: Thrown when required environment variables (like ANTHROPIC_AUTH_TOKEN) are not set
 - All errors include clear, actionable instructions for fixing the issue

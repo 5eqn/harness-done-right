@@ -40,7 +40,7 @@ print("任务已验证:", result)
 ### 环境配置
 
 HDR 需要以下环境变量：
-- `ANTHROPIC_API_KEY`：你的 Anthropic API 密钥（必需）
+- `ANTHROPIC_AUTH_TOKEN`：你的 Anthropic API 密钥（必需）
 - `ANTHROPIC_MODEL`：模型名称（可选，默认为 claude-4.6-sonnet）
 - `ANTHROPIC_BASE_URL`：API 基础 URL（可选）
 
