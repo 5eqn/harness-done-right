@@ -4,6 +4,7 @@ import hashlib
 from typing import Any
 
 import anthropic
+from anthropic.types import ThinkingConfigEnabledParam
 from pydantic import BaseModel
 
 # Cache directory for verify results (message-based)
@@ -85,7 +86,7 @@ def verify(condition: str) -> None:
     else:
         prompt = f"""Evaluate this condition:
 
-{condition}
+<condition>{condition}</condition>
 
 First, output a brief description of your evaluation (under 100 words).
 Then, output your final score using the format: <score>N</score> where N is a number from 1 to 5 (5=completely satisfied, 1=completely unsatisfied).
@@ -98,18 +99,9 @@ Only give a score of 5 if the condition is 100% true with no exceptions."""
 
         message = client.messages.create(
             model=model,
-            max_tokens=1000,
-            messages=[
-                {
-                    "role": "user",
-                    "content": [
-                        {
-                            "type": "text",
-                            "text": prompt
-                        }
-                    ]
-                }
-            ]
+            max_tokens=1024,
+            thinking=ThinkingConfigEnabledParam(type="enabled", budget_tokens=1024),
+            messages=[{"role": "user", "content": [{"type": "text", "text": prompt}]}],
         )
 
         text = ""
@@ -125,7 +117,7 @@ Only give a score of 5 if the condition is 100% true with no exceptions."""
 
         # Parse description (everything before <score>)
         if "<score>" in text:
-            description = text[:text.index("<score>")].strip()
+            description = text[: text.index("<score>")].strip()
         else:
             description = text.strip()
 
@@ -149,4 +141,6 @@ Only give a score of 5 if the condition is 100% true with no exceptions."""
             json.dump({"description": description, "score": score}, f)
 
     if score != 5:
-        raise AssertionError(f"Verification failed with score {score}/5.\nDescription: {description}")
+        raise AssertionError(
+            f"Verification failed with score {score}/5.\nDescription: {description}"
+        )

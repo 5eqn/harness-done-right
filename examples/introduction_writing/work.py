@@ -2,13 +2,14 @@
 Task implementation - builds final task instance
 Import task types from task.py (do not modify)
 """
-from task import *
+
+from task import IntroductionSection, UsageSection, Documentation
 
 print("Building documentation components...")
 
 # Build dependency instances first
 intro = IntroductionSection(
-    content="""Harness Done Right (HDR) is a Python library that lets you define any task as a Python class. For example, if you want to validate a summary, you write: class SummarizeText(BaseModel): original_text: str; summary: str, then HDR automatically checks that your summary is valid using AI. HDR solves the problem of writing one-off validation scripts by providing a clean, reusable pattern with automatic type checking and AI verification built in."""
+    content="""Harness Done Right (HDR) is a Python library that lets you define any task as a Python class. For example, if you want to validate a summary, you write: class SummarizeText(BaseModel): original_text: str; summary: str, then HDR automatically checks that your summary is valid using AI. HDR solves the problem of writing one-off validation scripts by providing a clean, reusable pattern with automatic type checking and AI verification built in. """
 )
 
 usage = UsageSection(
@@ -45,15 +46,15 @@ class UserRegistration(BaseModel):
         verify(f"{quote(self.password)} is ≥8 chars (upper/lower/number)")
 
 user = UserRegistration(username="john_doe123", email="john@example.com", password="SecurePass123")
-print("✅ Valid registration!")"""
-    ]
+print("✅ Valid registration!")""",
+    ],
 )
 
 # Build final target instance
 doc = Documentation(
     title="HDR Getting Started: Task Formalization & AI Validation",
     introduction=intro,
-    usage=usage
+    usage=usage,
 )
 
 print("✅ Task completed successfully!")

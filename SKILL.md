@@ -31,7 +31,7 @@ To complete a task:
 ## Core API
 
 ```python
-from hdr import *
+from hdr import BaseModel, verify
 
 # Define a new task type (inherit from BaseModel for automatic type checking)
 class MyTask(BaseModel):
