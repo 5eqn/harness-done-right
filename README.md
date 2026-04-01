@@ -1,13 +1,12 @@
 # Harness Done Right
 
-A magical Agent Harness that makes your agent **do things right**.
+让你的 Agent 把任务形式化定义出来，再**保证完成**。
 
-Inspired from [Curry-Howard Correspondence](https://en.wikipedia.org/wiki/Curry%E2%80%93Howard_correspondence), we developed a DSL (Domain Specific Language) for general agent tasks, and made a shallow embedding to the host language Python.
+## 极简示例：文本去 AI 味
 
-## Example: Humanizing Text
+### 1. 任务定义
 
-### 1. Task Definition
-Your agent formalizes the requirement into a schema:
+你的 Agent 将需求形式化为一个数据结构：
 
 ```python
 from hdr import BaseModel, verify, quote
@@ -18,46 +17,47 @@ class HumanizeText(BaseModel):
 
     def __init__(self, **data):
         super().__init__(**data)
-        # LLM-backed assertions
-        verify(f"{quote(self.original)} and {quote(self.humanized)} convey the same meaning")
-        verify(f"{quote(self.humanized)} reads like natural human-written text")
+        # 基于 LLM 的断言验证
+        verify(f"{quote(self.original)} 和 {quote(self.humanized)} 表达的意思相同")
+        verify(f"{quote(self.humanized)} 读起来像自然的人类书写文本")
 ```
 
-### 2. Execution
-Your agent runs the script to perform and verify the task:
+### 2. 执行
+
+你的 Agent 运行脚本来执行并验证任务：
 
 ```python
-# Set up environment variables:
-# export ANTHROPIC_API_KEY="your-api-key"
-# export ANTHROPIC_MODEL="claude-4.6-sonnet"  # optional, defaults to claude-4.6-sonnet
+# 设置环境变量：
+# export ANTHROPIC_API_KEY="你的 API 密钥"
+# export ANTHROPIC_MODEL="claude-4.6-sonnet"  # 可选，默认为 claude-4.6-sonnet
 
-# Instantiation triggers Pydantic type checks and LLM verification
+# 实例化时会触发 Pydantic 类型检查以及 LLM 验证
 result = HumanizeText(
-    original="AI-generated technical jargon...",
-    humanized="A clear, human-friendly explanation..."
+    original="AI 生成的技术术语...",
+    humanized="一个清晰、人性化的解释..."
 )
-print("Task Verified:", result)
+print("任务已验证:", result)
 ```
 
-## Getting Started
+## 快速开始
 
-### Environment Setup
+### 环境配置
 
-HDR requires the following environment variables:
-- `ANTHROPIC_API_KEY`: Your Anthropic API key (required)
-- `ANTHROPIC_MODEL`: Model name (optional, defaults to claude-4.6-sonnet)
-- `ANTHROPIC_BASE_URL`: API base URL (optional)
+HDR 需要以下环境变量：
+- `ANTHROPIC_API_KEY`：你的 Anthropic API 密钥（必需）
+- `ANTHROPIC_MODEL`：模型名称（可选，默认为 claude-4.6-sonnet）
+- `ANTHROPIC_BASE_URL`：API 基础 URL（可选）
 
-```bash
-export ANTHROPIC_API_KEY="your-api-key"
-```
+我们正在为这个仓库开发更多使用场景。
 
-We're currently developing use cases for this repo.
+## 开发
 
-## Development
+### 环境配置
 
 ```bash
 uv venv .venv
 uv pip install -e ".[dev]"
 source .venv/bin/activate
 ```
+
+接着启动 Claude Code 或你最爱的代码编辑工具，即可正常运行。
