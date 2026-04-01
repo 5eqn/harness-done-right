@@ -1,0 +1,1 @@
+HDR is an easy Python library for task formalization and AI validation—no advanced experience needed. Learn key concepts (BaseModel, verify(), quote()) and follow simple install/use steps to get started quickly.

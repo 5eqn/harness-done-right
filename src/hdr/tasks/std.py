@@ -17,10 +17,11 @@ class File(BaseModel):
 
     Prefer using relative paths for portability. The path can be absolute
     if needed, but relative paths are recommended for project-agnostic code.
+
+    Quoting this object (via quote()) will return the file's full content.
     """
 
     path: str
-    content: str = ""
     exists: bool = True
 
     def __init__(self, **data):
@@ -30,13 +31,13 @@ class File(BaseModel):
             raise AssertionError(f"File at {self.path} does not exist")
         if not self.exists and file_exists:
             raise AssertionError(f"File at {self.path} should not exist")
-        # Read content from file if it exists and content is empty
-        if self.exists and not self.content:
+
+    def model_dump_json(self, **kwargs):  # noqa: ARG002
+        content = ""
+        if self.exists:
             try:
                 with open(self.path, "r") as f:
-                    self.content = f.read()
+                    content = f.read()
             except (IOError, OSError):
                 pass
-
-    def model_dump_json(self, **kwargs):
-        return f"<file><path>{self.path}</path><content>{self.content}</content></file>"
+        return f"<file><path>{self.path}</path><content>{content}</content></file>"
