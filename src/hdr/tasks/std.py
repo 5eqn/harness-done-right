@@ -44,12 +44,12 @@ class Directory(BaseModel):
     Validates that a directory exists at the given path using os.path.isdir().
 
     The `content` field is auto-filled from the actual directory content if not specified.
-    Content is gathered recursively, respecting .gitignore patterns.
-    The total actual content length is logged.
+    Content is a list of File objects representing the files in the directory,
+    gathered recursively and respecting .gitignore patterns.
     """
 
     path: str
-    content: str = ""
+    content: list[File] = []
 
     def __init__(self, **data):
         super().__init__(**data)
@@ -58,12 +58,12 @@ class Directory(BaseModel):
         # Auto-fill content from actual directory if not provided
         if not self.content:
             self.content = self._gather_content(self.path)
-            total_len = len(self.content)
-            print(f"[Directory] Total actual content length for {self.path}: {total_len} chars")
+            total_files = len(self.content)
+            print(f"[Directory] Total files in {self.path}: {total_files}")
 
-    def _gather_content(self, dir_path: str) -> str:
-        """Gather content from directory, respecting .gitignore and recursing."""
-        content_parts = []
+    def _gather_content(self, dir_path: str) -> list[File]:
+        """Gather content from directory as list[File], respecting .gitignore and recursing."""
+        files: list[File] = []
         gitignore_path = os.path.join(dir_path, ".gitignore")
         gitignore_patterns = []
         if os.path.exists(gitignore_path):
@@ -73,13 +73,13 @@ class Directory(BaseModel):
             except (IOError, OSError):
                 pass
 
-        for root, dirs, files in os.walk(dir_path):
+        for root, dirs, filenames in os.walk(dir_path):
             # Calculate relative path for filtering directories
             rel_root = os.path.relpath(root, dir_path)
             # Filter out directories matching gitignore patterns
             dirs[:] = [d for d in dirs if not self._is_ignored(os.path.join(rel_root, d), gitignore_patterns)]
 
-            for filename in files:
+            for filename in filenames:
                 filepath = os.path.join(root, filename)
                 rel_path = os.path.relpath(filepath, dir_path)
                 # Check if file should be ignored
@@ -87,11 +87,12 @@ class Directory(BaseModel):
                     continue
                 try:
                     with open(filepath, "r") as f:
-                        content_parts.append(f.read())
+                        file_content = f.read()
+                    files.append(File(path=filepath, content=file_content))
                 except (IOError, OSError):
                     pass
 
-        return "\n".join(content_parts)
+        return files
 
     def _is_ignored(self, rel_path: str, patterns: list[str]) -> bool:
         """Check if a path matches any gitignore pattern."""

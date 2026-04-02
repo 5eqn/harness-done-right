@@ -30,25 +30,25 @@ custom = File(path="output.txt", content="my content")
 
 ## Directory
 
-**What:** Validates that a directory exists at a given path using `os.path.isdir()`. The `content` field is auto-filled from the actual directory content if not specified. Content is gathered recursively, respecting `.gitignore` patterns, and the total actual content length is logged.
+**What:** Validates that a directory exists at a given path using `os.path.isdir()`. The `content` field is a list of `File` objects auto-filled from the actual directory content if not specified. Content is gathered recursively, respecting `.gitignore` patterns, and the total file count is logged.
 
-**Why:** When a task operates on a directory, you want to guarantee the directory is present before proceeding. The auto-filled `content` allows inspection of directory contents.
+**Why:** When a task operates on a directory, you want to guarantee the directory is present before proceeding. The auto-filled `content` allows inspection of directory contents as a list of `File` objects.
 
 **How to use:**
 
 ```python
-from hdr.tasks import Directory
+from hdr.tasks import Directory, File
 
 # Verify a directory exists and auto-fill content
 dir_task = Directory(path="src")
 
-# Provide explicit content
-custom = Directory(path="output", content="my content")
+# Provide explicit content as list[File]
+custom = Directory(path="output", content=[File(path="a.txt", content="my content")])
 ```
 
 **Fields:**
 - `path: str` — path to the directory
-- `content: str = ""` — the directory content (auto-filled from directory if not specified, respects .gitignore, recurses)
+- `content: list[File] = []` — the directory content as list of File objects (auto-filled from directory if not specified, respects .gitignore, recurses)
 
 ---
 
