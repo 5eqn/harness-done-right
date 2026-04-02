@@ -125,11 +125,10 @@ class PythonWorkspace(Directory):
                     f"in {self.path}. Run 'pyright' for details."
                 )
         except (json.JSONDecodeError, KeyError):
-            if result_pyright.returncode != 0:
-                raise AssertionError(
-                    f"pyright failed in {self.path} (exit code {result_pyright.returncode}). "
-                    f"Run 'pyright' for details."
-                )
+            raise AssertionError(
+                f"pyright produced unexpected output in {self.path} "
+                f"(exit code {result_pyright.returncode}). Could not verify. Run 'pyright' for details."
+            )
 
         # Run ruff check and verify no lint errors
         result_ruff = subprocess.run(
