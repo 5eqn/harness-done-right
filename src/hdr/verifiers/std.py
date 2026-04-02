@@ -34,7 +34,7 @@ def quote(obj: Any) -> str:
 
 def verify(condition: str) -> None:
     """
-    Validate a condition using Claude. Throws an error with explanation if validation fails.
+    Validate a condition using LLM. Throws an error with explanation if validation fails.
 
     Reads API configuration from environment variables:
     - ANTHROPIC_AUTH_TOKEN: Your Anthropic API key (required)
