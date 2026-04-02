@@ -7,6 +7,8 @@ projects easier to share and version control.
 """
 
 import os
+import shutil
+import subprocess
 
 from hdr.core import BaseModel
 
@@ -71,3 +73,72 @@ class Directory(BaseModel):
 
     def model_dump_json(self, **kwargs):  # noqa: ARG002
         return f"<directory><path>{self.path}</path><files>{self.files}</files></directory>"
+
+
+class PythonWorkspace(Directory):
+    """
+    Validates a Python workspace is properly configured for linting and type checking.
+
+    Inherits from Directory — the directory must exist.
+    Additionally verifies:
+    - ruff is installed (shutil.which)
+    - pyright is installed (shutil.which)
+    - pyright reports no warnings or errors in the workspace
+    - ruff check reports no lint errors in the workspace
+
+    If ruff or pyright is not installed, raises AssertionError with
+    an installation message instructing the caller.
+    """
+
+    def __init__(self, **data):
+        super().__init__(**data)
+
+        # Check ruff is installed
+        ruff_path = shutil.which("ruff")
+        if not ruff_path:
+            raise AssertionError(
+                "ruff is not installed. Please install it with: pip install ruff"
+            )
+
+        # Check pyright is installed
+        pyright_path = shutil.which("pyright")
+        if not pyright_path:
+            raise AssertionError(
+                "pyright is not installed. Please install it with: pip install pyright"
+            )
+
+        # Run pyright and check for no errors/warnings
+        result_pyright = subprocess.run(
+            ["pyright", "--outputjson"],
+            cwd=self.path,
+            capture_output=True,
+            text=True,
+        )
+        try:
+            import json
+            pyright_output = json.loads(result_pyright.stdout)
+            error_count = pyright_output.get("summary", {}).get("errorCount", 0)
+            warning_count = pyright_output.get("summary", {}).get("warningCount", 0)
+            if error_count > 0 or warning_count > 0:
+                raise AssertionError(
+                    f"pyright found {error_count} error(s) and {warning_count} warning(s) "
+                    f"in {self.path}. Run 'pyright' for details."
+                )
+        except (json.JSONDecodeError, KeyError):
+            if result_pyright.returncode != 0:
+                raise AssertionError(
+                    f"pyright failed in {self.path} (exit code {result_pyright.returncode}). "
+                    f"Run 'pyright' for details."
+                )
+
+        # Run ruff check and verify no lint errors
+        result_ruff = subprocess.run(
+            ["ruff", "check", "."],
+            cwd=self.path,
+            capture_output=True,
+            text=True,
+        )
+        if result_ruff.returncode != 0:
+            raise AssertionError(
+                f"ruff found lint errors in {self.path}:\n{result_ruff.stdout}\n{result_ruff.stderr}"
+            )
