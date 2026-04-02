@@ -4,7 +4,7 @@ Defines the formal requirements for the task
 """
 
 from hdr import BaseModel, verify, quote
-from hdr.tasks.std import File
+from hdr.tasks.std import File, PythonWorkspace
 
 
 # Define subtask types
@@ -19,13 +19,12 @@ class IntroductionSection(BaseModel):
 
 class UsageSection(BaseModel):
     file: File
-    code_examples: list[File]
+    code_examples: PythonWorkspace
 
     def __init__(self, **data):
         super().__init__(**data)
         verify(f"{quote(self.file)} clearly explains how to use HDR")
-        for i, example in enumerate(self.code_examples):
-            verify(f"Code example {i+1} in {quote(example)} is correct and runnable")
+        verify(f"{quote(self.code_examples)} contains runnable Python code examples")
 
 
 class Documentation(BaseModel):

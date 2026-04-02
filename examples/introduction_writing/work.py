@@ -4,7 +4,7 @@ Import task types from task.py
 """
 
 from task import IntroductionSection, UsageSection, Documentation
-from hdr.tasks.std import File
+from hdr.tasks.std import File, PythonWorkspace
 
 print("Building documentation components...")
 
@@ -15,10 +15,7 @@ intro = IntroductionSection(
 
 usage = UsageSection(
     file=File(path="usage.md"),
-    code_examples=[
-        File(path="example1.py"),
-        File(path="example2.py"),
-    ],
+    code_examples=PythonWorkspace(path="."),
 )
 
 # Build final target instance
