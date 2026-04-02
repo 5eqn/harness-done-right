@@ -49,15 +49,14 @@ class Directory(BaseModel):
     """
     Validates that a directory exists at the given path using os.path.isdir().
 
-    The optional `files` parameter lists files (relative to the directory) that
-    must also exist. Each file path is joined with `path` before checking.
-
-    Quoting this object will return the directory path and its files list.
+    The optional `files` parameter lists File instances that should exist within
+    the directory. The files are NOT validated by Directory itself — they are
+    provided for composition with other tasks.
     """
 
     path: str
     exists: bool = True
-    files: list[str] = []
+    files: list[File] = []
 
     def __init__(self, **data):
         super().__init__(**data)
@@ -66,13 +65,6 @@ class Directory(BaseModel):
             raise AssertionError(f"Directory at {self.path} does not exist")
         if not self.exists and dir_exists:
             raise AssertionError(f"Directory at {self.path} should not exist")
-        for rel_file in self.files:
-            file_path = os.path.join(self.path, rel_file)
-            if not os.path.exists(file_path):
-                raise AssertionError(f"File {file_path} does not exist")
-
-    def model_dump_json(self, **kwargs):  # noqa: ARG002
-        return f"<directory><path>{self.path}</path><files>{self.files}</files></directory>"
 
 
 class PythonWorkspace(Directory):

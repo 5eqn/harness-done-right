@@ -70,15 +70,23 @@ print("Task Verified:", result)
 
 ```text
 hdr-skill/              # Project root (Claude Code skill)
+├── README.md           # User-facing documentation
+├── SKILL.md            # Skill metadata for Claude Code
 ├── src/
 │   └── hdr/            # Main package
 │       ├── __init__.py # Re-exports from core
 │       ├── core.py     # Core logic & LLM bridge
 │       └── tasks/      # Standard task types
 │           ├── __init__.py
-│           └── std.py  # File, PythonFile, etc.
+│           └── std.py  # File, Directory, PythonWorkspace
 ├── tests/              # Unit tests
-│   └── test_core.py
+│   ├── test_core.py
+│   └── test_std.py
+├── docs/
+│   ├── tasks/          # Task documentation
+│   │   └── std.md      # File, Directory, PythonWorkspace reference
+│   └── superpowers/    # Planning artifacts (from superpowers skill)
+│       └── plans/
 └── examples/           # Example workflows
     └── introduction_writing/
 ```

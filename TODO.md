@@ -1,8 +1,0 @@
-- [x] add a llm-less function for verifying runnability of python script
-- [ ] change example numeric verification to python implemented
-- [ ] meta task for task construction
-- [x] support for workspace
-- [ ] add context when validating everything
-- [ ] document tree
-- [ ] move verify to somewhere else (and possibly rename it)
-- [ ] add verification for document link
