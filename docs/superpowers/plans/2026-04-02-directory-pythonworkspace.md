@@ -237,11 +237,6 @@ import tempfile
 import pytest
 from hdr.tasks.std import Directory
 
-# Enable mock mode for all tests
-import hdr
-hdr.set_mock_mode(True)
-
-
 class TestDirectory:
     """Tests for Directory task class."""
 

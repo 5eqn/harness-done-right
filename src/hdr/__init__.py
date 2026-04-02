@@ -7,15 +7,14 @@ Formalize tasks as Python classes, validate with LLM assertions, and execute inc
 
 from pydantic import BaseModel
 
-from hdr.core import (
-    verify,
-    quote,
-    set_mock_mode,
-)
+from hdr.verifiers.std import verify, quote
+from hdr.tasks.std import Directory, File, PythonWorkspace
 
 __all__ = [
     "BaseModel",
     "verify",
     "quote",
-    "set_mock_mode",
+    "File",
+    "Directory",
+    "PythonWorkspace",
 ]

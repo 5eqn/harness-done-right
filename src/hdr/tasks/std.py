@@ -10,7 +10,7 @@ import os
 import shutil
 import subprocess
 
-from hdr.core import BaseModel
+from pydantic import BaseModel
 
 
 class File(BaseModel):

@@ -1,20 +1,11 @@
 """
 Tests for HDR verify functionality.
-
-IMPORTANT: Mock mode is ONLY for pytest testing purposes!
-Do NOT use mock mode in any real execution environment.
-Mock mode should never be mentioned to end users or in production documentation.
 """
 
 import pytest
-import hdr
 from hdr import verify, quote, BaseModel
 from hdr.tasks.std import File
 from pydantic import ValidationError
-
-# Enable mock mode for all tests
-# WARNING: Mock mode should ONLY be used in pytest unit tests
-hdr.set_mock_mode(True)
 
 
 # Test classes
