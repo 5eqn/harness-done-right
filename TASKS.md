@@ -1,3 +1,0 @@
-- add verify function for running python script
-- change example numeric verification to python implemented
-- meta task for task construction
