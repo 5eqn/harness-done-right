@@ -12,61 +12,70 @@ import hdr
 hdr.set_mock_mode(True)
 
 
+class TestFile:
+    """Tests for File task class."""
+
+    def test_file_exists(self):
+        """Test File validation passes when file exists"""
+        with tempfile.TemporaryDirectory() as tmpdir:
+            import os
+            file_path = os.path.join(tmpdir, "test.txt")
+            with open(file_path, "w") as f:
+                f.write("hello")
+            f = File(path=file_path)
+            assert f.path == file_path
+            assert f.content == "hello"
+
+    def test_file_not_exists(self):
+        """Test File validation fails when file does not exist"""
+        with pytest.raises(AssertionError, match="does not exist"):
+            File(path="/nonexistent/path/12345.txt")
+
+    def test_file_with_content(self):
+        """Test File accepts explicit content"""
+        with tempfile.TemporaryDirectory() as tmpdir:
+            import os
+            file_path = os.path.join(tmpdir, "test.txt")
+            with open(file_path, "w") as f:
+                f.write("original")
+            f = File(path=file_path, content="custom content")
+            assert f.path == file_path
+            assert f.content == "custom content"
+
+
 class TestDirectory:
     """Tests for Directory task class."""
 
     def test_directory_exists(self):
-        """Test Directory validation passes when directory exists and exists=True"""
-        with tempfile.TemporaryDirectory() as tmpdir:
-            d = Directory(path=tmpdir, exists=True)
-            assert d.path == tmpdir
-            assert d.exists is True
-
-    def test_directory_not_exists(self):
-        """Test Directory validation fails when directory does not exist and exists=True"""
-        with pytest.raises(AssertionError, match="does not exist"):
-            Directory(path="/nonexistent/path/12345", exists=True)
-
-    def test_directory_exists_false_when_missing(self):
-        """Test Directory validation passes when directory does not exist and exists=False"""
-        d = Directory(path="/nonexistent/path/12345", exists=False)
-        assert d.path == "/nonexistent/path/12345"
-        assert d.exists is False
-
-    def test_directory_exists_false_when_present(self):
-        """Test Directory validation fails when directory exists but exists=False"""
-        with tempfile.TemporaryDirectory() as tmpdir:
-            with pytest.raises(AssertionError, match="should not exist"):
-                Directory(path=tmpdir, exists=False)
-
-    def test_directory_default_exists_true(self):
-        """Test Directory defaults to exists=True"""
+        """Test Directory validation passes when directory exists"""
         with tempfile.TemporaryDirectory() as tmpdir:
             d = Directory(path=tmpdir)
-            assert d.exists is True
-
-    def test_directory_with_files(self):
-        """Test Directory accepts File instances in files list"""
-        with tempfile.TemporaryDirectory() as tmpdir:
-            d = Directory(path=tmpdir, files=[File(path="main.py", exists=False)])
             assert d.path == tmpdir
-            assert len(d.files) == 1
-            assert d.files[0].path == "main.py"
 
-    def test_directory_nested_files(self):
-        """Test Directory accepts File instances with nested paths"""
-        with tempfile.TemporaryDirectory() as tmpdir:
-            d = Directory(path=tmpdir, files=[File(path="sub/nested.py", exists=False)])
-            assert len(d.files) == 1
-            assert d.files[0].path == "sub/nested.py"
+    def test_directory_not_exists(self):
+        """Test Directory validation fails when directory does not exist"""
+        with pytest.raises(AssertionError, match="does not exist"):
+            Directory(path="/nonexistent/path/12345")
 
-    def test_directory_multiple_files(self):
-        """Test Directory accepts multiple File instances"""
+    def test_directory_with_content(self):
+        """Test Directory accepts explicit content"""
         with tempfile.TemporaryDirectory() as tmpdir:
-            d = Directory(path=tmpdir, files=[File(path="a.py", exists=False), File(path="b.py", exists=False)])
-            assert len(d.files) == 2
-            assert d.files[0].path == "a.py"
-            assert d.files[1].path == "b.py"
+            d = Directory(path=tmpdir, content="custom content")
+            assert d.path == tmpdir
+            assert d.content == "custom content"
+
+    def test_directory_auto_gathers_content(self):
+        """Test Directory auto-fills content from files"""
+        with tempfile.TemporaryDirectory() as tmpdir:
+            import os
+            # Create some files
+            with open(os.path.join(tmpdir, "a.txt"), "w") as f:
+                f.write("content a")
+            with open(os.path.join(tmpdir, "b.txt"), "w") as f:
+                f.write("content b")
+            d = Directory(path=tmpdir)
+            assert "content a" in d.content
+            assert "content b" in d.content
 
 
 if __name__ == "__main__":

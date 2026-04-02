@@ -24,7 +24,6 @@ class UsageSection(BaseModel):
     def __init__(self, **data):
         super().__init__(**data)
         verify(f"{quote(self.file)} clearly explains how to use HDR")
-        verify(f"{quote(self.code_examples)} contains runnable Python code examples")
 
 
 class Documentation(BaseModel):

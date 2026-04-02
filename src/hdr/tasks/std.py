@@ -20,51 +20,92 @@ class File(BaseModel):
     Prefer using relative paths for portability. The path can be absolute
     if needed, but relative paths are recommended for project-agnostic code.
 
-    Quoting this object (via quote()) will return the file's full content.
+    The `content` field is auto-filled from the actual file content if not specified.
     """
 
     path: str
-    exists: bool = True
+    content: str = ""
 
     def __init__(self, **data):
         super().__init__(**data)
-        file_exists = os.path.exists(self.path)
-        if self.exists and not file_exists:
+        if not os.path.exists(self.path):
             raise AssertionError(f"File at {self.path} does not exist")
-        if not self.exists and file_exists:
-            raise AssertionError(f"File at {self.path} should not exist")
-
-    def model_dump_json(self, **kwargs):  # noqa: ARG002
-        content = ""
-        if self.exists:
+        # Auto-fill content from actual file if not provided
+        if not self.content:
             try:
                 with open(self.path, "r") as f:
-                    content = f.read()
+                    self.content = f.read()
             except (IOError, OSError):
-                pass
-        return f"<file><path>{self.path}</path><content>{content}</content></file>"
+                raise AssertionError(f"Could not read file at {self.path}")
 
 
 class Directory(BaseModel):
     """
     Validates that a directory exists at the given path using os.path.isdir().
 
-    The optional `files` parameter lists File instances that should exist within
-    the directory. The files are NOT validated by Directory itself — they are
-    provided for composition with other tasks.
+    The `content` field is auto-filled from the actual directory content if not specified.
+    Content is gathered recursively, respecting .gitignore patterns.
+    The total actual content length is logged.
     """
 
     path: str
-    exists: bool = True
-    files: list[File] = []
+    content: str = ""
 
     def __init__(self, **data):
         super().__init__(**data)
-        dir_exists = os.path.isdir(self.path)
-        if self.exists and not dir_exists:
+        if not os.path.isdir(self.path):
             raise AssertionError(f"Directory at {self.path} does not exist")
-        if not self.exists and dir_exists:
-            raise AssertionError(f"Directory at {self.path} should not exist")
+        # Auto-fill content from actual directory if not provided
+        if not self.content:
+            self.content = self._gather_content(self.path)
+            total_len = len(self.content)
+            print(f"[Directory] Total actual content length for {self.path}: {total_len} chars")
+
+    def _gather_content(self, dir_path: str) -> str:
+        """Gather content from directory, respecting .gitignore and recursing."""
+        content_parts = []
+        gitignore_path = os.path.join(dir_path, ".gitignore")
+        gitignore_patterns = []
+        if os.path.exists(gitignore_path):
+            try:
+                with open(gitignore_path, "r") as f:
+                    gitignore_patterns = [line.strip() for line in f if line.strip() and not line.startswith("#")]
+            except (IOError, OSError):
+                pass
+
+        for root, dirs, files in os.walk(dir_path):
+            # Calculate relative path for filtering directories
+            rel_root = os.path.relpath(root, dir_path)
+            # Filter out directories matching gitignore patterns
+            dirs[:] = [d for d in dirs if not self._is_ignored(os.path.join(rel_root, d), gitignore_patterns)]
+
+            for filename in files:
+                filepath = os.path.join(root, filename)
+                rel_path = os.path.relpath(filepath, dir_path)
+                # Check if file should be ignored
+                if self._is_ignored(rel_path, gitignore_patterns):
+                    continue
+                try:
+                    with open(filepath, "r") as f:
+                        content_parts.append(f.read())
+                except (IOError, OSError):
+                    pass
+
+        return "\n".join(content_parts)
+
+    def _is_ignored(self, rel_path: str, patterns: list[str]) -> bool:
+        """Check if a path matches any gitignore pattern."""
+        import fnmatch
+        for pattern in patterns:
+            if pattern.endswith("/"):
+                # Directory pattern
+                dir_pattern = pattern.rstrip("/")
+                if fnmatch.fnmatch(rel_path, dir_pattern) or fnmatch.fnmatch(rel_path, dir_pattern + "/*"):
+                    return True
+            else:
+                if fnmatch.fnmatch(rel_path, pattern) or fnmatch.fnmatch(os.path.basename(rel_path), pattern):
+                    return True
+        return False
 
 
 class PythonWorkspace(Directory):

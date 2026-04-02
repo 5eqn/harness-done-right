@@ -15,7 +15,7 @@ intro = IntroductionSection(
 
 usage = UsageSection(
     file=File(path="usage.md"),
-    code_examples=PythonWorkspace(path="."),
+    code_examples=PythonWorkspace(path="example"),
 )
 
 # Build final target instance

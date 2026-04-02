@@ -192,32 +192,22 @@ class TestFile:
     """Unit tests for File task class"""
 
     def test_file_exists_with_existing_file(self):
-        """Test File validation passes when file exists and exists=True"""
+        """Test File validation passes when file exists"""
         # This file exists in the repo
-        f = File(path="tests/test_core.py", exists=True)
+        f = File(path="tests/test_core.py")
         assert f.path == "tests/test_core.py"
-        assert f.exists is True
+        assert len(f.content) > 0
 
     def test_file_exists_with_nonexistent_file(self):
-        """Test File validation fails when file does not exist and exists=True"""
+        """Test File validation fails when file does not exist"""
         with pytest.raises(AssertionError, match="does not exist"):
-            File(path="nonexistent_file_12345.txt", exists=True)
+            File(path="nonexistent_file_12345.txt")
 
-    def test_file_not_exists_when_file_does_not_exist(self):
-        """Test File validation passes when file does not exist and exists=False"""
-        f = File(path="nonexistent_file_12345.txt", exists=False)
-        assert f.path == "nonexistent_file_12345.txt"
-        assert f.exists is False
-
-    def test_file_not_exists_when_file_does_exist(self):
-        """Test File validation fails when file exists but exists=False"""
-        with pytest.raises(AssertionError, match="should not exist"):
-            File(path="tests/test_core.py", exists=False)
-
-    def test_file_default_exists_true(self):
-        """Test File defaults to exists=True"""
-        f = File(path="tests/test_core.py")
-        assert f.exists is True
+    def test_file_with_content(self):
+        """Test File accepts explicit content"""
+        f = File(path="tests/test_core.py", content="custom content")
+        assert f.path == "tests/test_core.py"
+        assert f.content == "custom content"
 
 
 if __name__ == "__main__":

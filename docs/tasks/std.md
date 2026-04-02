@@ -6,7 +6,7 @@ HDR includes a standard library of common task types in `hdr.tasks.std`.
 
 ## File
 
-**What:** Validates that a file exists (or does not exist) at a given path.
+**What:** Validates that a file exists at a given path using `os.path.exists()`. The `content` field is auto-filled from the actual file content if not specified.
 
 **Why:** Before proceeding with tasks that depend on a file, you want to guarantee it exists. `File` provides a self-verifying proof of presence.
 
@@ -15,52 +15,40 @@ HDR includes a standard library of common task types in `hdr.tasks.std`.
 ```python
 from hdr.tasks import File
 
-# Verify a file exists
-file_task = File(path="README.md", exists=True)
+# Verify a file exists and auto-fill content
+file_task = File(path="README.md")
 
-# Verify a file does not exist
-missing = File(path="debug.log", exists=False)
-
-# Default is exists=True
-default = File(path="README.md")
+# Provide explicit content
+custom = File(path="output.txt", content="my content")
 ```
 
 **Fields:**
 - `path: str` — path to the file (relative or absolute; relative is preferred for portability)
-- `exists: bool = True` — whether the file must exist or must not exist
-
-**Quote behavior:** `quote(File(...))` returns the file's full content wrapped in `<file><path>...</path><content>...</content></file>`.
+- `content: str = ""` — the file content (auto-filled from file if not specified)
 
 ---
 
 ## Directory
 
-**What:** Validates that a directory exists (or does not exist) at a given path. Optionally holds a list of `File` instances for composition with other tasks.
+**What:** Validates that a directory exists at a given path using `os.path.isdir()`. The `content` field is auto-filled from the actual directory content if not specified. Content is gathered recursively, respecting `.gitignore` patterns, and the total actual content length is logged.
 
-**Why:** When a task operates on a directory, you want to guarantee the directory is present before proceeding. The `files` list allows composition with `File` tasks for joint validation.
+**Why:** When a task operates on a directory, you want to guarantee the directory is present before proceeding. The auto-filled `content` allows inspection of directory contents.
 
 **How to use:**
 
 ```python
-from hdr.tasks import Directory, File
+from hdr.tasks import Directory
 
-# Verify a directory exists
-dir_task = Directory(path="src", exists=True)
+# Verify a directory exists and auto-fill content
+dir_task = Directory(path="src")
 
-# Verify a directory does not exist
-missing = Directory(path="/tmp/cache", exists=False)
-
-# Directory with File instances for composition
-dir_with_files = Directory(path="src", files=[File(path="main.py"), File(path="utils.py")])
-
-# Nested files
-nested = Directory(path="src", files=[File(path="sub/module.py")])
+# Provide explicit content
+custom = Directory(path="output", content="my content")
 ```
 
 **Fields:**
 - `path: str` — path to the directory
-- `exists: bool = True` — whether the directory must exist or must not exist
-- `files: list[File] = []` — list of `File` instances (for composition; Directory does not validate them)
+- `content: str = ""` — the directory content (auto-filled from directory if not specified, respects .gitignore, recurses)
 
 ---
 
