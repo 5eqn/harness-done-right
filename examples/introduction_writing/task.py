@@ -3,7 +3,7 @@ Task specification - THIS FILE IS IMMUTABLE ONCE AGREED
 Defines the formal requirements for the task
 """
 
-from hdr.tasks.std import File, PythonWorkspace, Context, Task, Concept
+from hdr.tasks.std import File, PythonWorkspace, Context, Task
 from pydantic import Field
 
 
@@ -12,16 +12,18 @@ class IntroSection(Task):
     Introduction section that explains what the subject is and why it matters.
     """
 
-    context: Context = Field(description="Authoritative definition of the subject being introduced")
+    context: Context = Field(
+        description="Authoritative definition of the subject being introduced"
+    )
     title: str = Field(description="Title of the introduction section")
-    file: File = Field(description="Markdown file (.md) containing the introduction text")
+    file: File = Field(
+        description="Markdown file (.md) containing the introduction text"
+    )
 
     def __init__(self, **data):
         super().__init__(**data)
 
-        self.verify(
-            "The file does not contradict any statement in context."
-        )
+        self.verify("The file does not contradict any statement in context.")
         self.verify(
             "The file contains both (a) a description of what the subject is, and (b) at least one statement of why it is useful or when to use it."
         )
@@ -41,9 +43,13 @@ class UsageSection(Task):
     Usage section that explains how to use a concept with runnable examples.
     """
 
-    context: Context = Field(description="Authoritative definition of the concept being documented")
+    context: Context = Field(
+        description="Authoritative definition of the concept being documented"
+    )
     concept: str = Field(description="Name of the concept being documented")
-    file: File = Field(description="Markdown file (.md) containing the usage explanation")
+    file: File = Field(
+        description="Markdown file (.md) containing the usage explanation"
+    )
     code_examples: PythonWorkspace = Field(
         description="Python workspace containing runnable code examples"
     )
@@ -51,9 +57,7 @@ class UsageSection(Task):
     def __init__(self, **data):
         super().__init__(**data)
 
-        self.verify(
-            "The file does not contradict any statement in context."
-        )
+        self.verify("The file does not contradict any statement in context.")
         self.verify(
             "Every code snippet in file has a corresponding file in code_examples, and every file in code_examples is referenced in file."
         )
@@ -73,5 +77,9 @@ class Documentation(Task):
     Complete documentation combining introduction and usage sections.
     """
 
-    intro: IntroSection = Field(description="Introduction section explaining what and why")
-    usage: UsageSection = Field(description="Usage section explaining how with examples")
+    intro: IntroSection = Field(
+        description="Introduction section explaining what and why"
+    )
+    usage: UsageSection = Field(
+        description="Usage section explaining how with examples"
+    )

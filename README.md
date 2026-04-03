@@ -9,17 +9,18 @@
 你的 Agent 将需求形式化为一个数据结构：
 
 ```python
-from hdr import BaseModel, verify, quote
+from hdr.tasks.std import Task
+from pydantic import Field
 
-class HumanizeText(BaseModel):
-    original: str
-    humanized: str
+class HumanizeText(Task):
+    original: str = Field(description="Original AI-generated text")
+    humanized: str = Field(description="Humanized version of the text")
 
     def __init__(self, **data):
         super().__init__(**data)
         # 基于 LLM 的断言验证
-        verify(f"{quote(self.original)} 和 {quote(self.humanized)} 表达的意思相同")
-        verify(f"{quote(self.humanized)} 读起来像自然的人类书写文本")
+        self.verify("original and humanized convey the same meaning")
+        self.verify("humanized reads like natural human-written text")
 ```
 
 ### 2. 执行

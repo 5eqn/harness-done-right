@@ -6,7 +6,7 @@ Import task types from task.py
 from hdr import Concept
 
 concept = Concept(
-    context="TODO Explain Python, Agent, Skill, Harness based on search result + exploration of this repo"
+    context="TODO Explain Python, Agent, Skill, Harness"
     # TODO other fields
 )
 
