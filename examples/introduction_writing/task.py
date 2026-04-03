@@ -3,30 +3,40 @@ Task specification - THIS FILE IS IMMUTABLE ONCE AGREED
 Defines the formal requirements for the task
 """
 
-from hdr import BaseModel, verify, quote
-from hdr.tasks.std import File, PythonWorkspace, Context
+from hdr.tasks.std import File, PythonWorkspace, Context, Task
+from pydantic import Field
 
 
 # Define subtask types
-class UsageSection(BaseModel):
-    context: Context
-    concept: str
-    file: File
-    code_examples: PythonWorkspace
+class UsageSection(Task):
+    context: Context = Field(description="Parent context this usage section belongs to")
+    concept: str = Field(description="Name of the concept being documented")
+    usage_summary: File = Field(description="File containing the usage summary text")
+    code_examples: PythonWorkspace = Field(
+        description="Python workspace containing runnable code examples"
+    )
 
     def __init__(self, **data):
         super().__init__(**data)
 
-        ctx = f"[Context] Under parent_context={quote(self.context)}, we're writing a usage section for concept={quote(self.concept)}, containing a usage_summary={quote(self.file)} facing human readers, along with some code_examples={quote(self.code_examples)} [Verify]"
+        self.verify(
+            "The usage section clearly explains how to use the concept in practical scenarios"
+        )
+        self.verify(
+            "All code examples are syntactically correct and follow best practices"
+        )
+        self.verify(
+            "The usage summary does not assume prior knowledge of the concept being explained"
+        )
 
-        verify(f"{ctx} The ...")
 
-
-class Documentation(BaseModel):
-    title: str
-    usage: UsageSection
+class Documentation(Task):
+    title: str = Field(description="Title of the documentation")
+    usage: UsageSection = Field(description="Usage section of the documentation")
 
     def __init__(self, **data):
         super().__init__(**data)
-        verify(f"{quote(self.title)} is clear and descriptive")
-        verify(f"{quote(self)} as a whole is easy to understand for new users")
+        self.verify(
+            "The title is clear and accurately describes the documentation content"
+        )
+        self.verify("The documentation as a whole is easy to understand for new users")

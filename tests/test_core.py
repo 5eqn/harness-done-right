@@ -131,6 +131,28 @@ def test_task_verify_method():
     task.verify("value is a positive integer")
 
 
+def test_quote_includes_field_descriptions():
+    """Test that quote function includes field descriptions in output"""
+
+    class TestTask(Task):
+        value: int = Field(description="Test integer value")
+        name: str = Field(description="Name of the test object")
+        is_active: bool = Field(description="Whether the task is active")
+
+    task = TestTask(value=42, name="test task", is_active=True)
+    quoted = quote(task)
+
+    # Check that descriptions are included
+    assert "# Test integer value" in quoted
+    assert "# Name of the test object" in quoted
+    assert "# Whether the task is active" in quoted
+
+    # Check that field values are present
+    assert "value = 42" in quoted
+    assert "name = 'test task'" in quoted
+    assert "is_active = True" in quoted
+
+
 class TestFile:
     """Unit tests for File task class"""
 

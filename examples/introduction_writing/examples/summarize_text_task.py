@@ -1,18 +1,19 @@
 # HDR end-to-end example: setup + text summarization
 # Follow install steps, save as example.py, run with python example.py
-from hdr import BaseModel, verify, quote
+from hdr.tasks.std import Task
+from pydantic import Field
 
 
-class SummarizeText(BaseModel):
-    original_text: str
-    summary: str
-    max_words: int = 50
+class SummarizeText(Task):
+    original_text: str = Field(description="Original text to be summarized")
+    summary: str = Field(description="Generated summary of the original text")
+    max_words: int = Field(
+        default=50, description="Maximum allowed word count for the summary"
+    )
 
     def __init__(self, **data):
         super().__init__(**data)
-        verify(
-            f"{quote(self.summary)} includes key info from {quote(self.original_text)}"
-        )
+        self.verify("The summary includes all key information from the original text")
         # Word count check: summary must be ≤ max_words
         assert len(self.summary.split()) <= self.max_words, (
             f"Summary exceeds {self.max_words} words"
