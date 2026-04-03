@@ -35,20 +35,6 @@ class ParentTask(BaseModel):
     name: str
 
 
-def test_task_verify_method():
-    """Test Task.verify method with automatic context injection"""
-    # Create a test Task subclass
-    class TestTask(Task):
-        value: int = Field(description="Test value")
-        name: str = Field(description="Test name")
-
-    # Verify runs without error in mock mode
-    task = TestTask(value=42, name="test")
-    task.verify("value is 42")
-    task.verify("name is 'test'")
-    task.verify("value is a positive integer")
-
-
 def test_pydantic_type_checking_string():
     """Test Pydantic string type validation"""
     instance = StringTask(name="test")
@@ -91,15 +77,13 @@ def test_pydantic_nested_type():
 def test_quote_function():
     """Test quote function for various types"""
     # Test primitive types
-    assert quote("test string") == "<quote>'test string'</quote>"
-    assert quote(42) == "<quote>42</quote>"
-    assert quote(3.14) == "<quote>3.14</quote>"
-    assert quote(True) == "<quote>True</quote>"
+    assert quote("test string") == "'test string'"
+    assert quote(42) == "42"
+    assert quote(3.14) == "3.14"
+    assert quote(True) == "True"
 
     # Test list
     quoted_list = quote([1, 2, 3])
-    assert quoted_list.startswith("<quote>")
-    assert quoted_list.endswith("</quote>")
     assert "1," in quoted_list
     assert "2," in quoted_list
     assert "3," in quoted_list
@@ -107,24 +91,18 @@ def test_quote_function():
     # Test dict
     test_dict = {"key": "value", "number": 42}
     quoted_dict = quote(test_dict)
-    assert quoted_dict.startswith("<quote>")
-    assert quoted_dict.endswith("</quote>")
     assert "'key': 'value'" in quoted_dict
     assert "'number': 42" in quoted_dict
 
     # Test BaseModel (should be pretty printed with class name)
     nested = NestedItem(value=42)
     quoted_model = quote(nested)
-    assert quoted_model.startswith("<quote>")
-    assert quoted_model.endswith("</quote>")
     assert "NestedItem(" in quoted_model
     assert "value = 42" in quoted_model
 
     # Test nested BaseModel
     parent = ParentTask(name="test", item=nested)
     quoted_parent = quote(parent)
-    assert quoted_parent.startswith("<quote>")
-    assert quoted_parent.endswith("</quote>")
     assert "ParentTask(" in quoted_parent
     assert "name = 'test'" in quoted_parent
     assert "item = " in quoted_parent
@@ -140,6 +118,7 @@ def test_quote_function():
 
 def test_task_verify_method():
     """Test Task.verify method with automatic context injection"""
+
     # Create a test Task subclass
     class TestTask(Task):
         value: int = Field(description="Test value")

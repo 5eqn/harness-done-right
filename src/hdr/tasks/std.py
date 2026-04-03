@@ -17,7 +17,7 @@ from anthropic.types import ThinkingConfigEnabledParam
 from pydantic import BaseModel, Field
 
 
-def _quote(obj: Any, indent: int = 0) -> str:
+def quote(obj: Any, indent: int = 0) -> str:
     """
     Pretty quote an object for use in verify prompts.
     - Prints class name for BaseModel instances
@@ -41,13 +41,13 @@ def _quote(obj: Any, indent: int = 0) -> str:
 
             # Format field value
             if isinstance(field_value, BaseModel):
-                value_str = "\n" + _quote(field_value, next_indent)
+                value_str = "\n" + quote(field_value, next_indent)
             elif isinstance(field_value, dict):
                 value_str = " {"
                 if field_value:
                     value_str += "\n"
                     for k, v in field_value.items():
-                        value_str += f"{next_indent_str}{repr(k)}: {_quote(v, next_indent + 1).lstrip()},\n"
+                        value_str += f"{next_indent_str}{repr(k)}: {quote(v, next_indent + 1).lstrip()},\n"
                     value_str += f"{indent_str}  "
                 value_str += "}"
             elif isinstance(field_value, (list, tuple)):
@@ -55,7 +55,7 @@ def _quote(obj: Any, indent: int = 0) -> str:
                 if field_value:
                     value_str += "\n"
                     for item in field_value:
-                        value_str += f"{next_indent_str}{_quote(item, next_indent + 1).lstrip()},\n"
+                        value_str += f"{next_indent_str}{quote(item, next_indent + 1).lstrip()},\n"
                     value_str += f"{indent_str}  "
                 value_str += "]"
             elif isinstance(field_value, str):
@@ -74,7 +74,7 @@ def _quote(obj: Any, indent: int = 0) -> str:
         result = [f"{indent_str}{{"]
         for k, v in obj.items():
             result.append(
-                f"{next_indent_str}{repr(k)}: {_quote(v, next_indent + 1).lstrip()},"
+                f"{next_indent_str}{repr(k)}: {quote(v, next_indent + 1).lstrip()},"
             )
         result.append(f"{indent_str}}}")
         return "\n".join(result)
@@ -86,7 +86,7 @@ def _quote(obj: Any, indent: int = 0) -> str:
         close_bracket = "]" if isinstance(obj, list) else ")"
         result = [f"{indent_str}{bracket}"]
         for item in obj:
-            result.append(f"{next_indent_str}{_quote(item, next_indent + 1).lstrip()},")
+            result.append(f"{next_indent_str}{quote(item, next_indent + 1).lstrip()},")
         result.append(f"{indent_str}{close_bracket}")
         return "\n".join(result)
 
@@ -114,7 +114,7 @@ class Task(BaseModel):
         No need to manually quote fields or use f-strings.
         """
         full_condition = (
-            f"Given the task object:\n{_quote(self)}\n\nVerify that: {condition}"
+            f"Given the task object:\n{quote(self)}\n\nVerify that: {condition}"
         )
 
         # Return mock result if running under pytest
@@ -207,14 +207,6 @@ Only give a score of 5 if the condition is 100% true with no exceptions."""
             raise AssertionError(
                 f"Verification failed with score {score}/5.\nDescription: {description}"
             )
-
-
-def quote(obj: Any) -> str:
-    """
-    Quote an object to be used in verify prompts, preventing prompt injection.
-    Uses the pretty _quote function to format objects nicely.
-    """
-    return f"<quote>{_quote(obj)}</quote>"
 
 
 class File(Task):
