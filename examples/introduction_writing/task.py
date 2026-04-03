@@ -3,15 +3,47 @@ Task specification - THIS FILE IS IMMUTABLE ONCE AGREED
 Defines the formal requirements for the task
 """
 
-from hdr.tasks.std import File, PythonWorkspace, Context, Task
+from hdr.tasks.std import File, PythonWorkspace, Context, Task, Concept
 from pydantic import Field
 
 
-# Define subtask types
+class IntroSection(Task):
+    """
+    Introduction section that explains what the subject is and why it matters.
+    """
+
+    context: Context = Field(description="Authoritative definition of the subject being introduced")
+    title: str = Field(description="Title of the introduction section")
+    file: File = Field(description="Markdown file (.md) containing the introduction text")
+
+    def __init__(self, **data):
+        super().__init__(**data)
+
+        self.verify(
+            "The file does not contradict any statement in context."
+        )
+        self.verify(
+            "The file contains both (a) a description of what the subject is, and (b) at least one statement of why it is useful or when to use it."
+        )
+        self.verify(
+            "The file only discusses topics within the scope indicated by title; it does not digress into unrelated subjects."
+        )
+        self.verify(
+            "The file contains no time-sensitive terms (e.g., 'currently', 'recently', 'as of now') without specifying an exact version or date."
+        )
+        self.verify(
+            "Every technical term used in file is either defined in context or explained within file itself."
+        )
+
+
 class UsageSection(Task):
-    context: Context = Field(description="Parent context this usage section belongs to")
+    """
+    Usage section that explains how to use a concept with runnable examples.
+    """
+
+    context: Context = Field(description="Authoritative definition of the concept being documented")
     concept: str = Field(description="Name of the concept being documented")
-    usage_summary: File = Field(description="File containing the usage summary text")
+    file: File = Field(description="Markdown file (.md) containing the usage explanation")
     code_examples: PythonWorkspace = Field(
         description="Python workspace containing runnable code examples"
     )
@@ -20,23 +52,26 @@ class UsageSection(Task):
         super().__init__(**data)
 
         self.verify(
-            "The usage section clearly explains how to use the concept in practical scenarios"
+            "The file does not contradict any statement in context."
         )
         self.verify(
-            "All code examples are syntactically correct and follow best practices"
+            "Every code snippet in file has a corresponding file in code_examples, and every file in code_examples is referenced in file."
         )
         self.verify(
-            "The usage summary does not assume prior knowledge of the concept being explained"
+            "The file only explains usage of concept; it does not introduce or explain usage of unrelated concepts."
+        )
+        self.verify(
+            "The file contains no time-sensitive terms (e.g., 'currently', 'recently', 'as of now') without specifying an exact version or date."
+        )
+        self.verify(
+            "Every technical term used in file is either defined in context or explained within file itself."
         )
 
 
 class Documentation(Task):
-    title: str = Field(description="Title of the documentation")
-    usage: UsageSection = Field(description="Usage section of the documentation")
+    """
+    Complete documentation combining introduction and usage sections.
+    """
 
-    def __init__(self, **data):
-        super().__init__(**data)
-        self.verify(
-            "The title is clear and accurately describes the documentation content"
-        )
-        self.verify("The documentation as a whole is easy to understand for new users")
+    intro: IntroSection = Field(description="Introduction section explaining what and why")
+    usage: UsageSection = Field(description="Usage section explaining how with examples")

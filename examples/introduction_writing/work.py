@@ -3,21 +3,11 @@ Task implementation - builds final task instance
 Import task types from task.py
 """
 
-from task import UsageSection, Documentation
-from hdr.tasks.std import File, PythonWorkspace
+from hdr import Concept
 
-print("Building documentation components...")
-
-# Build dependency instances first
-usage = UsageSection(
-    usage_summary=File(path="usage.md"),
-    code_examples=PythonWorkspace(path="examples"),
-)
-
-# Build final target instance
-doc = Documentation(
-    title="HDR Getting Started: Task Formalization & AI Validation",
-    usage=usage,
+concept = Concept(
+    context="TODO Explain Python, Agent, Skill, Harness based on search result + exploration of this repo"
+    # TODO other fields
 )
 
 print("✅ Task completed successfully!")
