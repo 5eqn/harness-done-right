@@ -6,11 +6,11 @@ All tasks use relative paths by preference, as they are more portable and make
 projects easier to share and version control.
 """
 
+from hdr import BaseModel, verify, quote
+
 import os
 import shutil
 import subprocess
-
-from pydantic import BaseModel
 
 
 class File(BaseModel):
@@ -69,7 +69,11 @@ class Directory(BaseModel):
         if os.path.exists(gitignore_path):
             try:
                 with open(gitignore_path, "r") as f:
-                    gitignore_patterns = [line.strip() for line in f if line.strip() and not line.startswith("#")]
+                    gitignore_patterns = [
+                        line.strip()
+                        for line in f
+                        if line.strip() and not line.startswith("#")
+                    ]
             except (IOError, OSError):
                 pass
 
@@ -77,7 +81,11 @@ class Directory(BaseModel):
             # Calculate relative path for filtering directories
             rel_root = os.path.relpath(root, dir_path)
             # Filter out directories matching gitignore patterns
-            dirs[:] = [d for d in dirs if not self._is_ignored(os.path.join(rel_root, d), gitignore_patterns)]
+            dirs[:] = [
+                d
+                for d in dirs
+                if not self._is_ignored(os.path.join(rel_root, d), gitignore_patterns)
+            ]
 
             for filename in filenames:
                 filepath = os.path.join(root, filename)
@@ -97,14 +105,19 @@ class Directory(BaseModel):
     def _is_ignored(self, rel_path: str, patterns: list[str]) -> bool:
         """Check if a path matches any gitignore pattern."""
         import fnmatch
+
         for pattern in patterns:
             if pattern.endswith("/"):
                 # Directory pattern
                 dir_pattern = pattern.rstrip("/")
-                if fnmatch.fnmatch(rel_path, dir_pattern) or fnmatch.fnmatch(rel_path, dir_pattern + "/*"):
+                if fnmatch.fnmatch(rel_path, dir_pattern) or fnmatch.fnmatch(
+                    rel_path, dir_pattern + "/*"
+                ):
                     return True
             else:
-                if fnmatch.fnmatch(rel_path, pattern) or fnmatch.fnmatch(os.path.basename(rel_path), pattern):
+                if fnmatch.fnmatch(rel_path, pattern) or fnmatch.fnmatch(
+                    os.path.basename(rel_path), pattern
+                ):
                     return True
         return False
 
@@ -150,6 +163,7 @@ class PythonWorkspace(Directory):
         )
         try:
             import json
+
             pyright_output = json.loads(result_pyright.stdout)
             error_count = pyright_output.get("summary", {}).get("errorCount", 0)
             warning_count = pyright_output.get("summary", {}).get("warningCount", 0)
@@ -175,3 +189,34 @@ class PythonWorkspace(Directory):
             raise AssertionError(
                 f"ruff found lint errors in {self.path}:\n{result_ruff.stdout}\n{result_ruff.stderr}"
             )
+
+
+class Concept(BaseModel):
+    context: str
+    name: str
+    description: File
+
+    def __init__(self, **data):
+        super().__init__(**data)
+
+        ctx = f"[Concept Definition] context={quote(self.context)} name={quote(self.name)} description={quote(self.description)} [Verify]"
+
+        verify(
+            f"{ctx} The description is written for readers who understand context but do not yet know name; it neither repeats basics from context nor presumes knowledge of sibling/descendant concepts."
+        )
+        verify(
+            f"{ctx} The concept name represents exactly one atomic idea that cannot be meaningfully split into two independent concepts."
+        )
+        verify(
+            f"{ctx} The description contains no time-sensitive terms (e.g., 'currently', 'recently', 'as of now') without specifying an exact version or date."
+        )
+        verify(
+            f"{ctx} The description identifies (a) a broader category that name belongs to, and (b) a distinguishing property that separates it from other members of that category."
+        )
+        verify(
+            f"{ctx} A reader familiar with context can determine for any concrete instance whether it belongs to name, with at most minor edge-case ambiguity."
+        )
+
+
+class Context(BaseModel):
+    concepts: list[Concept]
