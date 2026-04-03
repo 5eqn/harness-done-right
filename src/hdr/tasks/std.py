@@ -402,9 +402,11 @@ class Concept(Task):
     Represents a documented concept within a context.
     """
 
-    context: str = Field(description="Parent context this concept belongs to")
+    context: File = Field(description="Markdown file explaining the parent context")
     name: str = Field(description="Name of the concept")
-    description: File = Field(description="File containing the concept description")
+    description: File = Field(
+        description="Markdown file containing the concept description"
+    )
 
     def __init__(self, **data):
         super().__init__(**data)
