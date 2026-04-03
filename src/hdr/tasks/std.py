@@ -199,10 +199,10 @@ class Concept(BaseModel):
     def __init__(self, **data):
         super().__init__(**data)
 
-        ctx = f"[Concept Definition] context={quote(self.context)} name={quote(self.name)} description={quote(self.description)} [Verify]"
+        ctx = f"[Context] Under parent_context={quote(self.context)}, we're introducing a concept with name={quote(self.name)} and description={quote(self.description)} [Verify]"
 
         verify(
-            f"{ctx} The description is written for readers who understand context but do not yet know name; it neither repeats basics from context nor presumes knowledge of sibling/descendant concepts."
+            f"{ctx} The description is written for readers who understand parent_context but do not yet know name; it neither repeats basics from parent_context nor presumes knowledge of sibling/descendant concepts."
         )
         verify(
             f"{ctx} The concept name represents exactly one atomic idea that cannot be meaningfully split into two independent concepts."
@@ -214,7 +214,7 @@ class Concept(BaseModel):
             f"{ctx} The description identifies (a) a broader category that name belongs to, and (b) a distinguishing property that separates it from other members of that category."
         )
         verify(
-            f"{ctx} A reader familiar with context can determine for any concrete instance whether it belongs to name, with at most minor edge-case ambiguity."
+            f"{ctx} A reader familiar with parent_context can determine for any concrete instance whether it belongs to name, with at most minor edge-case ambiguity."
         )
 
 

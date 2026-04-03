@@ -10,14 +10,16 @@ from hdr.tasks.std import File, PythonWorkspace, Context
 # Define subtask types
 class UsageSection(BaseModel):
     context: Context
-    usage_summary: File
+    concept: str
+    file: File
     code_examples: PythonWorkspace
 
     def __init__(self, **data):
         super().__init__(**data)
-        verify(
-            f"[Condition] context={quote(self.context)}, usage_summary={quote(self.usage_summary)} [Verify] The file clearly explains how to use HDR"
-        )
+
+        ctx = f"[Context] Under parent_context={quote(self.context)}, we're writing a usage section for concept={quote(self.concept)}, containing a usage_summary={quote(self.file)} facing human readers, along with some code_examples={quote(self.code_examples)} [Verify]"
+
+        verify(f"{ctx} The ...")
 
 
 class Documentation(BaseModel):

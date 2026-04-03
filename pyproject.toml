@@ -29,7 +29,7 @@ python_files = ["test_*.py"]
 
 [tool.pyright]
 include = ["src"]
-exclude = ["**/__pycache__", ".venv"]
+exclude = ["**/__pycache__", ".venv", "**/node_modules", "**/.*"]
 typeCheckingMode = "basic"
 pythonVersion = "3.12"
 
