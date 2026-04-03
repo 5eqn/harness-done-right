@@ -3,56 +3,12 @@ Tests for HDR verify functionality.
 """
 
 import pytest
-from hdr import verify, quote, BaseModel
+from hdr import quote, BaseModel, Task
 from hdr.tasks.std import File
-from pydantic import ValidationError
+from pydantic import ValidationError, Field
 
 
 # Test classes
-class HumanizeText:
-    def __init__(self, original: str, humanized: str):
-        self.original = original
-        self.humanized = humanized
-        verify(f"<a>{original}</a> and <b>{humanized}</b> conveys the same meaning")
-        verify(f"{humanized} reads like natural human-written text")
-
-
-class FailingTask:
-    def __init__(self, value: str):
-        verify(f"{value} is valid")
-
-
-class D:
-    def __init__(self, value: str):
-        self.value = value
-        verify(f"{value} is a valid D")
-
-
-class E:
-    def __init__(self, value: int):
-        self.value = value
-        verify(f"{value} is a valid E")
-
-
-class B:
-    def __init__(self, d: D, e: E):
-        self.d = d
-        self.e = e
-        verify(f"{d.value} and {e.value} are properly combined into B")
-
-
-class C:
-    def __init__(self, data: list):
-        self.data = data
-        verify(f"{data} is valid for C")
-
-
-class A:
-    def __init__(self, title: str, b: B, c: C):
-        self.title = title
-        self.b = b
-        self.c = c
-        verify(f"{title} matches {b.d.value} and {c.data}")
 
 
 # Pydantic test classes
@@ -79,28 +35,18 @@ class ParentTask(BaseModel):
     name: str
 
 
-def test_basic_task_flow():
-    """Test the basic stateless task creation flow from the example"""
-    instance = HumanizeText("Text with AI", "Text without AI")
+def test_task_verify_method():
+    """Test Task.verify method with automatic context injection"""
+    # Create a test Task subclass
+    class TestTask(Task):
+        value: int = Field(description="Test value")
+        name: str = Field(description="Test name")
 
-    assert isinstance(instance, HumanizeText)
-    assert instance.original == "Text with AI"
-    assert instance.humanized == "Text without AI"
-
-
-def test_recursive_dependencies():
-    """Test recursive stateless task construction from the example"""
-    d = D("d-value")
-    e = E(42)
-    b = B(d, e)
-    c = C([1, 2, 3])
-
-    a = A("Test Title", b, c)
-
-    assert a.title == "Test Title"
-    assert a.b.d.value == "d-value"
-    assert a.b.e.value == 42
-    assert a.c.data == [1, 2, 3]
+    # Verify runs without error in mock mode
+    task = TestTask(value=42, name="test")
+    task.verify("value is 42")
+    task.verify("name is 'test'")
+    task.verify("value is a positive integer")
 
 
 def test_pydantic_type_checking_string():
@@ -144,39 +90,66 @@ def test_pydantic_nested_type():
 
 def test_quote_function():
     """Test quote function for various types"""
-    assert quote("test string") == "<quote>test string</quote>"
-
+    # Test primitive types
+    assert quote("test string") == "<quote>'test string'</quote>"
     assert quote(42) == "<quote>42</quote>"
     assert quote(3.14) == "<quote>3.14</quote>"
     assert quote(True) == "<quote>True</quote>"
 
-    assert quote([1, 2, 3]) == "<quote>[\n  1,\n  2,\n  3\n]</quote>"
+    # Test list
+    quoted_list = quote([1, 2, 3])
+    assert quoted_list.startswith("<quote>")
+    assert quoted_list.endswith("</quote>")
+    assert "1," in quoted_list
+    assert "2," in quoted_list
+    assert "3," in quoted_list
 
+    # Test dict
     test_dict = {"key": "value", "number": 42}
     quoted_dict = quote(test_dict)
     assert quoted_dict.startswith("<quote>")
     assert quoted_dict.endswith("</quote>")
-    assert '"key": "value"' in quoted_dict
-    assert '"number": 42' in quoted_dict
+    assert "'key': 'value'" in quoted_dict
+    assert "'number': 42" in quoted_dict
 
+    # Test BaseModel (should be pretty printed with class name)
     nested = NestedItem(value=42)
     quoted_model = quote(nested)
     assert quoted_model.startswith("<quote>")
     assert quoted_model.endswith("</quote>")
-    assert '"value": 42' in quoted_model
+    assert "NestedItem(" in quoted_model
+    assert "value = 42" in quoted_model
 
+    # Test nested BaseModel
     parent = ParentTask(name="test", item=nested)
     quoted_parent = quote(parent)
     assert quoted_parent.startswith("<quote>")
     assert quoted_parent.endswith("</quote>")
-    assert '"name": "test"' in quoted_parent
-    assert '"item": {' in quoted_parent
-    assert '"value": 42' in quoted_parent
+    assert "ParentTask(" in quoted_parent
+    assert "name = 'test'" in quoted_parent
+    assert "item = " in quoted_parent
+    assert "NestedItem(" in quoted_parent
+    assert "value = 42" in quoted_parent
 
-    # Test that quote works in verify (mock mode)
+    # Test that quote works with BaseModel instances
     task = StringTask(name="test task")
-    verify(f"{quote(task.name)} is a valid task name")
-    verify(f"{quote(task)} has a valid name field")
+    quoted_task = quote(task)
+    assert "StringTask(" in quoted_task
+    assert "name = 'test task'" in quoted_task
+
+
+def test_task_verify_method():
+    """Test Task.verify method with automatic context injection"""
+    # Create a test Task subclass
+    class TestTask(Task):
+        value: int = Field(description="Test value")
+        name: str = Field(description="Test name")
+
+    # Verify runs without error in mock mode
+    task = TestTask(value=42, name="test")
+    task.verify("value is 42")
+    task.verify("name is 'test'")
+    task.verify("value is a positive integer")
 
 
 class TestFile:

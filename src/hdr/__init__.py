@@ -7,12 +7,19 @@ Formalize tasks as Python classes, validate with LLM assertions, and execute inc
 
 from pydantic import BaseModel
 
-from hdr.verifiers.std import verify, quote
-from hdr.tasks.std import Directory, File, PythonWorkspace, Context, Concept
+from hdr.tasks.std import (
+    Task,
+    Directory,
+    File,
+    PythonWorkspace,
+    Context,
+    Concept,
+    quote,
+)
 
 __all__ = [
     "BaseModel",
-    "verify",
+    "Task",
     "quote",
     "File",
     "Directory",
