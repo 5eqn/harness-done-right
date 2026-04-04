@@ -3,12 +3,14 @@ Task implementation - builds final task instance
 Import task types from task.py
 """
 
-from hdr import Concept, File
+from hdr import quote, Concept, File
 
 concept = Concept(
-    context=File(path="context.md"),
+    context=File(path="docs/hdr/context.md"),
     name="HDR (Harness Done Right)",
-    description=File(path="intro.md"),
+    description=File(path="docs/hdr/description.md"),
 )
 
-print("✅ Task completed successfully!")
+# TODO
+
+print("✅ Target (construct `IntroSection` instance) accomplished!")

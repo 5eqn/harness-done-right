@@ -1,5 +1,5 @@
 ---
-name: hdr
+name: hdr-skill
 description: Harness Done Right - Formalize tasks as Python classes, validate with LLM assertions, and execute tasks incrementally with dependency management. Use this skill whenever the user wants to define formal task structures, validate task completions with LLM checks, build task dependency graphs, or track task execution progress.
 ---
 

@@ -13,7 +13,6 @@ from hdr.tasks.std import (
     Directory,
     File,
     PythonWorkspace,
-    Context,
     Concept,
     quote,
 )
@@ -25,6 +24,5 @@ __all__ = [
     "File",
     "Directory",
     "PythonWorkspace",
-    "Context",
     "Concept",
 ]

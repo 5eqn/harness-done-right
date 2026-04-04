@@ -107,6 +107,85 @@ class Task(BaseModel):
     _CACHE_DIR = "/tmp/claude/hdr_verify_cache"
     os.makedirs(_CACHE_DIR, exist_ok=True)
 
+    def _call_llm_with_retry(self, full_condition: str, max_retries: int = 10) -> tuple[str, int]:
+        """
+        Call LLM with retry logic. Returns (description, score).
+        Only retries on errors (network, parsing, etc.), not on score < 5.
+        """
+        prompt = f"""Evaluate this condition:
+
+<condition>{full_condition}</condition>
+
+First, output a brief description of your evaluation (under 100 words).
+Then, output your final score using the format: <score>N</score> where N is a number from 1 to 5 (5=completely satisfied, 1=completely unsatisfied).
+Only give a score of 5 if the condition is 100% true with no exceptions."""
+
+        api_key = os.environ.get("ANTHROPIC_AUTH_TOKEN")
+        base_url = os.environ.get("ANTHROPIC_BASE_URL", "https://api.anthropic.com")
+        model = os.environ.get("ANTHROPIC_MODEL", "claude-4.6-sonnet")
+
+        for attempt in range(1, max_retries + 1):
+            try:
+                client = anthropic.Anthropic(
+                    api_key=api_key,
+                    base_url=base_url,
+                )
+
+                message = client.messages.create(
+                    model=model,
+                    max_tokens=4096,
+                    thinking=ThinkingConfigEnabledParam(type="enabled", budget_tokens=1024),
+                    messages=[
+                        {"role": "user", "content": [{"type": "text", "text": prompt}]}
+                    ],
+                )
+
+                text = ""
+                description = ""
+                score = 0
+
+                for block in message.content:
+                    if block.type == "thinking":
+                        print(f"Thinking:\n{block.thinking}\n")
+                    elif block.type == "text":
+                        text = block.text
+                        print(f"Text:\n{block.text}\n")
+
+                # Parse description (everything before <score>)
+                if "<score>" in text:
+                    description = text[: text.index("<score>")].strip()
+                else:
+                    description = text.strip()
+
+                # Parse score from text output
+                if "<score>" in text and "</score>" in text:
+                    start = text.index("<score>") + len("<score>")
+                    end = text.index("</score>")
+                    try:
+                        score = int(text[start:end].strip())
+                    except ValueError:
+                        raise ValueError(f"Failed to parse score from LLM output: {text}")
+                else:
+                    raise ValueError(f"No <score> tag found in LLM output: {text}")
+
+                # Validate score range
+                if score < 1 or score > 5:
+                    raise ValueError(
+                        f"Score {score} is out of range (1-5). LLM output: {text}"
+                    )
+
+                # Success - return the result
+                return description, score
+
+            except Exception as e:
+                print(f"Error on attempt {attempt}/{max_retries}: {e}")
+                if attempt == max_retries:
+                    raise Exception(f"Failed after {max_retries} retries: {e}")
+                # Continue to next retry
+
+        # Should never reach here
+        raise Exception("Unexpected end of retry loop")
+
     def verify(self, condition: str) -> None:
         """
         Verify a condition against the current task state.
@@ -129,9 +208,6 @@ class Task(BaseModel):
                 "by setting the ANTHROPIC_AUTH_TOKEN environment variable."
             )
 
-        base_url = os.environ.get("ANTHROPIC_BASE_URL", "https://api.anthropic.com")
-        model = os.environ.get("ANTHROPIC_MODEL", "claude-4.6-sonnet")
-
         # Create cache key based solely on the condition
         cache_key = hashlib.md5(full_condition.encode()).hexdigest()
         cache_file = os.path.join(self._CACHE_DIR, f"{cache_key}.json")
@@ -143,61 +219,8 @@ class Task(BaseModel):
                 description = cached["description"]
                 score = cached["score"]
         else:
-            prompt = f"""Evaluate this condition:
-
-<condition>{full_condition}</condition>
-
-First, output a brief description of your evaluation (under 100 words).
-Then, output your final score using the format: <score>N</score> where N is a number from 1 to 5 (5=completely satisfied, 1=completely unsatisfied).
-Only give a score of 5 if the condition is 100% true with no exceptions."""
-
-            client = anthropic.Anthropic(
-                api_key=api_key,
-                base_url=base_url,
-            )
-
-            message = client.messages.create(
-                model=model,
-                max_tokens=1024,
-                thinking=ThinkingConfigEnabledParam(type="enabled", budget_tokens=1024),
-                messages=[
-                    {"role": "user", "content": [{"type": "text", "text": prompt}]}
-                ],
-            )
-
-            text = ""
-            description = ""
-            score = 0
-
-            for block in message.content:
-                if block.type == "thinking":
-                    print(f"Thinking:\n{block.thinking}\n")
-                elif block.type == "text":
-                    text = block.text
-                    print(f"Text:\n{block.text}\n")
-
-            # Parse description (everything before <score>)
-            if "<score>" in text:
-                description = text[: text.index("<score>")].strip()
-            else:
-                description = text.strip()
-
-            # Parse score from text output
-            if "<score>" in text and "</score>" in text:
-                start = text.index("<score>") + len("<score>")
-                end = text.index("</score>")
-                try:
-                    score = int(text[start:end].strip())
-                except ValueError:
-                    raise ValueError(f"Failed to parse score from LLM output: {text}")
-            else:
-                raise ValueError(f"No <score> tag found in LLM output: {text}")
-
-            # Validate score range
-            if score < 1 or score > 5:
-                raise ValueError(
-                    f"Score {score} is out of range (1-5). LLM output: {text}"
-                )
+            # Call LLM with retry logic
+            description, score = self._call_llm_with_retry(full_condition)
 
             # Cache the result (only description and score)
             with open(cache_file, "w") as f:
@@ -426,11 +449,3 @@ class Concept(Task):
         self.verify(
             "A reader familiar with context can determine for any concrete instance whether it belongs to name, with at most minor edge-case ambiguity."
         )
-
-
-class Context(Task):
-    """
-    Represents a collection of related concepts.
-    """
-
-    concepts: list[Concept] = Field(description="List of concepts in this context")
