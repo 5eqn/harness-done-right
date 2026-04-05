@@ -75,11 +75,12 @@ print("Task Verified:", result)
 | :--- | :--- |
 | `FileWritten` | Validates a file exists; auto-fills content from disk. |
 | `MarkdownFileWritten` | Validates a markdown file exists with valid syntax (extends `FileWritten`). |
+| `PythonFileWritten` | Validates a `.py` file exists; checks extension, ruff, and pyright pass cleanly. |
 | `DirectoryCreated` | Validates a directory exists; auto-gathers file content recursively. |
 | `PythonWorkspaceBuilt` | Extends `DirectoryCreated`; also validates ruff and pyright pass cleanly. |
 | `ConceptDescribed` | Represents a documented concept with LLM quality validation. |
 
-See `docs/tasks/std.md` for full documentation.
+See `docs/tasks/std.md` for standard tasks, `docs/tasks/coding.md` for Python-related tasks.
 
 ---
 

@@ -75,26 +75,6 @@ for f in directory.content:
     print(f.path, len(f.content))
 ```
 
-### PythonWorkspaceBuilt
-
-Extends `DirectoryCreated` — validates a Python workspace is properly configured for linting and type checking.
-
-**Inherits:** All fields from `DirectoryCreated`.
-
-**Validates (in addition to directory existence):**
-- `ruff` is installed (`shutil.which("ruff")`).
-- `pyright` is installed (`shutil.which("pyright")`).
-- `pyright --outputjson` reports zero errors and zero warnings.
-- `ruff check .` reports no lint errors.
-- `ruff format .` runs cleanly.
-
-**Example:**
-```python
-from hdr import PythonWorkspaceBuilt
-
-workspace = PythonWorkspaceBuilt(path="src/my_project")
-```
-
 ## Concept Tasks
 
 ### ConceptDescribed

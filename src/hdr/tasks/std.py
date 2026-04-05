@@ -10,7 +10,6 @@ from typing import Any
 import hashlib
 import json
 import os
-import shutil
 import subprocess
 import anthropic
 from anthropic.types import ThinkingConfigEnabledParam
@@ -350,87 +349,6 @@ class DirectoryCreated(Task):
                 ):
                     return True
         return False
-
-
-class PythonWorkspaceBuilt(DirectoryCreated):
-    """
-    Validates a Python workspace is properly configured for linting and type checking.
-    Inherits all fields from DirectoryCreated.
-
-    Additionally verifies:
-    - ruff is installed (shutil.which)
-    - pyright is installed (shutil.which)
-    - pyright reports no warnings or errors in the workspace
-    - ruff check reports no lint errors in the workspace
-
-    If ruff or pyright is not installed, raises AssertionError with
-    an installation message instructing the caller.
-    """
-
-    def __init__(self, **data):
-        super().__init__(**data)
-
-        # Check ruff is installed
-        ruff_path = shutil.which("ruff")
-        if not ruff_path:
-            raise AssertionError(
-                "ruff is not installed. Please install it with: pip install ruff"
-            )
-
-        # Check pyright is installed
-        pyright_path = shutil.which("pyright")
-        if not pyright_path:
-            raise AssertionError(
-                "pyright is not installed. Please install it with: pip install pyright"
-            )
-
-        # Run pyright and check for no errors/warnings
-        result_pyright = subprocess.run(
-            ["pyright", "--outputjson"],
-            cwd=self.path,
-            capture_output=True,
-            text=True,
-        )
-        try:
-            import json
-
-            pyright_output = json.loads(result_pyright.stdout)
-            error_count = pyright_output.get("summary", {}).get("errorCount", 0)
-            warning_count = pyright_output.get("summary", {}).get("warningCount", 0)
-            if error_count > 0 or warning_count > 0:
-                raise AssertionError(
-                    f"pyright found {error_count} error(s) and {warning_count} warning(s) "
-                    f"in {self.path}. Run 'pyright' for details."
-                )
-        except (json.JSONDecodeError, KeyError):
-            raise AssertionError(
-                f"pyright produced unexpected output in {self.path} "
-                f"(exit code {result_pyright.returncode}). Could not verify. Run 'pyright' for details."
-            )
-
-        # Run ruff check and verify no lint errors
-        result_ruff = subprocess.run(
-            ["ruff", "check", "."],
-            cwd=self.path,
-            capture_output=True,
-            text=True,
-        )
-        if result_ruff.returncode != 0:
-            raise AssertionError(
-                f"ruff found lint errors in {self.path}:\n{result_ruff.stdout}\n{result_ruff.stderr}"
-            )
-
-        # Run ruff format to ensure consistent formatting
-        result_ruff_fmt = subprocess.run(
-            ["ruff", "format", "."],
-            cwd=self.path,
-            capture_output=True,
-            text=True,
-        )
-        if result_ruff_fmt.returncode != 0:
-            raise AssertionError(
-                f"ruff format failed in {self.path}:\n{result_ruff_fmt.stdout}\n{result_ruff_fmt.stderr}"
-            )
 
 
 class MarkdownFileWritten(FileWritten):
