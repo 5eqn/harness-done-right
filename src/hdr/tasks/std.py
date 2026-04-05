@@ -107,7 +107,10 @@ class Task(BaseModel):
     os.makedirs(_CACHE_DIR, exist_ok=True)
 
     def _call_llm_with_retry(
-        self, full_condition: str, max_retries: int = 10
+        self,
+        full_condition: str,
+        max_retries: int = 10,
+        verbose: bool = False,
     ) -> tuple[str, int]:
         """
         Call LLM with retry logic. Returns (description, score).
@@ -118,8 +121,23 @@ class Task(BaseModel):
 <condition>{full_condition}</condition>
 
 First, output a brief description of your evaluation (under 100 words).
-Then, output your final score using the format: <score>N</score> where N is a number from 1 to 5 (5=completely satisfied, 1=completely unsatisfied).
-Only give a score of 5 if the condition is 100% true with no exceptions."""
+Then, output your final score using the format: <score>N</score>, N ranges from:
+
+1 / Definitely false. Even if parts are true, the overall claim cannot reasonably be interpreted as true.
+    Example: "The document clearly explains how LLMs work" (when it only covers Shannon's Theorem — related, but the main claim is plainly unmet)
+
+2 / Probably false, but the condition is ambiguous enough that a different reasonable interpretation could make it true.
+    Example: "The response is short" (it's 150 words — is that short?)
+
+3 / Genuinely ambiguous. Cannot be evaluated without clarification.
+    Example: "The output is good"
+
+4 / Probably true, but the condition is ambiguous enough that a different reasonable interpretation could make it false.
+    Example: "The code handles errors" (it handles some, but all?)
+
+5 / Definitely true. Judge by standard interpretation; do not search for edge cases to invalidate a clearly true statement.
+    Example: "The code contains no factual errors" (it says JavaScript arrays are zero-indexed — true under any reasonable reading)
+"""
 
         api_key = os.environ.get("ANTHROPIC_AUTH_TOKEN")
         base_url = os.environ.get("ANTHROPIC_BASE_URL", "https://api.anthropic.com")
@@ -147,12 +165,14 @@ Only give a score of 5 if the condition is 100% true with no exceptions."""
                 description = ""
                 score = 0
 
-                for block in message.content:
-                    if block.type == "thinking":
-                        print(f"Thinking:\n{block.thinking}\n")
-                    elif block.type == "text":
-                        text = block.text
-                        print(f"Text:\n{block.text}\n")
+                # Log LLM response
+                if verbose:
+                    for block in message.content:
+                        if block.type == "thinking":
+                            print(f"Thinking:\n{block.thinking}\n")
+                        elif block.type == "text":
+                            text = block.text
+                            print(f"Text:\n{block.text}\n")
 
                 # Parse description (everything before <score>)
                 if "<score>" in text:
@@ -191,7 +211,7 @@ Only give a score of 5 if the condition is 100% true with no exceptions."""
         # Should never reach here
         raise Exception("Unexpected end of retry loop")
 
-    def verify(self, condition: str) -> None:
+    def verify(self, condition: str, expected_score: int = 5) -> None:
         """
         Verify a condition against the current task state.
         Automatically includes the pretty-printed task object as context.
@@ -231,9 +251,9 @@ Only give a score of 5 if the condition is 100% true with no exceptions."""
             with open(cache_file, "w") as f:
                 json.dump({"description": description, "score": score}, f)
 
-        if score != 5:
+        if score != expected_score:
             raise AssertionError(
-                f"Verification failed with score {score}/5.\nDescription: {description}"
+                f"Verification failed with score {score} (expected {expected_score}).\nDescription: {description}"
             )
 
 
