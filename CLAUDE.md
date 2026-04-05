@@ -84,9 +84,6 @@ hdr-skill/              # Project root (Claude Code skill)
 ├── tests/              # Unit tests
 │   ├── test_core.py
 │   └── test_std.py
-├── docs/
-│   └── tasks/          # Task documentation
-│       └── std.md      # File, Directory, PythonWorkspace reference
 └── examples/           # Example workflows
     └── introduction_writing/
 ```
