@@ -5,7 +5,7 @@ Uses a fixed temp workspace created via tempfile.mkdtemp.
 
 import tempfile
 import pytest
-from hdr.tasks.std import DirectoryCreated, FileWritten
+from hdr.tasks.std import DirectoryCreated, FileWritten, MarkdownFileWritten
 
 
 class TestFileWritten:
@@ -87,6 +87,61 @@ class TestDirectoryCreated:
             contents = [f.content for f in d.content]
             assert "content a" in contents
             assert "content b" in contents
+
+
+class TestMarkdownFileWritten:
+    """Tests for MarkdownFileWritten task class."""
+
+    def test_md_file_exists(self):
+        """Test MarkdownFileWritten validation passes when file exists"""
+        with tempfile.TemporaryDirectory() as tmpdir:
+            import os
+
+            file_path = os.path.join(tmpdir, "test.md")
+            with open(file_path, "w") as f:
+                f.write("# Hello\n")
+            f = MarkdownFileWritten(path=file_path)
+            assert f.path == file_path
+            assert f.content == "# Hello\n"
+
+    def test_md_file_must_end_with_md(self):
+        """Test MarkdownFileWritten fails when path does not end with .md"""
+        with tempfile.TemporaryDirectory() as tmpdir:
+            import os
+
+            file_path = os.path.join(tmpdir, "test.txt")
+            with open(file_path, "w") as f:
+                f.write("hello")
+            with pytest.raises(AssertionError, match=r".*\.md.*"):
+                MarkdownFileWritten(path=file_path)
+
+    def test_md_file_not_exists(self):
+        """Test MarkdownFileWritten fails when file does not exist"""
+        with pytest.raises(AssertionError, match="does not exist"):
+            MarkdownFileWritten(path="/nonexistent/path/12345.md")
+
+    def test_md_file_with_content(self):
+        """Test MarkdownFileWritten accepts explicit content"""
+        with tempfile.TemporaryDirectory() as tmpdir:
+            import os
+
+            file_path = os.path.join(tmpdir, "test.md")
+            with open(file_path, "w") as f:
+                f.write("# Hello\n")
+            f = MarkdownFileWritten(path=file_path, content="# Custom\n")
+            assert f.path == file_path
+            assert f.content == "# Custom\n"
+
+    def test_md_file_invalid_syntax(self):
+        """Test MarkdownFileWritten passes when markdownlint finds no issues"""
+        with tempfile.TemporaryDirectory() as tmpdir:
+            import os
+
+            file_path = os.path.join(tmpdir, "valid.md")
+            with open(file_path, "w") as f:
+                f.write("# Valid Markdown\n\nThis is fine.\n")
+            f = MarkdownFileWritten(path=file_path)
+            assert f.path == file_path
 
 
 if __name__ == "__main__":

@@ -5,6 +5,7 @@ HDR Tasks - Standard library of common task types.
 from hdr.tasks.std import (
     DirectoryCreated,
     FileWritten,
+    MarkdownFileWritten,
     PythonWorkspaceBuilt,
     ConceptDescribed,
 )
@@ -12,6 +13,7 @@ from hdr.tasks.std import (
 __all__ = [
     "DirectoryCreated",
     "FileWritten",
+    "MarkdownFileWritten",
     "PythonWorkspaceBuilt",
     "ConceptDescribed",
 ]

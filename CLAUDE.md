@@ -74,6 +74,7 @@ print("Task Verified:", result)
 | Task | Description |
 | :--- | :--- |
 | `FileWritten` | Validates a file exists; auto-fills content from disk. |
+| `MarkdownFileWritten` | Validates a markdown file exists with valid syntax (extends `FileWritten`). |
 | `DirectoryCreated` | Validates a directory exists; auto-gathers file content recursively. |
 | `PythonWorkspaceBuilt` | Extends `DirectoryCreated`; also validates ruff and pyright pass cleanly. |
 | `ConceptDescribed` | Represents a documented concept with LLM quality validation. |

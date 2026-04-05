@@ -99,6 +99,7 @@ Available standard tasks:
 | Task | Description |
 | :--- | :--- |
 | `FileWritten` | Validates a file exists; auto-fills content from disk. |
+| `MarkdownFileWritten` | Validates a markdown file exists with valid syntax (extends `FileWritten`). |
 | `DirectoryCreated` | Validates a directory exists; auto-gathers file content recursively. |
 | `PythonWorkspaceBuilt` | Extends `DirectoryCreated`; also validates ruff and pyright pass cleanly. |
 | `ConceptDescribed` | Represents a documented concept with LLM quality validation. |
@@ -127,9 +128,11 @@ Create a `work.py` file in the same directory:
 - If task is very complicated, you don't have to create the final task instance at the first try
 
 #### Step 4: Run and validate
-Execute your code:
+Execute your code from the directory where `work.py` is located:
 ```bash
 # Run your implementation (timeout 30 minutes)
+# IMPORTANT: always cd to the directory containing work.py first
+cd path/to/workpy-directory
 python work.py
 ```
 

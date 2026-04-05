@@ -420,18 +420,55 @@ class PythonWorkspaceBuilt(DirectoryCreated):
                 f"ruff found lint errors in {self.path}:\n{result_ruff.stdout}\n{result_ruff.stderr}"
             )
 
+        # Run ruff format to ensure consistent formatting
+        result_ruff_fmt = subprocess.run(
+            ["ruff", "format", "."],
+            cwd=self.path,
+            capture_output=True,
+            text=True,
+        )
+        if result_ruff_fmt.returncode != 0:
+            raise AssertionError(
+                f"ruff format failed in {self.path}:\n{result_ruff_fmt.stdout}\n{result_ruff_fmt.stderr}"
+            )
+
+
+class MarkdownFileWritten(FileWritten):
+    """
+    Validates that a markdown file exists at the given path.
+    Inherits all fields from FileWritten.
+
+    Additionally verifies:
+    - Path ends with `.md`
+    - markdownlint-cli2 reports no syntax errors
+    """
+
+    def __init__(self, **data):
+        super().__init__(**data)
+        if not self.path.endswith(".md"):
+            raise AssertionError(f"Path '{self.path}' does not end with '.md'")
+        result = subprocess.run(
+            ["markdownlint-cli2", self.path],
+            capture_output=True,
+            text=True,
+        )
+        if result.returncode != 0:
+            raise AssertionError(
+                f"markdownlint-cli2 found issues in {self.path}:\n{result.stderr}\n{result.stdout}"
+            )
+
 
 class ConceptDescribed(Task):
     """
     Represents a documented concept within a context.
     """
 
-    context: FileWritten = Field(
-        description="Markdown file explaining the parent context"
+    context: MarkdownFileWritten = Field(
+        description="File explaining the parent context"
     )
     name: str = Field(description="Name of the concept")
-    description: FileWritten = Field(
-        description="Markdown file containing the concept description"
+    description: MarkdownFileWritten = Field(
+        description="File containing the concept description"
     )
 
     def __init__(self, **data):

@@ -30,8 +30,26 @@ Validates that a file exists at the given path and optionally reads its content.
 ```python
 from hdr import FileWritten
 
-file = FileWritten(path="README.md")
+file = FileWritten(path="config.json")
 print(file.content)  # auto-filled from disk
+```
+
+### MarkdownFileWritten
+
+Validates that a markdown file exists at the given path and has valid syntax.
+
+**Inherits:** All fields from `FileWritten`.
+
+**Validates (in addition to file existence):**
+- Path ends with `.md`.
+- `markdownlint-cli2` reports no issues.
+
+**Example:**
+```python
+from hdr import MarkdownFileWritten
+
+md_file = MarkdownFileWritten(path="README.md")
+print(md_file.content)  # auto-filled from disk
 ```
 
 ## Directory Tasks
@@ -68,6 +86,7 @@ Extends `DirectoryCreated` — validates a Python workspace is properly configur
 - `pyright` is installed (`shutil.which("pyright")`).
 - `pyright --outputjson` reports zero errors and zero warnings.
 - `ruff check .` reports no lint errors.
+- `ruff format .` runs cleanly.
 
 **Example:**
 ```python
@@ -83,9 +102,9 @@ workspace = PythonWorkspaceBuilt(path="src/my_project")
 Represents a documented concept within a context, with LLM validation of description quality.
 
 **Fields:**
-- `context: FileWritten` — Markdown file explaining the parent context.
+- `context: MarkdownFileWritten` — File explaining the parent context.
 - `name: str` — Name of the concept.
-- `description: FileWritten` — Markdown file containing the concept description.
+- `description: MarkdownFileWritten` — File containing the concept description.
 
 **Validates (via `self.verify`):**
 - The description is written for readers who understand context but do not yet know the concept name.
@@ -96,11 +115,11 @@ Represents a documented concept within a context, with LLM validation of descrip
 
 **Example:**
 ```python
-from hdr import ConceptDescribed, FileWritten
+from hdr import ConceptDescribed, MarkdownFileWritten
 
 concept = ConceptDescribed(
-    context=FileWritten(path="context.md"),
+    context=MarkdownFileWritten(path="context.md"),
     name="Connection Pooling",
-    description=FileWritten(path="description.md"),
+    description=MarkdownFileWritten(path="description.md"),
 )
 ```
