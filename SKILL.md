@@ -88,11 +88,22 @@ Use `quote()` when you need to explicitly reference objects in custom prompts or
 HDR includes a standard library of common task types in `hdr.tasks.std`:
 
 ```python
-from hdr.tasks import File
+from hdr.tasks import FileWritten
 
 # Validate a file exists (prefer relative paths)
-file_task = File(path="README.md", exists=True)
+file_task = FileWritten(path="README.md")
 ```
+
+Available standard tasks:
+
+| Task | Description |
+| :--- | :--- |
+| `FileWritten` | Validates a file exists; auto-fills content from disk. |
+| `DirectoryCreated` | Validates a directory exists; auto-gathers file content recursively. |
+| `PythonWorkspaceBuilt` | Extends `DirectoryCreated`; also validates ruff and pyright pass cleanly. |
+| `ConceptDescribed` | Represents a documented concept with LLM quality validation. |
+
+See `docs/tasks/std.md` for full documentation.
 
 ## Recommended Workflow
 

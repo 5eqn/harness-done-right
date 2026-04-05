@@ -69,21 +69,46 @@ print("Task Verified:", result)
 
 ---
 
+## Standard Tasks
+
+| Task | Description |
+| :--- | :--- |
+| `FileWritten` | Validates a file exists; auto-fills content from disk. |
+| `DirectoryCreated` | Validates a directory exists; auto-gathers file content recursively. |
+| `PythonWorkspaceBuilt` | Extends `DirectoryCreated`; also validates ruff and pyright pass cleanly. |
+| `ConceptDescribed` | Represents a documented concept with LLM quality validation. |
+
+See `docs/tasks/std.md` for full documentation.
+
+---
+
 ## Project Structure
 
-```text
-hdr-skill/              # Project root (Claude Code skill)
-├── README.md           # User-facing documentation
-├── SKILL.md            # Skill metadata for Claude Code
+```
+hdr-skill/
+├── CLAUDE.md              # Project instructions
+├── README.md              # User-facing documentation
+├── SKILL.md               # Skill metadata for Claude Code
+├── docs/
+│   ├── plan/
+│   │   └── intro.md       # Planning notes
+│   └── tasks/
+│       └── std.md         # Standard task documentation
 ├── src/
-│   └── hdr/            # Main package
-│       ├── __init__.py # Public API exports
-│       └── tasks/      # Task implementations
+│   └── hdr/
+│       ├── __init__.py    # Public API exports
+│       └── tasks/
 │           ├── __init__.py
-│           └── std.py  # Core framework, standard tasks (File, Directory, PythonWorkspace, etc.)
-├── tests/              # Unit tests
-│   ├── test_core.py
-│   └── test_std.py
-└── examples/           # Example workflows
+│           └── std.py     # Core framework + standard tasks
+├── tests/
+│   ├── __init__.py
+│   ├── test_core.py       # Core framework tests
+│   └── test_std.py        # Standard task tests
+└── examples/
     └── introduction_writing/
+        ├── __init__.py
+        ├── context.md
+        ├── description.md
+        ├── task.py         # Task specification
+        └── work.py         # Implementation
 ```

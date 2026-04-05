@@ -3,7 +3,7 @@ Task specification - THIS FILE IS IMMUTABLE ONCE AGREED
 Defines the formal requirements for the task
 """
 
-from hdr import File, PythonWorkspace, Concept, Task
+from hdr import FileWritten, PythonWorkspaceBuilt, ConceptDescribed, Task
 from pydantic import Field
 
 
@@ -12,10 +12,10 @@ class IntroSection(Task):
     Introduction section that explains what the subject is and why it matters.
     """
 
-    concept: Concept = Field(
+    concept: ConceptDescribed = Field(
         description="Authoritative definition of the concept being introduced"
     )
-    file: File = Field(
+    file: FileWritten = Field(
         description="Markdown file (.md) containing the introduction text"
     )
 
@@ -59,7 +59,6 @@ class IntroSection(Task):
               and reduces load on backend systems, though it introduces complexity."
               Why: Generic claim ("important", "complexity"), no specific situation the reader can see.
             """,
-
             # Verification 2: Opening - Forward Momentum (predicates on first 2-3 sentences)
             """
             After reading the first 2-3 sentences, a reader would want to continue not merely 
@@ -88,7 +87,6 @@ class IntroSection(Task):
               to prevent cascading failures and improve resilience."
               Why: Reader has no event to follow, no conflict to witness unfold.
             """,
-
             # Verification 3: Contains "Should" Force
             """
             The file contains a vivid depiction of the "should" force: the natural expectation, 
@@ -119,7 +117,6 @@ class IntroSection(Task):
               Text contains: "Mutable state can lead to bugs in concurrent programs."
               Why: Jumps to problems without showing why mutation feels natural, easy, and tempting first.
             """,
-
             # Verification 4: Contains "Must" Force (Prevailing)
             """
             The file contains a vivid depiction of the "must" force that prevails over the "should" force:
@@ -153,7 +150,6 @@ class IntroSection(Task):
               Why: "Common source" is statistics, not a moment. The reader doesn't witness failure,
               so the "should" force (mutation is easy) still feels stronger.
             """,
-
             # Verification 5: Contains Clear Turning Point
             """
             The file contains a clear turning point where the concept is introduced as the response 
@@ -201,13 +197,13 @@ class UsageSection(Task):
     Usage section that explains how to use a concept with runnable examples.
     """
 
-    concept: Concept = Field(
+    concept: ConceptDescribed = Field(
         description="Authoritative definition of the concept being documented"
     )
-    file: File = Field(
+    file: FileWritten = Field(
         description="Markdown file (.md) containing the usage explanation"
     )
-    code_examples: PythonWorkspace = Field(
+    code_examples: PythonWorkspaceBuilt = Field(
         description="Python workspace containing runnable code examples"
     )
 

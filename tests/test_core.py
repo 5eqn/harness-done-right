@@ -4,7 +4,7 @@ Tests for HDR verify functionality.
 
 import pytest
 from hdr import quote, BaseModel, Task
-from hdr.tasks.std import File
+from hdr.tasks.std import FileWritten
 from pydantic import ValidationError, Field
 
 
@@ -153,24 +153,24 @@ def test_quote_includes_field_descriptions():
     assert "is_active = True" in quoted
 
 
-class TestFile:
-    """Unit tests for File task class"""
+class TestFileWritten:
+    """Unit tests for FileWritten task class"""
 
     def test_file_exists_with_existing_file(self):
-        """Test File validation passes when file exists"""
+        """Test FileWritten validation passes when file exists"""
         # This file exists in the repo
-        f = File(path="tests/test_core.py")
+        f = FileWritten(path="tests/test_core.py")
         assert f.path == "tests/test_core.py"
         assert len(f.content) > 0
 
     def test_file_exists_with_nonexistent_file(self):
-        """Test File validation fails when file does not exist"""
+        """Test FileWritten validation fails when file does not exist"""
         with pytest.raises(AssertionError, match="does not exist"):
-            File(path="nonexistent_file_12345.txt")
+            FileWritten(path="nonexistent_file_12345.txt")
 
     def test_file_with_content(self):
-        """Test File accepts explicit content"""
-        f = File(path="tests/test_core.py", content="custom content")
+        """Test FileWritten accepts explicit content"""
+        f = FileWritten(path="tests/test_core.py", content="custom content")
         assert f.path == "tests/test_core.py"
         assert f.content == "custom content"
 

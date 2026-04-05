@@ -3,12 +3,12 @@ Task implementation - builds final task instance
 Import task types from task.py
 """
 
-from hdr import quote, Concept, File
+from hdr import ConceptDescribed, FileWritten
 
-concept = Concept(
-    context=File(path="context.md"),
+concept = ConceptDescribed(
+    context=FileWritten(path="context.md"),
     name="HDR (Harness Done Right)",
-    description=File(path="description.md"),
+    description=FileWritten(path="description.md"),
 )
 
 # TODO

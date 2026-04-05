@@ -10,10 +10,10 @@ from pydantic import BaseModel
 
 from hdr.tasks.std import (
     Task,
-    Directory,
-    File,
-    PythonWorkspace,
-    Concept,
+    DirectoryCreated,
+    FileWritten,
+    PythonWorkspaceBuilt,
+    ConceptDescribed,
     quote,
 )
 
@@ -21,8 +21,8 @@ __all__ = [
     "BaseModel",
     "Task",
     "quote",
-    "File",
-    "Directory",
-    "PythonWorkspace",
-    "Concept",
+    "FileWritten",
+    "DirectoryCreated",
+    "PythonWorkspaceBuilt",
+    "ConceptDescribed",
 ]

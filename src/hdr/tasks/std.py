@@ -107,7 +107,9 @@ class Task(BaseModel):
     _CACHE_DIR = "/tmp/claude/hdr_verify_cache"
     os.makedirs(_CACHE_DIR, exist_ok=True)
 
-    def _call_llm_with_retry(self, full_condition: str, max_retries: int = 10) -> tuple[str, int]:
+    def _call_llm_with_retry(
+        self, full_condition: str, max_retries: int = 10
+    ) -> tuple[str, int]:
         """
         Call LLM with retry logic. Returns (description, score).
         Only retries on errors (network, parsing, etc.), not on score < 5.
@@ -134,7 +136,9 @@ Only give a score of 5 if the condition is 100% true with no exceptions."""
                 message = client.messages.create(
                     model=model,
                     max_tokens=4096,
-                    thinking=ThinkingConfigEnabledParam(type="enabled", budget_tokens=1024),
+                    thinking=ThinkingConfigEnabledParam(
+                        type="enabled", budget_tokens=1024
+                    ),
                     messages=[
                         {"role": "user", "content": [{"type": "text", "text": prompt}]}
                     ],
@@ -164,7 +168,9 @@ Only give a score of 5 if the condition is 100% true with no exceptions."""
                     try:
                         score = int(text[start:end].strip())
                     except ValueError:
-                        raise ValueError(f"Failed to parse score from LLM output: {text}")
+                        raise ValueError(
+                            f"Failed to parse score from LLM output: {text}"
+                        )
                 else:
                     raise ValueError(f"No <score> tag found in LLM output: {text}")
 
@@ -232,7 +238,7 @@ Only give a score of 5 if the condition is 100% true with no exceptions."""
             )
 
 
-class File(Task):
+class FileWritten(Task):
     """
     Validates that a file exists at the given path using os.path.exists().
 
@@ -260,19 +266,19 @@ class File(Task):
                 raise AssertionError(f"Could not read file at {self.path}")
 
 
-class Directory(Task):
+class DirectoryCreated(Task):
     """
     Validates that a directory exists at the given path using os.path.isdir().
 
     The `content` field is auto-filled from the actual directory content if not specified.
-    Content is a list of File objects representing the files in the directory,
+    Content is a list of FileWritten objects representing the files in the directory,
     gathered recursively and respecting .gitignore patterns.
     """
 
     path: str = Field(description="Path to the directory")
-    content: list[File] = Field(
+    content: list[FileWritten] = Field(
         default_factory=list,
-        description="List of File objects in the directory, auto-filled if not provided",
+        description="List of FileWritten objects in the directory, auto-filled if not provided",
     )
 
     def __init__(self, **data):
@@ -285,9 +291,9 @@ class Directory(Task):
             total_files = len(self.content)
             print(f"[Directory] Total files in {self.path}: {total_files}")
 
-    def _gather_content(self, dir_path: str) -> list[File]:
-        """Gather content from directory as list[File], respecting .gitignore and recursing."""
-        files: list[File] = []
+    def _gather_content(self, dir_path: str) -> list[FileWritten]:
+        """Gather content from directory as list[FileWritten], respecting .gitignore and recursing."""
+        files: list[FileWritten] = []
         gitignore_path = os.path.join(dir_path, ".gitignore")
         gitignore_patterns = []
         if os.path.exists(gitignore_path):
@@ -320,7 +326,7 @@ class Directory(Task):
                 try:
                     with open(filepath, "r") as f:
                         file_content = f.read()
-                    files.append(File(path=filepath, content=file_content))
+                    files.append(FileWritten(path=filepath, content=file_content))
                 except (IOError, OSError):
                     pass
 
@@ -346,16 +352,11 @@ class Directory(Task):
         return False
 
 
-class PythonWorkspace(Directory):
+class PythonWorkspaceBuilt(DirectoryCreated):
     """
     Validates a Python workspace is properly configured for linting and type checking.
-    Inherits all fields from Directory.
-    """
+    Inherits all fields from DirectoryCreated.
 
-    """
-    Validates a Python workspace is properly configured for linting and type checking.
-
-    Inherits from Directory — the directory must exist.
     Additionally verifies:
     - ruff is installed (shutil.which)
     - pyright is installed (shutil.which)
@@ -420,14 +421,16 @@ class PythonWorkspace(Directory):
             )
 
 
-class Concept(Task):
+class ConceptDescribed(Task):
     """
     Represents a documented concept within a context.
     """
 
-    context: File = Field(description="Markdown file explaining the parent context")
+    context: FileWritten = Field(
+        description="Markdown file explaining the parent context"
+    )
     name: str = Field(description="Name of the concept")
-    description: File = Field(
+    description: FileWritten = Field(
         description="Markdown file containing the concept description"
     )
 
