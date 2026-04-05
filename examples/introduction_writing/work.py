@@ -6,9 +6,9 @@ Import task types from task.py
 from hdr import quote, Concept, File
 
 concept = Concept(
-    context=File(path="docs/hdr/context.md"),
+    context=File(path="context.md"),
     name="HDR (Harness Done Right)",
-    description=File(path="docs/hdr/description.md"),
+    description=File(path="description.md"),
 )
 
 # TODO
