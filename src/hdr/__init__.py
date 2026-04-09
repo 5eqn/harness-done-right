@@ -14,8 +14,8 @@ from hdr.tasks.coding import (
     PythonWorkspaceBuilt,
 )
 from hdr.tasks.meta import TaskCreated, FieldSpec, VerifySpec
+from hdr.tasks.mind import ConceptDescribed
 from hdr.tasks.std import (
-    ConceptDescribed,
     DirectoryCreated,
     FileWritten,
     Task,
