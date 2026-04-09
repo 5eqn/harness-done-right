@@ -34,24 +34,6 @@ file = FileWritten(path="config.json")
 print(file.content)  # auto-filled from disk
 ```
 
-### MarkdownFileWritten
-
-Validates that a markdown file exists at the given path and has valid syntax.
-
-**Inherits:** All fields from `FileWritten`.
-
-**Validates (in addition to file existence):**
-- Path ends with `.md`.
-- `markdownlint-cli2` reports no issues.
-
-**Example:**
-```python
-from hdr import MarkdownFileWritten
-
-md_file = MarkdownFileWritten(path="README.md")
-print(md_file.content)  # auto-filled from disk
-```
-
 ## Directory Tasks
 
 ### DirectoryCreated

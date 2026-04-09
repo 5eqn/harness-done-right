@@ -80,6 +80,31 @@ class PythonFileWritten(FileWritten):
             )
 
 
+class MarkdownFileWritten(FileWritten):
+    """
+    Validates that a markdown file exists at the given path.
+    Inherits all fields from FileWritten.
+
+    Additionally verifies:
+    - Path ends with `.md`
+    - markdownlint-cli2 reports no syntax errors
+    """
+
+    def __init__(self, **data):
+        super().__init__(**data)
+        if not self.path.endswith(".md"):
+            raise AssertionError(f"Path '{self.path}' does not end with '.md'")
+        result = subprocess.run(
+            ["markdownlint-cli2", self.path],
+            capture_output=True,
+            text=True,
+        )
+        if result.returncode != 0:
+            raise AssertionError(
+                f"markdownlint-cli2 found issues in {self.path}:\n{result.stderr}\n{result.stdout}"
+            )
+
+
 class PythonWorkspaceBuilt(DirectoryCreated):
     """
     Validates a Python workspace is properly configured for linting and type checking.

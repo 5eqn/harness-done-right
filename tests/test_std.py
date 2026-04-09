@@ -5,7 +5,8 @@ Uses a fixed temp workspace created via tempfile.mkdtemp.
 
 import tempfile
 import pytest
-from hdr.tasks.std import DirectoryCreated, FileWritten, MarkdownFileWritten
+from hdr.tasks.std import DirectoryCreated, FileWritten
+from hdr.tasks.coding import MarkdownFileWritten
 
 
 class TestFileWritten:

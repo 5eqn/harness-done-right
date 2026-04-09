@@ -6,14 +6,16 @@ All tasks use relative paths by preference, as they are more portable and make
 projects easier to share and version control.
 """
 
-from typing import Any, Sequence
+from typing import Any, Sequence, TYPE_CHECKING
 import hashlib
 import json
 import os
-import subprocess
 import anthropic
 from anthropic.types import ThinkingConfigEnabledParam
 from pydantic import BaseModel, Field
+
+if TYPE_CHECKING:
+    from hdr.tasks.coding import MarkdownFileWritten
 
 
 class Example:
@@ -429,41 +431,16 @@ class DirectoryCreated(Task):
         return False
 
 
-class MarkdownFileWritten(FileWritten):
-    """
-    Validates that a markdown file exists at the given path.
-    Inherits all fields from FileWritten.
-
-    Additionally verifies:
-    - Path ends with `.md`
-    - markdownlint-cli2 reports no syntax errors
-    """
-
-    def __init__(self, **data):
-        super().__init__(**data)
-        if not self.path.endswith(".md"):
-            raise AssertionError(f"Path '{self.path}' does not end with '.md'")
-        result = subprocess.run(
-            ["markdownlint-cli2", self.path],
-            capture_output=True,
-            text=True,
-        )
-        if result.returncode != 0:
-            raise AssertionError(
-                f"markdownlint-cli2 found issues in {self.path}:\n{result.stderr}\n{result.stdout}"
-            )
-
-
 class ConceptDescribed(Task):
     """
     Represents a documented concept within a context.
     """
 
-    context: MarkdownFileWritten = Field(
+    context: "MarkdownFileWritten" = Field(
         description="File explaining the parent context"
     )
     name: str = Field(description="Name of the concept")
-    description: MarkdownFileWritten = Field(
+    description: "MarkdownFileWritten" = Field(
         description="File containing the concept description"
     )
 

@@ -8,13 +8,16 @@ and execute incrementally.
 
 from pydantic import BaseModel
 
-from hdr.tasks.coding import PythonFileWritten, PythonWorkspaceBuilt
+from hdr.tasks.coding import (
+    MarkdownFileWritten,
+    PythonFileWritten,
+    PythonWorkspaceBuilt,
+)
 from hdr.tasks.meta import TaskCreated, FieldSpec, VerifySpec
 from hdr.tasks.std import (
     ConceptDescribed,
     DirectoryCreated,
     FileWritten,
-    MarkdownFileWritten,
     Task,
     quote,
 )

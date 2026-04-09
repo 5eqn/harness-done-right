@@ -1,6 +1,6 @@
 # Coding Tasks
 
-Coding task types in `hdr.tasks.coding` for Python-related validation. These tasks use tools like `ruff` and `pyright` to validate Python files and workspaces.
+Coding task types in `hdr.tasks.coding` for programming-related validation. These tasks validate code files (Python, Markdown) using tools like `ruff`, `pyright`, and `markdownlint-cli2`.
 
 ## PythonFileWritten
 
@@ -21,6 +21,24 @@ from hdr import PythonFileWritten
 
 py_file = PythonFileWritten(path="src/my_project/main.py")
 print(py_file.content)  # auto-filled from disk
+```
+
+## MarkdownFileWritten
+
+Validates that a markdown file exists at the given path and has valid syntax.
+
+**Inherits:** All fields from `FileWritten`.
+
+**Validates (in addition to file existence):**
+- Path ends with `.md`.
+- `markdownlint-cli2` reports no issues.
+
+**Example:**
+```python
+from hdr import MarkdownFileWritten
+
+md_file = MarkdownFileWritten(path="README.md")
+print(md_file.content)  # auto-filled from disk
 ```
 
 ## PythonWorkspaceBuilt
