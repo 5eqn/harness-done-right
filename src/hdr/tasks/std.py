@@ -6,7 +6,7 @@ All tasks use relative paths by preference, as they are more portable and make
 projects easier to share and version control.
 """
 
-from typing import Any
+from typing import Any, Sequence
 import hashlib
 import json
 import os
@@ -16,11 +16,82 @@ from anthropic.types import ThinkingConfigEnabledParam
 from pydantic import BaseModel, Field
 
 
+class Example:
+    """
+    Lightweight stand-in for a BaseModel instance, for use with quote().
+    Represents a named object with described fields and values, without
+    requiring a full Pydantic model definition.
+    """
+
+    def __init__(self, class_name: str, fields: dict[str, tuple[Any, str]]):
+        """
+        Args:
+            class_name: Display name for the object.
+            fields: Ordered dict mapping field_name -> (value, description).
+        """
+        self.class_name = class_name
+        self.fields = fields
+
+
+def _quote_named_fields(
+    class_name: str,
+    fields: Sequence[tuple[str, Any, str | None]],
+    indent: int,
+) -> str:
+    """
+    Format a named object with fields.
+    Shared by BaseModel and Example branches of quote().
+
+    Args:
+        class_name: Name to display.
+        fields: List of (field_name, field_value, description_or_None).
+        indent: Current indentation level.
+    """
+    indent_str = "  " * indent
+    next_indent = indent + 1
+    next_indent_str = "  " * next_indent
+
+    result = [f"{indent_str}{class_name}("]
+
+    for field_name, field_value, description in fields:
+        field_desc = f" # {description}" if description else ""
+
+        if isinstance(field_value, (BaseModel, Example)):
+            value_str = "\n" + quote(field_value, next_indent)
+        elif isinstance(field_value, dict):
+            value_str = " {"
+            if field_value:
+                value_str += "\n"
+                for k, v in field_value.items():
+                    value_str += f"{next_indent_str}{repr(k)}: {quote(v, next_indent + 1).lstrip()},\n"
+                value_str += f"{indent_str}  "
+            value_str += "}"
+        elif isinstance(field_value, (list, tuple)):
+            value_str = " ["
+            if field_value:
+                value_str += "\n"
+                for item in field_value:
+                    value_str += (
+                        f"{next_indent_str}{quote(item, next_indent + 1).lstrip()},\n"
+                    )
+                value_str += f"{indent_str}  "
+            value_str += "]"
+        elif isinstance(field_value, str):
+            value_str = repr(field_value)
+        else:
+            value_str = str(field_value)
+
+        result.append(f"{next_indent_str}{field_name} = {value_str}{field_desc}")
+
+    result.append(f"{indent_str})")
+    return "\n".join(result)
+
+
 def quote(obj: Any, indent: int = 0) -> str:
     """
     Pretty quote an object for use in verify prompts.
-    - Prints class name for BaseModel instances
-    - Recursively formats nested BaseModels, dicts, and arrays
+    - Prints class name for BaseModel and Example instances
+    - Recursively formats nested objects, dicts, and arrays
     - Includes field descriptions if available
     - Uses indentation for readability
     """
@@ -29,43 +100,15 @@ def quote(obj: Any, indent: int = 0) -> str:
     next_indent_str = "  " * next_indent
 
     if isinstance(obj, BaseModel):
-        class_name = obj.__class__.__name__
-        result = [f"{indent_str}{class_name}("]
+        fields = [
+            (name, getattr(obj, name), info.description)
+            for name, info in obj.model_fields.items()
+        ]
+        return _quote_named_fields(obj.__class__.__name__, fields, indent)
 
-        # Get model fields with descriptions
-        for field_name, field_info in obj.model_fields.items():
-            field_value = getattr(obj, field_name)
-            description = field_info.description
-            field_desc = f" # {description}" if description else ""
-
-            # Format field value
-            if isinstance(field_value, BaseModel):
-                value_str = "\n" + quote(field_value, next_indent)
-            elif isinstance(field_value, dict):
-                value_str = " {"
-                if field_value:
-                    value_str += "\n"
-                    for k, v in field_value.items():
-                        value_str += f"{next_indent_str}{repr(k)}: {quote(v, next_indent + 1).lstrip()},\n"
-                    value_str += f"{indent_str}  "
-                value_str += "}"
-            elif isinstance(field_value, (list, tuple)):
-                value_str = " ["
-                if field_value:
-                    value_str += "\n"
-                    for item in field_value:
-                        value_str += f"{next_indent_str}{quote(item, next_indent + 1).lstrip()},\n"
-                    value_str += f"{indent_str}  "
-                value_str += "]"
-            elif isinstance(field_value, str):
-                value_str = repr(field_value)
-            else:
-                value_str = str(field_value)
-
-            result.append(f"{next_indent_str}{field_name} = {value_str}{field_desc}")
-
-        result.append(f"{indent_str})")
-        return "\n".join(result)
+    elif isinstance(obj, Example):
+        fields = [(name, value, desc) for name, (value, desc) in obj.fields.items()]
+        return _quote_named_fields(obj.class_name, fields, indent)
 
     elif isinstance(obj, dict):
         if not obj:
@@ -211,15 +254,18 @@ Then, output your final score using the format: <score>N</score>, N ranges from:
         # Should never reach here
         raise Exception("Unexpected end of retry loop")
 
-    def verify(self, condition: str, expected_score: int = 5) -> None:
+    def verify(
+        self, condition: str, expected_score: int = 5, inject_self_quote: bool = True
+    ) -> None:
         """
         Verify a condition against the current task state.
         Automatically includes the pretty-printed task object as context.
         No need to manually quote fields or use f-strings.
         """
-        full_condition = (
-            f"Given the task object:\n{quote(self)}\n\nVerify that: {condition}"
-        )
+        if inject_self_quote:
+            full_condition = f"Given the task object:\n{quote(self)}\n\nThis condition holds true: {condition}"
+        else:
+            full_condition = condition
 
         # Return mock result if running under pytest
         if "PYTEST_CURRENT_TEST" in os.environ:

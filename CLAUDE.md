@@ -79,8 +79,9 @@ print("Task Verified:", result)
 | `DirectoryCreated` | Validates a directory exists; auto-gathers file content recursively. |
 | `PythonWorkspaceBuilt` | Extends `DirectoryCreated`; also validates ruff and pyright pass cleanly. |
 | `ConceptDescribed` | Represents a documented concept with LLM quality validation. |
+| `TaskCreated` | Meta-task for creating well-formed HDR tasks with validated fields and verify examples. |
 
-See `docs/tasks/std.md` for standard tasks, `docs/tasks/coding.md` for Python-related tasks.
+See `docs/tasks/std.md` for standard tasks, `docs/tasks/coding.md` for Python-related tasks, `docs/tasks/meta.md` for meta-task utilities.
 
 ---
 

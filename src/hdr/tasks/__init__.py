@@ -9,6 +9,7 @@ from hdr.tasks.std import (
     MarkdownFileWritten,
 )
 from hdr.tasks.coding import PythonFileWritten, PythonWorkspaceBuilt
+from hdr.tasks.meta import TaskCreated, FieldSpec, VerifySpec
 
 __all__ = [
     "ConceptDescribed",
@@ -17,4 +18,7 @@ __all__ = [
     "MarkdownFileWritten",
     "PythonFileWritten",
     "PythonWorkspaceBuilt",
+    "TaskCreated",
+    "FieldSpec",
+    "VerifySpec",
 ]

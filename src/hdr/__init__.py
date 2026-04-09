@@ -9,6 +9,7 @@ and execute incrementally.
 from pydantic import BaseModel
 
 from hdr.tasks.coding import PythonFileWritten, PythonWorkspaceBuilt
+from hdr.tasks.meta import TaskCreated, FieldSpec, VerifySpec
 from hdr.tasks.std import (
     ConceptDescribed,
     DirectoryCreated,
@@ -28,4 +29,7 @@ __all__ = [
     "DirectoryCreated",
     "PythonWorkspaceBuilt",
     "ConceptDescribed",
+    "TaskCreated",
+    "FieldSpec",
+    "VerifySpec",
 ]
