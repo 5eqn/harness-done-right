@@ -93,16 +93,18 @@ hdr-skill/
 ├── README.md              # User-facing documentation
 ├── SKILL.md               # Skill metadata for Claude Code
 ├── docs/
-│   ├── plan/
-│   │   └── intro.md       # Planning notes
 │   └── tasks/
-│       └── std.md         # Standard task documentation
+│       ├── std.md         # Standard task documentation
+│       ├── coding.md      # Python coding task documentation
+│       └── meta.md        # Meta-task utility documentation
 ├── src/
 │   └── hdr/
 │       ├── __init__.py    # Public API exports
 │       └── tasks/
 │           ├── __init__.py
-│           └── std.py     # Core framework + standard tasks
+│           ├── std.py     # Core framework + standard tasks
+│           ├── coding.py  # Python coding-related tasks
+│           └── meta.py    # Meta-task utilities
 ├── tests/
 │   ├── __init__.py
 │   ├── test_quote.py       # Quote function tests
