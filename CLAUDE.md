@@ -110,7 +110,8 @@ hdr-skill/
 │   ├── test_quote.py       # Quote function tests
 │   ├── test_verify.py      # Verify method tests
 │   ├── test_std.py         # Standard task tests
-│   └── test_coding.py      # Python coding task tests
+│   ├── test_coding.py      # Python coding task tests
+│   └── test_meta.py        # Meta-task (TaskCreated) tests
 └── examples/
     └── introduction_writing/
         ├── __init__.py
