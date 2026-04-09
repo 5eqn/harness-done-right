@@ -105,8 +105,10 @@ hdr-skill/
 │           └── std.py     # Core framework + standard tasks
 ├── tests/
 │   ├── __init__.py
-│   ├── test_core.py       # Core framework tests
-│   └── test_std.py        # Standard task tests
+│   ├── test_quote.py       # Quote function tests
+│   ├── test_verify.py      # Verify method tests
+│   ├── test_std.py         # Standard task tests
+│   └── test_coding.py      # Python coding task tests
 └── examples/
     └── introduction_writing/
         ├── __init__.py

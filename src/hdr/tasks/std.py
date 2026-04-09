@@ -102,7 +102,7 @@ def quote(obj: Any, indent: int = 0) -> str:
     if isinstance(obj, BaseModel):
         fields = [
             (name, getattr(obj, name), info.description)
-            for name, info in obj.model_fields.items()
+            for name, info in obj.__class__.model_fields.items()
         ]
         return _quote_named_fields(obj.__class__.__name__, fields, indent)
 
@@ -269,6 +269,18 @@ Then, output your final score using the format: <score>N</score>, N ranges from:
 
         # Return mock result if running under pytest
         if "PYTEST_CURRENT_TEST" in os.environ:
+            # Parse mock score from condition if present: <mock>N</mock>
+            import re
+
+            match = re.search(r"<mock>(\d)</mock>", condition)
+            if match:
+                score = int(match.group(1))
+            else:
+                score = 5
+            if score != expected_score:
+                raise AssertionError(
+                    f"Mock verification failed with score {score} (expected {expected_score})"
+                )
             return
 
         # Get API key from environment
