@@ -224,7 +224,9 @@ class TestTaskCreated:
                 )
             ],
         )
-        code = task.generated_file.content
+        assert task.generated_file is not None
+        with open(task.generated_file.path, "r") as f:
+            code = f.read()
         assert "class Summarized(Task):" in code
         assert '"""Summarize input text."""' in code
         assert "input_text: str" in code
@@ -255,7 +257,9 @@ class TestTaskCreated:
                 )
             ],
         )
-        code = task.generated_file.content
+        assert task.generated_file is not None
+        with open(task.generated_file.path, "r") as f:
+            code = f.read()
         assert 'default="fast"' in code
 
     def test_generate_code_with_programmatic_checks(self):
@@ -277,7 +281,8 @@ class TestTaskCreated:
                 )
             ],
         )
-        code = task.generated_file.content
+        with open("my_task.py", "r") as f:
+            code = f.read()
         assert "if not self.value:" in code
         assert "raise AssertionError" in code
 
@@ -302,7 +307,8 @@ class TestTaskCreated:
                 )
             ],
         )
-        code = task.generated_file.content
+        with open("my_task.py", "r") as f:
+            code = f.read()
         assert "class MyTask(FileWritten):" in code
 
     def test_generate_code_multiline_docstring(self):
@@ -321,7 +327,8 @@ class TestTaskCreated:
                 )
             ],
         )
-        code = task.generated_file.content
+        with open("my_task.py", "r") as f:
+            code = f.read()
         assert "Line one." in code
         assert "Line two." in code
 
@@ -347,7 +354,8 @@ class TestTaskCreated:
                 ),
             ],
         )
-        code = task.generated_file.content
+        with open("my_task.py", "r") as f:
+            code = f.read()
         assert code.count("self.verify(") == 2
 
 
