@@ -74,8 +74,9 @@ class TaskCreated(Task):
         description="List of verify specifications with examples"
     )
     generated_file: PythonFileWritten | None = Field(
+        init=False,
         default=None,
-        description="The generated Python file task instance, after successful creation",
+        description="The generated Python file task instance, after successful creation (cannot be manually assigned). Will always be non-None after successful initialization.",
     )
 
     def __init__(self, **data):

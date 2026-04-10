@@ -29,18 +29,6 @@ class TestFileWritten:
         with pytest.raises(AssertionError, match="does not exist"):
             FileWritten(path="/nonexistent/path/12345.txt")
 
-    def test_file_with_content(self):
-        """Test FileWritten accepts explicit content"""
-        with tempfile.TemporaryDirectory() as tmpdir:
-            import os
-
-            file_path = os.path.join(tmpdir, "test.txt")
-            with open(file_path, "w") as f:
-                f.write("original")
-            f = FileWritten(path=file_path, content="custom content")
-            assert f.path == file_path
-            assert f.content == "custom content"
-
 
 class TestDirectoryCreated:
     """Tests for DirectoryCreated task class."""
@@ -65,9 +53,13 @@ class TestDirectoryCreated:
             file_path = os.path.join(tmpdir, "a.txt")
             with open(file_path, "w") as f:
                 f.write("custom content")
+            file = FileWritten(path=file_path)
+            file.content = (
+                "custom content"  # Set content after init since init doesn't accept it
+            )
             d = DirectoryCreated(
                 path=tmpdir,
-                content=[FileWritten(path=file_path, content="custom content")],
+                content=[file],
             )
             assert d.path == tmpdir
             assert len(d.content) == 1
@@ -120,18 +112,6 @@ class TestMarkdownFileWritten:
         """Test MarkdownFileWritten fails when file does not exist"""
         with pytest.raises(AssertionError, match="does not exist"):
             MarkdownFileWritten(path="/nonexistent/path/12345.md")
-
-    def test_md_file_with_content(self):
-        """Test MarkdownFileWritten accepts explicit content"""
-        with tempfile.TemporaryDirectory() as tmpdir:
-            import os
-
-            file_path = os.path.join(tmpdir, "test.md")
-            with open(file_path, "w") as f:
-                f.write("# Hello\n")
-            f = MarkdownFileWritten(path=file_path, content="# Custom\n")
-            assert f.path == file_path
-            assert f.content == "# Custom\n"
 
     def test_md_file_invalid_syntax(self):
         """Test MarkdownFileWritten passes when markdownlint finds no issues"""

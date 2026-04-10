@@ -23,7 +23,7 @@ Meta-task for creating well-formed HDR tasks. Validates task definitions at cons
 - `imports: list[str] = ["from pydantic import Field", "from hdr.tasks.std import Task"]` — List of import statements to include at the top of the generated file
 - `programmatic_checks: list[str] = []` — Python code snippets for programmatic validations executed before LLM verifies
 - `verifies: list[VerifySpec]` — List of verify specifications with positive and negative examples
-- `generated_file: PythonFileWritten | None` — The generated Python file task instance, available after successful creation
+- `generated_file: PythonFileWritten | None` — The generated Python file task instance, available after successful creation (cannot be manually assigned; will always be non-None after successful initialization)
 
 **Methods:**
 - `generate_code() -> str` — Generates complete Python code for the task class, including all validations and verifies with embedded examples

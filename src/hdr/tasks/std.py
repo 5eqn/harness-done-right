@@ -325,25 +325,26 @@ class FileWritten(Task):
     Prefer using relative paths for portability. The path can be absolute
     if needed, but relative paths are recommended for project-agnostic code.
 
-    The `content` field is auto-filled from the actual file content if not specified.
+    The `content` field is auto-filled from the actual file content and cannot be manually assigned.
     """
 
     path: str = Field(description="Path to the file")
     content: str = Field(
-        default="", description="Content of the file, auto-filled if not provided"
+        init=False,
+        default="",
+        description="Content of the file, auto-filled from disk (cannot be manually assigned)",
     )
 
     def __init__(self, **data):
         super().__init__(**data)
         if not os.path.exists(self.path):
             raise AssertionError(f"File at {self.path} does not exist")
-        # Auto-fill content from actual file if not provided
-        if not self.content:
-            try:
-                with open(self.path, "r") as f:
-                    self.content = f.read()
-            except (IOError, OSError):
-                raise AssertionError(f"Could not read file at {self.path}")
+        # Always auto-fill content from actual file since it can't be passed
+        try:
+            with open(self.path, "r") as f:
+                self.content = f.read()
+        except (IOError, OSError):
+            raise AssertionError(f"Could not read file at {self.path}")
 
 
 class DirectoryCreated(Task):

@@ -34,7 +34,7 @@ Validates that a markdown file exists at the given path, auto-formats it, and ch
 - `markdownlint-cli2` is installed.
 - `markdownlint-cli2 --fix <file>` runs successfully to auto format the file.
 - `markdownlint-cli2 <file>` reports no remaining issues after formatting.
-- The `content` field is updated with the formatted content from disk.
+- The `content` field is updated with the formatted content from disk (cannot be manually assigned).
 
 **Example:**
 ```python

@@ -116,13 +116,12 @@ class MarkdownFileWritten(FileWritten):
                 f"markdownlint-cli2 --fix failed for {self.path}:\n{result_fix.stderr}\n{result_fix.stdout}"
             )
 
-        # Re-read the file content after formatting only if content was not explicitly provided
-        if "content" not in self.model_fields_set:
-            try:
-                with open(self.path, "r") as f:
-                    self.content = f.read()
-            except (IOError, OSError):
-                raise AssertionError(f"Could not read file at {self.path} after formatting")
+        # Re-read the file content after formatting (content can't be manually assigned)
+        try:
+            with open(self.path, "r") as f:
+                self.content = f.read()
+        except (IOError, OSError):
+            raise AssertionError(f"Could not read file at {self.path} after formatting")
 
 
 class PythonWorkspaceBuilt(DirectoryCreated):

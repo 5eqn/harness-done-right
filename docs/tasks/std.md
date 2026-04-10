@@ -20,11 +20,12 @@ Validates that a file exists at the given path and optionally reads its content.
 
 **Fields:**
 - `path: str` — Path to the file (relative paths recommended).
-- `content: str` — Content of the file; auto-filled from the actual file if not provided.
+- `content: str` — Content of the file; auto-filled from disk (cannot be manually assigned).
 
 **Validates:**
 - File exists at `path` (`os.path.exists`).
 - File is readable.
+- Content is automatically populated from the actual file content.
 
 **Example:**
 ```python
