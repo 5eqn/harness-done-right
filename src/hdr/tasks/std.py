@@ -9,6 +9,7 @@ projects easier to share and version control.
 import hashlib
 import json
 import os
+import re
 from typing import Any, Sequence
 
 import anthropic
@@ -140,6 +141,14 @@ def quote(obj: Any, indent: int = 0) -> str:
         return f"{indent_str}{str(obj)}"
 
 
+def _summarize_condition(condition: str, max_length: int = 80) -> str:
+    """Normalize whitespace and trim long conditions for single-line logs."""
+    normalized = re.sub(r"\s+", " ", condition).strip()
+    if len(normalized) <= max_length:
+        return normalized
+    return normalized[: max_length - 3].rstrip() + "..."
+
+
 class Task(BaseModel):
     """
     Base class for all HDR tasks.
@@ -267,8 +276,6 @@ Then, output your final score using the format: <score>N</score>, N ranges from:
         # Return mock result if running under pytest
         if "PYTEST_CURRENT_TEST" in os.environ:
             # Parse mock score from condition if present: <mock>N</mock>
-            import re
-
             match = re.search(r"<mock>(\d)</mock>", condition)
             if match:
                 score = int(match.group(1))
@@ -278,6 +285,7 @@ Then, output your final score using the format: <score>N</score>, N ranges from:
                 raise AssertionError(
                     f"Mock verification failed with score {score} (expected {expected_score})"
                 )
+            print(f"[verify] score={score} {_summarize_condition(condition)}")
             return
 
         verify_config = load_verify_config()
@@ -311,6 +319,7 @@ Then, output your final score using the format: <score>N</score>, N ranges from:
             raise AssertionError(
                 f"Verification failed with score {score} (expected {expected_score}).\nDescription: {description}"
             )
+        print(f"[verify] score={score} {_summarize_condition(condition)}")
 
 
 class FileWritten(Task):

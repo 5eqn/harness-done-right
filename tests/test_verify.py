@@ -23,6 +23,30 @@ def test_task_verify_method():
     task.verify("value is a positive integer")
 
 
+def test_verify_logs_success_with_score_and_trimmed_condition(capsys):
+    """Successful verify() calls log a one-line summary with the actual score."""
+
+    class TestTask(Task):
+        value: int = Field(description="Test value")
+
+    task = TestTask(value=42)
+
+    task.verify(
+        "value is 42 and the explanation should be trimmed onto one line "
+        "because this sentence is intentionally long enough to exceed the log preview limit"
+    )
+
+    captured = capsys.readouterr()
+    assert captured.out.startswith("[verify] score=5 ")
+    assert captured.out.endswith("...\n")
+    assert "\n" not in captured.out[:-1]
+    assert "expected" not in captured.out
+    assert (
+        "value is 42 and the explanation should be trimmed onto one line"
+        in captured.out
+    )
+
+
 def test_verify_mock_score_parsing():
     """Test that verify correctly parses <mock>N</mock> pattern in pytest mode"""
 
@@ -138,6 +162,43 @@ def test_verify_uses_config_values(tmp_path, monkeypatch):
     assert captured["base_url"] == "https://example.com"
     assert captured["model"] == "test-model"
     assert "This condition holds true: value is 42" in captured["full_condition"]
+
+
+def test_verify_logs_actual_score_on_non_default_success(tmp_path, monkeypatch, capsys):
+    """Successful verify() logs the actual score without an expected score suffix."""
+
+    class TestTask(Task):
+        value: int = Field(description="Test value")
+
+    monkeypatch.delenv("PYTEST_CURRENT_TEST", raising=False)
+    monkeypatch.setattr(hdr_config, "CONFIG_PATH", tmp_path / ".hdr" / "config.yaml")
+
+    hdr_config.CONFIG_PATH.parent.mkdir()
+    hdr_config.CONFIG_PATH.write_text(
+        'anthropic_auth_token: "test-token"\n'
+        'anthropic_model: "test-model"\n'
+        'anthropic_base_url: "https://example.com"\n'
+        f'verify_cache_dir: "{tmp_path / "cache"}"\n'
+    )
+
+    def fake_call_llm_with_retry(
+        self,
+        full_condition: str,
+        api_key: str,
+        base_url: str,
+        model: str,
+        max_retries: int = 10,
+        verbose: bool = False,
+    ) -> tuple[str, int]:
+        return "Looks mostly correct.", 3
+
+    monkeypatch.setattr(Task, "_call_llm_with_retry", fake_call_llm_with_retry)
+
+    task = TestTask(value=42)
+    task.verify("value is acceptable", expected_score=3)
+
+    captured = capsys.readouterr()
+    assert captured.out == "[verify] score=3 value is acceptable\n"
 
 
 if __name__ == "__main__":
