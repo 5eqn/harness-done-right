@@ -6,7 +6,7 @@ All tasks use relative paths by preference, as they are more portable and make
 projects easier to share and version control.
 """
 
-from typing import Any, Sequence, TYPE_CHECKING
+from typing import Any, ClassVar, Sequence, TYPE_CHECKING
 import hashlib
 import json
 import os
@@ -148,12 +148,81 @@ class Task(BaseModel):
     """
 
     # Cache directory for verify results (message-based)
-    _CACHE_DIR = "/tmp/claude/hdr_verify_cache"
+    _CACHE_DIR: ClassVar[str] = "/tmp/claude/hdr_verify_cache"
     os.makedirs(_CACHE_DIR, exist_ok=True)
+    _DEFAULT_CONFIG: ClassVar[dict[str, str]] = {
+        "anthropic_auth_token": "",
+        "anthropic_model": "claude-4.6-sonnet",
+        "anthropic_base_url": "https://api.anthropic.com",
+    }
+
+    @classmethod
+    def _config_path(cls) -> str:
+        return os.path.expanduser("~/.hdr/config.yaml")
+
+    @classmethod
+    def _config_template(cls) -> str:
+        return """# HDR verification config
+# Fill in the Anthropic API token before calling Task.verify().
+anthropic_auth_token: ""
+anthropic_model: "claude-4.6-sonnet"
+anthropic_base_url: "https://api.anthropic.com"
+"""
+
+    @staticmethod
+    def _parse_config(content: str) -> dict[str, str]:
+        config: dict[str, str] = {}
+        for raw_line in content.splitlines():
+            line = raw_line.strip()
+            if not line or line.startswith("#"):
+                continue
+            if ":" not in line:
+                continue
+            key, value = line.split(":", 1)
+            parsed = value.strip()
+            if len(parsed) >= 2 and parsed[0] == parsed[-1] and parsed[0] in {'"', "'"}:
+                parsed = parsed[1:-1]
+            config[key.strip()] = parsed
+        return config
+
+    @classmethod
+    def _load_verify_config(cls) -> tuple[str, str, str]:
+        config_path = cls._config_path()
+        config_dir = os.path.dirname(config_path)
+
+        if not os.path.exists(config_path):
+            os.makedirs(config_dir, exist_ok=True)
+            with open(config_path, "w") as f:
+                f.write(cls._config_template())
+            raise EnvironmentError(
+                f"HDR config created at {config_path}. "
+                "Please fill in anthropic_auth_token in ~/.hdr/config.yaml and rerun."
+            )
+
+        with open(config_path, "r") as f:
+            raw_config = cls._parse_config(f.read())
+
+        config = cls._DEFAULT_CONFIG | raw_config
+        api_key = config["anthropic_auth_token"].strip()
+
+        if not api_key:
+            raise EnvironmentError(
+                f"anthropic_auth_token is empty in {config_path}. "
+                "Please fill it in in ~/.hdr/config.yaml and rerun."
+            )
+
+        return (
+            api_key,
+            config["anthropic_base_url"].strip(),
+            config["anthropic_model"].strip(),
+        )
 
     def _call_llm_with_retry(
         self,
         full_condition: str,
+        api_key: str,
+        base_url: str,
+        model: str,
         max_retries: int = 10,
         verbose: bool = False,
     ) -> tuple[str, int]:
@@ -183,10 +252,6 @@ Then, output your final score using the format: <score>N</score>, N ranges from:
 5 / Definitely true. Judge by standard interpretation; do not search for edge cases to invalidate a clearly true statement.
     Example: "The code contains no factual errors" (it says JavaScript arrays are zero-indexed — true under any reasonable reading)
 """
-
-        api_key = os.environ.get("ANTHROPIC_AUTH_TOKEN")
-        base_url = os.environ.get("ANTHROPIC_BASE_URL", "https://api.anthropic.com")
-        model = os.environ.get("ANTHROPIC_MODEL", "claude-4.6-sonnet")
 
         for attempt in range(1, max_retries + 1):
             try:
@@ -286,15 +351,10 @@ Then, output your final score using the format: <score>N</score>, N ranges from:
                 )
             return
 
-        # Get API key from environment
-        api_key = os.environ.get("ANTHROPIC_AUTH_TOKEN")
-        if not api_key:
-            raise EnvironmentError(
-                "ANTHROPIC_AUTH_TOKEN is not set. Please ask the user to provide their Anthropic API key "
-                "by setting the ANTHROPIC_AUTH_TOKEN environment variable."
-            )
+        api_key, base_url, model = self._load_verify_config()
 
         # Create cache key based solely on the condition
+        os.makedirs(self._CACHE_DIR, exist_ok=True)
         cache_key = hashlib.md5(full_condition.encode()).hexdigest()
         cache_file = os.path.join(self._CACHE_DIR, f"{cache_key}.json")
 
@@ -306,7 +366,12 @@ Then, output your final score using the format: <score>N</score>, N ranges from:
                 score = cached["score"]
         else:
             # Call LLM with retry logic
-            description, score = self._call_llm_with_retry(full_condition)
+            description, score = self._call_llm_with_retry(
+                full_condition,
+                api_key=api_key,
+                base_url=base_url,
+                model=model,
+            )
 
             # Cache the result (only description and score)
             with open(cache_file, "w") as f:

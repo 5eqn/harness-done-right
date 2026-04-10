@@ -10,7 +10,7 @@ Base class for all HDR tasks. Extends Pydantic `BaseModel` to provide automatic 
 
 **Key methods:**
 
-- `self.verify(condition: str) -> None` — Validates a condition against the current task state using Claude. Automatically includes the full pretty-printed task object as context. Throws `AssertionError` with reasoning and score if validation fails. Only passes at score 5/5. Results are automatically cached by condition.
+- `self.verify(condition: str) -> None` — Validates a condition against the current task state using Claude. Automatically includes the full pretty-printed task object as context. On first use, HDR creates `~/.hdr/config.yaml` if it does not exist; you must fill in `anthropic_auth_token` there before verification can run. Throws `AssertionError` with reasoning and score if validation fails. Only passes at score 5/5. Results are automatically cached by condition.
 
 ## File Tasks
 
@@ -57,4 +57,3 @@ directory = DirectoryCreated(path="src")
 for f in directory.content:
     print(f.path, len(f.content))
 ```
-

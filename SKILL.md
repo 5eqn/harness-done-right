@@ -69,10 +69,11 @@ Validates a condition against the current task state using Claude. Automatically
 
 No need to manually quote values in conditions - the task context is already included automatically.
 
-Configuration via environment variables:
-- `ANTHROPIC_AUTH_TOKEN`: Your Anthropic API key (required)
-- `ANTHROPIC_BASE_URL`: The base URL for the API (optional)
-- `ANTHROPIC_MODEL`: The model name to use (optional, defaults to claude-4.6-sonnet)
+Configuration via `~/.hdr/config.yaml`:
+- HDR creates the file automatically on first `self.verify()` if it does not exist
+- `anthropic_auth_token`: Your Anthropic API key (required; must be filled in)
+- `anthropic_base_url`: The base URL for the API (optional, defaults to `https://api.anthropic.com`)
+- `anthropic_model`: The model name to use (optional, defaults to `claude-4.6-sonnet`)
 
 ### `quote(obj: Any) -> str`
 Safely pretty-print any object for use in prompts. Automatically handles:
@@ -147,5 +148,5 @@ Notice:
 ## Error Handling
 - **ValidationError**: Thrown by Pydantic when you pass incorrect types to task constructors
 - **AssertionError**: Thrown when a verification fails, includes reasoning and score
-- **EnvironmentError**: Thrown when required environment variables (like ANTHROPIC_AUTH_TOKEN) are not set
+- **EnvironmentError**: Thrown when `~/.hdr/config.yaml` is missing required values such as `anthropic_auth_token`
 - All errors include clear, actionable instructions for fixing the issue

@@ -264,7 +264,7 @@ class TestTaskCreated:
 
     def test_generate_code_with_programmatic_checks(self):
         """generate_code includes programmatic check code."""
-        task = TaskCreated(
+        TaskCreated(
             class_name="MyTask",
             docstring="A task.",
             fields=[
@@ -288,7 +288,7 @@ class TestTaskCreated:
 
     def test_generate_code_custom_parent(self):
         """generate_code uses custom parent_class."""
-        task = TaskCreated(
+        TaskCreated(
             class_name="MyTask",
             parent_class="FileWritten",
             docstring="A file task.",
@@ -313,7 +313,7 @@ class TestTaskCreated:
 
     def test_generate_code_multiline_docstring(self):
         """generate_code handles multi-line docstrings."""
-        task = TaskCreated(
+        TaskCreated(
             class_name="MyTask",
             docstring="Line one.\nLine two.",
             fields=[
@@ -334,7 +334,7 @@ class TestTaskCreated:
 
     def test_generate_code_verify_count(self):
         """generate_code includes one self.verify per verify spec."""
-        task = TaskCreated(
+        TaskCreated(
             class_name="MyTask",
             docstring="A task.",
             fields=[

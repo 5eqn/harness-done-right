@@ -38,12 +38,12 @@ print("任务已验证:", result)
 
 ## 快速开始
 
-### 环境配置
+### 配置文件
 
-HDR 需要以下环境变量：
-- `ANTHROPIC_AUTH_TOKEN`：你的 Anthropic API 密钥（必需）
-- `ANTHROPIC_MODEL`：模型名称（可选，默认为 claude-4.6-sonnet）
-- `ANTHROPIC_BASE_URL`：API 基础 URL（可选）
+HDR 在第一次调用 `self.verify()` 时会检查 `~/.hdr/config.yaml`：
+- 如果文件不存在，会自动创建一个模板文件
+- 你需要在其中填写 `anthropic_auth_token`
+- `anthropic_model` 和 `anthropic_base_url` 默认已经写好，可按需修改
 
 我们正在为这个仓库开发更多使用场景。
 
