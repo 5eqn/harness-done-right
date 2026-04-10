@@ -82,27 +82,47 @@ class PythonFileWritten(FileWritten):
 
 class MarkdownFileWritten(FileWritten):
     """
-    Validates that a markdown file exists at the given path.
+    Validates that a markdown file exists at the given path, auto-formats it, and checks for valid syntax.
     Inherits all fields from FileWritten.
 
-    Additionally verifies:
+    Additionally verifies/does:
     - Path ends with `.md`
-    - markdownlint-cli2 reports no syntax errors
+    - markdownlint-cli2 is installed
+    - markdownlint-cli2 --fix runs successfully to auto format the file
+    - markdownlint-cli2 reports no remaining syntax errors after formatting
+    - The content field is updated with the formatted content
     """
 
     def __init__(self, **data):
         super().__init__(**data)
         if not self.path.endswith(".md"):
             raise AssertionError(f"Path '{self.path}' does not end with '.md'")
-        result = subprocess.run(
-            ["markdownlint-cli2", self.path],
+
+        # Check markdownlint-cli2 is installed
+        markdownlint_path = shutil.which("markdownlint-cli2")
+        if not markdownlint_path:
+            raise AssertionError(
+                "markdownlint-cli2 is not installed. Please install it with: npm install -g markdownlint-cli2"
+            )
+
+        # Run markdownlint-cli2 --fix to auto format the file
+        result_fix = subprocess.run(
+            ["markdownlint-cli2", "--fix", self.path],
             capture_output=True,
             text=True,
         )
-        if result.returncode != 0:
+        if result_fix.returncode != 0:
             raise AssertionError(
-                f"markdownlint-cli2 found issues in {self.path}:\n{result.stderr}\n{result.stdout}"
+                f"markdownlint-cli2 --fix failed for {self.path}:\n{result_fix.stderr}\n{result_fix.stdout}"
             )
+
+        # Re-read the file content after formatting only if content was not explicitly provided
+        if "content" not in self.model_fields_set:
+            try:
+                with open(self.path, "r") as f:
+                    self.content = f.read()
+            except (IOError, OSError):
+                raise AssertionError(f"Could not read file at {self.path} after formatting")
 
 
 class PythonWorkspaceBuilt(DirectoryCreated):

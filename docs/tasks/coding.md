@@ -25,20 +25,23 @@ print(py_file.content)  # auto-filled from disk
 
 ## MarkdownFileWritten
 
-Validates that a markdown file exists at the given path and has valid syntax.
+Validates that a markdown file exists at the given path, auto-formats it, and checks for valid syntax.
 
 **Inherits:** All fields from `FileWritten`.
 
-**Validates (in addition to file existence):**
+**Validates/does (in addition to file existence):**
 - Path ends with `.md`.
-- `markdownlint-cli2` reports no issues.
+- `markdownlint-cli2` is installed.
+- `markdownlint-cli2 --fix <file>` runs successfully to auto format the file.
+- `markdownlint-cli2 <file>` reports no remaining issues after formatting.
+- The `content` field is updated with the formatted content from disk.
 
 **Example:**
 ```python
 from hdr import MarkdownFileWritten
 
 md_file = MarkdownFileWritten(path="README.md")
-print(md_file.content)  # auto-filled from disk
+print(md_file.content)  # auto-filled from disk (now formatted!)
 ```
 
 ## PythonWorkspaceBuilt
