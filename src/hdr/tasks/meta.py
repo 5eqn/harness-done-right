@@ -58,7 +58,6 @@ class TaskCreated(Task):
         default="Task", description="Parent class to inherit from"
     )
     docstring: str = Field(description="Docstring for the task class")
-    fields: list[FieldSpec] = Field(description="List of field specifications")
     imports: list[str] = Field(
         default_factory=lambda: [
             "from pydantic import Field",
@@ -66,6 +65,7 @@ class TaskCreated(Task):
         ],
         description="List of import statements to include at the top of the file",
     )
+    fields: list[FieldSpec] = Field(description="List of field specifications")
     programmatic_checks: list[str] = Field(
         default_factory=list,
         description="Python code snippets for programmatic validations, executed before LLM verifies",
@@ -81,6 +81,13 @@ class TaskCreated(Task):
 
     def __init__(self, **data):
         super().__init__(**data)
+
+        # Programmatic: generate the Python file and validate it with PythonFileWritten
+        file_content = self._generate_file_content()
+        file_path = self._generate_file_path()
+        with open(file_path, "w") as f:
+            f.write(file_content)
+        self.generated_file = PythonFileWritten(path=file_path)
 
         # Programmatic: class_name must be valid Python identifier
         if not self.class_name.isidentifier():
@@ -140,17 +147,6 @@ class TaskCreated(Task):
                 f"This condition holds true: {verify_spec.condition}"
             )
             self.verify(neg_condition, expected_score=1, inject_self_quote=False)
-
-        # Generate the Python file and validate it with PythonFileWritten
-        file_content = self._generate_file_content()
-        file_path = self._generate_file_path()
-
-        # Write the content to disk
-        with open(file_path, "w") as f:
-            f.write(file_content)
-
-        # Create PythonFileWritten instance to validate the file (auto-reads content, runs format)
-        self.generated_file = PythonFileWritten(path=file_path)
 
     def _to_example(self, values: dict[str, Any]) -> Example:
         """Convert a dict of field values into an Example for quoting."""

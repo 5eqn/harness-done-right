@@ -141,7 +141,7 @@ def quote(obj: Any, indent: int = 0) -> str:
         return f"{indent_str}{str(obj)}"
 
 
-def _summarize_condition(condition: str, max_length: int = 80) -> str:
+def _summarize_condition(condition: str, max_length: int = 63) -> str:
     """Normalize whitespace and trim long conditions for single-line logs."""
     normalized = re.sub(r"\s+", " ", condition).strip()
     if len(normalized) <= max_length:

@@ -15,6 +15,11 @@ concept_described_task = TaskCreated(
     class_name="ConceptDescribed",
     parent_class="Task",
     docstring="Represents a documented concept within a context.",
+    imports=[
+        "from pydantic import Field",
+        "from hdr.tasks.std import Task",
+        "from hdr.tasks.coding import MarkdownFileWritten",
+    ],
     fields=[
         FieldSpec(
             name="context",

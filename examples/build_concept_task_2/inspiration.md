@@ -1,12 +1,6 @@
-"""
-Task specification - THIS FILE IS IMMUTABLE ONCE AGREED
-Defines the formal requirements for the task
-"""
+We attempt to write a concept task that focuses more on storytelling. The first version just check some basic validity, we want the concept task structure to actually be capable of telling a concept properly. Please take inspiration from:
 
-from hdr import FileWritten, PythonWorkspaceBuilt, ConceptDescribed, Task
-from pydantic import Field
-
-
+```py
 class IntroSection(Task):
     """
     Introduction section that explains what the subject is and why it matters.
@@ -190,49 +184,6 @@ class IntroSection(Task):
 
         for v in story_verifications:
             self.verify(v)
+```
 
-
-class UsageSection(Task):
-    """
-    Usage section that explains how to use a concept with runnable examples.
-    """
-
-    concept: ConceptDescribed = Field(
-        description="Authoritative definition of the concept being documented"
-    )
-    file: FileWritten = Field(
-        description="Markdown file (.md) containing the usage explanation"
-    )
-    code_examples: PythonWorkspaceBuilt = Field(
-        description="Python workspace containing runnable code examples"
-    )
-
-    def __init__(self, **data):
-        super().__init__(**data)
-
-        self.verify("The file does not contradict any statement in the concept.")
-        self.verify(
-            "Every code snippet in file has a corresponding file in code_examples, and every file in code_examples is referenced in file."
-        )
-        self.verify(
-            "The file only explains usage of concept; it does not introduce or explain usage of unrelated concepts."
-        )
-        self.verify(
-            "The file contains no time-sensitive terms (e.g., 'currently', 'recently', 'as of now') without specifying an exact version or date."
-        )
-        self.verify(
-            "Every technical term used in file is either defined in the concept or explained within file itself."
-        )
-
-
-class Documentation(Task):
-    """
-    Complete documentation combining introduction and usage sections.
-    """
-
-    intro: IntroSection = Field(
-        description="Introduction section explaining what and why"
-    )
-    usage: UsageSection = Field(
-        description="Usage section explaining how with examples"
-    )
+but you should also make sure context is something widely known. Context is only for specifying the common knowledge base, not for introducing something. Providing context is only for the judger to know we already assume reader to know Python, LLM, Agent, Harness and such, we can probably rename it to target_reader. Also, for positive examples, you can use different positive example for each verification, because after proper setting of verification, it's hard to have an example pass all verifications, you just focus on this one example and provide a clear and simple positive + negative example to illustrate + verify this verification.
