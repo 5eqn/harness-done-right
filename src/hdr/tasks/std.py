@@ -59,7 +59,7 @@ def _quote_named_fields(
         field_desc = f" # {description}" if description else ""
 
         if isinstance(field_value, (BaseModel, Example)):
-            value_str = "\n" + quote(field_value, next_indent)
+            value_str = quote(field_value, next_indent).lstrip()
         elif isinstance(field_value, dict):
             value_str = " {"
             if field_value:

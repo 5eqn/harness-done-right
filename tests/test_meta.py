@@ -275,6 +275,10 @@ class TestTaskCreated:
             class_name="MyTask",
             parent_class="FileWritten",
             docstring="A file task.",
+            imports=[
+                "from pydantic import Field",
+                "from hdr.tasks.std import FileWritten",
+            ],
             fields=[
                 FieldSpec(name="label", type_annotation="str", description="Label"),
             ],

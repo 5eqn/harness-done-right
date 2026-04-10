@@ -5,9 +5,11 @@ TaskCreated validates task definitions at construction time and generates
 complete task class code with examples embedded in verify conditions.
 """
 
+import re
 from typing import Any
 from pydantic import Field, BaseModel
 from hdr.tasks.std import Task, Example, quote
+from hdr.tasks.coding import PythonFileWritten
 
 
 class FieldSpec(BaseModel):
@@ -47,6 +49,8 @@ class TaskCreated(Task):
     - All verify specs have valid positive and negative examples (LLM-verified at instantiation)
 
     Provides code generation that embeds validated examples into verify conditions.
+    Automatically generates a PythonFileWritten task for the created task class,
+    ensuring the file passes PyRight and Ruff checks.
     """
 
     class_name: str = Field(description="Name of the task class to create")
@@ -55,12 +59,23 @@ class TaskCreated(Task):
     )
     docstring: str = Field(description="Docstring for the task class")
     fields: list[FieldSpec] = Field(description="List of field specifications")
+    imports: list[str] = Field(
+        default_factory=lambda: [
+            "from pydantic import Field",
+            "from hdr.tasks.std import Task",
+        ],
+        description="List of import statements to include at the top of the file",
+    )
     programmatic_checks: list[str] = Field(
         default_factory=list,
         description="Python code snippets for programmatic validations, executed before LLM verifies",
     )
     verifies: list[VerifySpec] = Field(
         description="List of verify specifications with examples"
+    )
+    generated_file: PythonFileWritten | None = Field(
+        default=None,
+        description="The generated Python file task instance, after successful creation",
     )
 
     def __init__(self, **data):
@@ -125,6 +140,28 @@ class TaskCreated(Task):
             )
             self.verify(neg_condition, expected_score=1, inject_self_quote=False)
 
+        # Generate the Python file and validate it with PythonFileWritten
+        file_content = self.generate_full_file_content()
+        file_path = self.generate_file_path()
+
+        # Write the content to disk
+        with open(file_path, "w") as f:
+            f.write(file_content)
+
+        # Run ruff format on the file to ensure it meets formatting standards
+        import subprocess
+
+        subprocess.run(["ruff", "format", file_path], capture_output=True, text=True)
+
+        # Read the formatted content back
+        with open(file_path, "r") as f:
+            formatted_content = f.read()
+
+        # Create PythonFileWritten instance to validate the file
+        self.generated_file = PythonFileWritten(
+            path=file_path, content=formatted_content
+        )
+
     def _to_example(self, values: dict[str, Any]) -> Example:
         """Convert a dict of field values into an Example for quoting."""
         field_descs = {f.name: f.description for f in self.fields}
@@ -135,6 +172,26 @@ class TaskCreated(Task):
                 for name, value in values.items()
             },
         )
+
+    def _camel_to_snake(self, s: str) -> str:
+        """Convert CamelCase to snake_case."""
+        s = re.sub("(.)([A-Z][a-z]+)", r"\1_\2", s)
+        return re.sub("([a-z0-9])([A-Z])", r"\1_\2", s).lower()
+
+    def generate_full_file_content(self) -> str:
+        """Generate the complete Python file content including imports and class code."""
+        lines = []
+        # Add imports
+        for import_line in self.imports:
+            lines.append(import_line)
+        lines.append("")
+        # Add class code
+        lines.append(self.generate_code())
+        return "\n".join(lines)
+
+    def generate_file_path(self) -> str:
+        """Generate the snake_case .py filename from the class name."""
+        return f"{self._camel_to_snake(self.class_name)}.py"
 
     def generate_code(self) -> str:
         """
