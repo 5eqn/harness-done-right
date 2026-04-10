@@ -44,6 +44,7 @@ HDR 在第一次调用 `self.verify()` 时会检查 `~/.hdr/config.yaml`：
 - 如果文件不存在，会自动创建一个模板文件
 - 你需要在其中填写 `anthropic_auth_token`
 - `anthropic_model` 和 `anthropic_base_url` 默认已经写好，可按需修改
+- `verify_cache_dir` 默认是 `/tmp/claude/hdr_verify_cache`，可按需修改验证缓存目录
 
 我们正在为这个仓库开发更多使用场景。
 

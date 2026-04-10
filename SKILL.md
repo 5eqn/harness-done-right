@@ -74,6 +74,7 @@ Configuration via `~/.hdr/config.yaml`:
 - `anthropic_auth_token`: Your Anthropic API key (required; must be filled in)
 - `anthropic_base_url`: The base URL for the API (optional, defaults to `https://api.anthropic.com`)
 - `anthropic_model`: The model name to use (optional, defaults to `claude-4.6-sonnet`)
+- `verify_cache_dir`: Directory used to cache verification results (optional, defaults to `/tmp/claude/hdr_verify_cache`)
 
 ### `quote(obj: Any) -> str`
 Safely pretty-print any object for use in prompts. Automatically handles:
@@ -148,5 +149,5 @@ Notice:
 ## Error Handling
 - **ValidationError**: Thrown by Pydantic when you pass incorrect types to task constructors
 - **AssertionError**: Thrown when a verification fails, includes reasoning and score
-- **EnvironmentError**: Thrown when `~/.hdr/config.yaml` is missing required values such as `anthropic_auth_token`
+- **EnvironmentError**: Thrown when `~/.hdr/config.yaml` is missing required values such as `anthropic_auth_token`, or when the config YAML does not contain a mapping at the top level
 - All errors include clear, actionable instructions for fixing the issue

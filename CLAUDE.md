@@ -38,6 +38,7 @@ Claude runs the script to perform and verify the task:
 # anthropic_auth_token: "your-api-key"
 # anthropic_model: "claude-4.6-sonnet"
 # anthropic_base_url: "https://api.anthropic.com"
+# verify_cache_dir: "/tmp/claude/hdr_verify_cache"
 
 # Instantiation triggers Pydantic type checks and LLM verification
 result = HumanizeText(
@@ -54,9 +55,9 @@ print("Task Verified:", result)
 *   **Type Safety**: Built on **Pydantic** for runtime type and schema validation.
 *   **LLM Assertions**: `self.verify(condition)` calls Claude to score the result (1-5). Only a score of **5** passes; otherwise, it throws an error with the reasoning. Automatically includes full task state as context.
 *   **Descriptive Fields**: Use `Field(description=...)` to document task fields, which are automatically included in verification prompts.
-*   **Message-Based Caching**: Verification results are cached by condition to prevent redundant LLM calls.
+*   **Message-Based Caching**: Verification results are cached by the full verification condition and stored in the configured `verify_cache_dir` to prevent redundant LLM calls.
 *   **Prompt Safety**: `quote(obj)` handles any data type safely with pretty-printing for use in prompts.
-*   **Config File Setup**: Verification settings are loaded from `~/.hdr/config.yaml`. HDR creates a template automatically on first use if the file is missing.
+*   **Config File Setup**: Verification settings are loaded from `~/.hdr/config.yaml` via YAML. HDR creates a template automatically on first use if the file is missing.
 
 ---
 
@@ -65,7 +66,7 @@ print("Task Verified:", result)
 | Function | Description |
 | :--- | :--- |
 | `Task` | Base class for all tasks; provides automatic schema validation and built-in verification. |
-| `self.verify(condition)` | Uses Claude to validate a condition against the current task state. Fails if score < 5. Requires `~/.hdr/config.yaml` with `anthropic_auth_token` filled in. |
+| `self.verify(condition)` | Uses Claude to validate a condition against the current task state. Fails if score < 5. Requires `~/.hdr/config.yaml` with `anthropic_auth_token` filled in and supports `verify_cache_dir` for cache location. |
 | `quote(obj)` | Safely pretty-prints objects (str, dict, models) for use in LLM prompts. |
 
 ---
