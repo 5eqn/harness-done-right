@@ -6,17 +6,15 @@ All tasks use relative paths by preference, as they are more portable and make
 projects easier to share and version control.
 """
 
-from typing import Any, ClassVar, Sequence, TYPE_CHECKING
 import hashlib
 import json
 import os
+from typing import Any, Sequence
+
 import anthropic
 from anthropic.types import ThinkingConfigEnabledParam
-from pydantic import BaseModel, Field
 from hdr.config import load_verify_config
-
-if TYPE_CHECKING:
-    pass
+from pydantic import BaseModel, Field
 
 
 class Example:
@@ -147,10 +145,6 @@ class Task(BaseModel):
     Base class for all HDR tasks.
     Provides built-in verify method that automatically includes the task's pretty-printed state.
     """
-
-    # Cache directory for verify results (message-based)
-    _CACHE_DIR: ClassVar[str] = "/tmp/claude/hdr_verify_cache"
-    os.makedirs(_CACHE_DIR, exist_ok=True)
 
     def _call_llm_with_retry(
         self,
@@ -289,13 +283,14 @@ Then, output your final score using the format: <score>N</score>, N ranges from:
         verify_config = load_verify_config()
 
         # Create cache key based solely on the condition
-        os.makedirs(self._CACHE_DIR, exist_ok=True)
+        cache_dir = verify_config.verify_cache_dir
+        cache_dir.mkdir(parents=True, exist_ok=True)
         cache_key = hashlib.md5(full_condition.encode()).hexdigest()
-        cache_file = os.path.join(self._CACHE_DIR, f"{cache_key}.json")
+        cache_file = cache_dir / f"{cache_key}.json"
 
         # Return cached result if available
-        if os.path.exists(cache_file):
-            with open(cache_file, "r") as f:
+        if cache_file.exists():
+            with cache_file.open("r") as f:
                 cached = json.load(f)
                 description = cached["description"]
                 score = cached["score"]
@@ -309,7 +304,7 @@ Then, output your final score using the format: <score>N</score>, N ranges from:
             )
 
             # Cache the result (only description and score)
-            with open(cache_file, "w") as f:
+            with cache_file.open("w") as f:
                 json.dump({"description": description, "score": score}, f)
 
         if score != expected_score:

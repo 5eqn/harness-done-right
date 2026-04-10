@@ -57,7 +57,6 @@ def test_verify_creates_config_template_when_missing(tmp_path, monkeypatch):
 
     monkeypatch.delenv("PYTEST_CURRENT_TEST", raising=False)
     monkeypatch.setattr(hdr_config, "CONFIG_PATH", tmp_path / ".hdr" / "config.yaml")
-    monkeypatch.setattr(Task, "_CACHE_DIR", str(tmp_path / "cache"))
 
     task = TestTask(value=42)
 
@@ -70,6 +69,7 @@ def test_verify_creates_config_template_when_missing(tmp_path, monkeypatch):
     assert 'anthropic_auth_token: ""' in content
     assert 'anthropic_model: "claude-4.6-sonnet"' in content
     assert 'anthropic_base_url: "https://api.anthropic.com"' in content
+    assert f'verify_cache_dir: "{hdr_config.DEFAULT_VERIFY_CACHE_DIR}"' in content
 
 
 def test_verify_rejects_blank_token_in_config(tmp_path, monkeypatch):
@@ -80,13 +80,13 @@ def test_verify_rejects_blank_token_in_config(tmp_path, monkeypatch):
 
     monkeypatch.delenv("PYTEST_CURRENT_TEST", raising=False)
     monkeypatch.setattr(hdr_config, "CONFIG_PATH", tmp_path / ".hdr" / "config.yaml")
-    monkeypatch.setattr(Task, "_CACHE_DIR", str(tmp_path / "cache"))
 
     hdr_config.CONFIG_PATH.parent.mkdir()
     hdr_config.CONFIG_PATH.write_text(
         'anthropic_auth_token: ""\n'
         'anthropic_model: "claude-4.6-sonnet"\n'
         'anthropic_base_url: "https://api.anthropic.com"\n'
+        f'verify_cache_dir: "{tmp_path / "cache"}"\n'
     )
 
     task = TestTask(value=42)
@@ -103,13 +103,13 @@ def test_verify_uses_config_values(tmp_path, monkeypatch):
 
     monkeypatch.delenv("PYTEST_CURRENT_TEST", raising=False)
     monkeypatch.setattr(hdr_config, "CONFIG_PATH", tmp_path / ".hdr" / "config.yaml")
-    monkeypatch.setattr(Task, "_CACHE_DIR", str(tmp_path / "cache"))
 
     hdr_config.CONFIG_PATH.parent.mkdir()
     hdr_config.CONFIG_PATH.write_text(
         'anthropic_auth_token: "test-token"\n'
         'anthropic_model: "test-model"\n'
         'anthropic_base_url: "https://example.com"\n'
+        f'verify_cache_dir: "{tmp_path / "cache"}"\n'
     )
 
     captured: dict[str, str] = {}

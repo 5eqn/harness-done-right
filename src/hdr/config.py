@@ -5,10 +5,13 @@ Configuration helpers for HDR runtime behavior.
 from dataclasses import dataclass
 from pathlib import Path
 
+import yaml
+
 
 CONFIG_PATH = Path("~/.hdr/config.yaml").expanduser()
 DEFAULT_ANTHROPIC_MODEL = "claude-4.6-sonnet"
 DEFAULT_ANTHROPIC_BASE_URL = "https://api.anthropic.com"
+DEFAULT_VERIFY_CACHE_DIR = Path("/tmp/claude/hdr_verify_cache")
 
 
 @dataclass(frozen=True, slots=True)
@@ -18,6 +21,7 @@ class VerifyConfig:
     anthropic_auth_token: str
     anthropic_model: str = DEFAULT_ANTHROPIC_MODEL
     anthropic_base_url: str = DEFAULT_ANTHROPIC_BASE_URL
+    verify_cache_dir: Path = DEFAULT_VERIFY_CACHE_DIR
 
 
 def config_template() -> str:
@@ -27,24 +31,8 @@ def config_template() -> str:
 anthropic_auth_token: ""
 anthropic_model: "{DEFAULT_ANTHROPIC_MODEL}"
 anthropic_base_url: "{DEFAULT_ANTHROPIC_BASE_URL}"
+verify_cache_dir: "{DEFAULT_VERIFY_CACHE_DIR}"
 """
-
-
-def _parse_config(content: str) -> dict[str, str]:
-    parsed_config: dict[str, str] = {}
-
-    for raw_line in content.splitlines():
-        line = raw_line.strip()
-        if not line or line.startswith("#") or ":" not in line:
-            continue
-
-        key, raw_value = line.split(":", 1)
-        value = raw_value.strip()
-        if len(value) >= 2 and value[0] == value[-1] and value[0] in {'"', "'"}:
-            value = value[1:-1]
-        parsed_config[key.strip()] = value
-
-    return parsed_config
 
 
 def load_verify_config() -> VerifyConfig:
@@ -61,15 +49,21 @@ def load_verify_config() -> VerifyConfig:
             "Please fill in anthropic_auth_token in ~/.hdr/config.yaml and rerun."
         )
 
-    raw_config = _parse_config(CONFIG_PATH.read_text())
+    raw_config = yaml.safe_load(CONFIG_PATH.read_text()) or {}
+    if not isinstance(raw_config, dict):
+        raise EnvironmentError(f"HDR config at {CONFIG_PATH} must be a YAML mapping.")
+
     config = VerifyConfig(
-        anthropic_auth_token=raw_config.get("anthropic_auth_token", "").strip(),
-        anthropic_model=raw_config.get(
-            "anthropic_model", DEFAULT_ANTHROPIC_MODEL
+        anthropic_auth_token=str(raw_config.get("anthropic_auth_token", "")).strip(),
+        anthropic_model=str(
+            raw_config.get("anthropic_model", DEFAULT_ANTHROPIC_MODEL)
         ).strip(),
-        anthropic_base_url=raw_config.get(
-            "anthropic_base_url", DEFAULT_ANTHROPIC_BASE_URL
+        anthropic_base_url=str(
+            raw_config.get("anthropic_base_url", DEFAULT_ANTHROPIC_BASE_URL)
         ).strip(),
+        verify_cache_dir=Path(
+            str(raw_config.get("verify_cache_dir", DEFAULT_VERIFY_CACHE_DIR))
+        ).expanduser(),
     )
 
     if not config.anthropic_auth_token:
