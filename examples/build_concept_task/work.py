@@ -100,6 +100,3 @@ concept_described_task = TaskCreated(
 )
 
 print("✅ ConceptDescribed task specification created successfully!")
-print("\nGenerated task code:")
-print("=" * 80)
-print(concept_described_task.generate_code())
