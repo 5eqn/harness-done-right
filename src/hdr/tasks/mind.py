@@ -6,12 +6,9 @@ validation use cases that require qualitative judgment.
 """
 
 from pydantic import Field
-from typing import TYPE_CHECKING
 
 from hdr.tasks.std import Task
-
-if TYPE_CHECKING:
-    from hdr.tasks.coding import MarkdownFileWritten
+from hdr.tasks.coding import MarkdownFileWritten
 
 
 class ConceptDescribed(Task):
@@ -19,11 +16,11 @@ class ConceptDescribed(Task):
     Represents a documented concept within a context.
     """
 
-    context: "MarkdownFileWritten" = Field(
+    context: MarkdownFileWritten = Field(
         description="File explaining the parent context"
     )
     name: str = Field(description="Name of the concept")
-    description: "MarkdownFileWritten" = Field(
+    description: MarkdownFileWritten = Field(
         description="File containing the concept description"
     )
 

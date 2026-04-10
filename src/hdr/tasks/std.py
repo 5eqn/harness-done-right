@@ -211,12 +211,13 @@ Then, output your final score using the format: <score>N</score>, N ranges from:
                 score = 0
 
                 # Log LLM response
-                if verbose:
-                    for block in message.content:
-                        if block.type == "thinking":
+                for block in message.content:
+                    if block.type == "thinking":
+                        if verbose:
                             print(f"Thinking:\n{block.thinking}\n")
-                        elif block.type == "text":
-                            text = block.text
+                    elif block.type == "text":
+                        text = block.text
+                        if verbose:
                             print(f"Text:\n{block.text}\n")
 
                 # Parse description (everything before <score>)
