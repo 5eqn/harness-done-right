@@ -22,7 +22,8 @@ Represents a documented concept within a context, with LLM validation of descrip
 
 **Example:**
 ```python
-from hdr import ConceptDescribed, MarkdownFileWritten
+from hdr.tasks.coding import MarkdownFileWritten
+from hdr.tasks.mind import ConceptDescribed
 
 concept = ConceptDescribed(
     context=MarkdownFileWritten(path="context.md"),

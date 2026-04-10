@@ -17,7 +17,7 @@ Validates that a Python file exists and passes linting and type checking.
 
 **Example:**
 ```python
-from hdr import PythonFileWritten
+from hdr.tasks.coding import PythonFileWritten
 
 py_file = PythonFileWritten(path="src/my_project/main.py")
 print(py_file.content)  # auto-filled from disk
@@ -38,7 +38,7 @@ Validates that a markdown file exists at the given path, auto-formats it, and ch
 
 **Example:**
 ```python
-from hdr import MarkdownFileWritten
+from hdr.tasks.coding import MarkdownFileWritten
 
 md_file = MarkdownFileWritten(path="README.md")
 print(md_file.content)  # auto-filled from disk (now formatted!)
@@ -59,7 +59,7 @@ Extends `DirectoryCreated` — validates a Python workspace is properly configur
 
 **Example:**
 ```python
-from hdr import PythonWorkspaceBuilt
+from hdr.tasks.coding import PythonWorkspaceBuilt
 
 workspace = PythonWorkspaceBuilt(path="src/my_project")
 ```

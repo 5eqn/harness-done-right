@@ -32,7 +32,7 @@ Meta-task for creating well-formed HDR tasks. Validates task definitions at cons
 
 **Example Usage:**
 ```python
-from hdr import TaskCreated
+from hdr.tasks.meta import TaskCreated
 
 # Define a new task
 task_spec = TaskCreated(

@@ -82,13 +82,6 @@ class TaskCreated(Task):
     def __init__(self, **data):
         super().__init__(**data)
 
-        # Programmatic: generate the Python file and validate it with PythonFileWritten
-        file_content = self._generate_file_content()
-        file_path = self._generate_file_path()
-        with open(file_path, "w") as f:
-            f.write(file_content)
-        self.generated_file = PythonFileWritten(path=file_path)
-
         # Programmatic: class_name must be valid Python identifier
         if not self.class_name.isidentifier():
             raise AssertionError(
@@ -130,6 +123,13 @@ class TaskCreated(Task):
                     raise AssertionError(
                         f"Verify #{i + 1} {label} has unknown fields: {extra}"
                     )
+
+        # Programmatic: generate the Python file and validate it with PythonFileWritten
+        file_content = self._generate_file_content()
+        file_path = self._generate_file_path()
+        with open(file_path, "w") as f:
+            f.write(file_content)
+        self.generated_file = PythonFileWritten(path=file_path)
 
         # LLM verification: validate each example against its condition
         for i, verify_spec in enumerate(self.verifies):

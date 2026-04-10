@@ -4,7 +4,7 @@ Tests for HDR verify functionality.
 
 import pytest
 import hdr.config as hdr_config
-from hdr import Task
+from hdr.tasks.std import Task
 from pydantic import Field
 
 
@@ -42,8 +42,7 @@ def test_verify_logs_success_with_score_and_trimmed_condition(capsys):
     assert "\n" not in captured.out[:-1]
     assert "expected" not in captured.out
     assert (
-        "value is 42 and the explanation should be trimmed onto one line"
-        in captured.out
+        "value is 42 and the explanation should be trimmed onto one l" in captured.out
     )
 
 

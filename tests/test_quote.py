@@ -3,8 +3,8 @@ Tests for HDR quote functionality.
 """
 
 import pytest
-from hdr import quote, BaseModel, Task
-from pydantic import Field
+from hdr.tasks.std import Task, quote
+from pydantic import BaseModel, Field
 
 
 # Pydantic test classes
