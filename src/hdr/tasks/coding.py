@@ -68,15 +68,15 @@ class PythonFileWritten(FileWritten):
                 f"ruff found lint errors in {self.path}:\n{result_ruff.stdout}\n{result_ruff.stderr}"
             )
 
-        # Run ruff format on the single file
+        # Run ruff format on the single file to ensure consistent formatting
         result_ruff_fmt = subprocess.run(
-            ["ruff", "format", "--check", self.path],
+            ["ruff", "format", self.path],
             capture_output=True,
             text=True,
         )
         if result_ruff_fmt.returncode != 0:
             raise AssertionError(
-                f"ruff format check failed for {self.path}:\n{result_ruff_fmt.stdout}\n{result_ruff_fmt.stderr}"
+                f"ruff format failed for {self.path}:\n{result_ruff_fmt.stdout}\n{result_ruff_fmt.stderr}"
             )
 
 

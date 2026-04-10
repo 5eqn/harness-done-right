@@ -8,6 +8,7 @@ so that neg_condition gets score 1 (matching expected_score=1).
 """
 
 import pytest
+import os
 from hdr.tasks.meta import TaskCreated, FieldSpec, VerifySpec
 
 
@@ -33,6 +34,17 @@ def _valid_verifies() -> list[VerifySpec]:
 
 class TestTaskCreated:
     """Tests for TaskCreated meta-task."""
+
+    def teardown_method(self):
+        """Clean up generated files after each test."""
+        generated_files = [
+            "my_task.py",
+            "summarized.py",
+            "multi_task.py",
+        ]
+        for file in generated_files:
+            if os.path.exists(file):
+                os.remove(file)
 
     def test_valid_construction(self):
         """Valid TaskCreated passes all programmatic and mock-verify checks."""
@@ -212,7 +224,7 @@ class TestTaskCreated:
                 )
             ],
         )
-        code = task.generate_code()
+        code = task.generated_file.content
         assert "class Summarized(Task):" in code
         assert '"""Summarize input text."""' in code
         assert "input_text: str" in code
@@ -243,7 +255,7 @@ class TestTaskCreated:
                 )
             ],
         )
-        code = task.generate_code()
+        code = task.generated_file.content
         assert 'default="fast"' in code
 
     def test_generate_code_with_programmatic_checks(self):
@@ -265,7 +277,7 @@ class TestTaskCreated:
                 )
             ],
         )
-        code = task.generate_code()
+        code = task.generated_file.content
         assert "if not self.value:" in code
         assert "raise AssertionError" in code
 
@@ -290,7 +302,7 @@ class TestTaskCreated:
                 )
             ],
         )
-        code = task.generate_code()
+        code = task.generated_file.content
         assert "class MyTask(FileWritten):" in code
 
     def test_generate_code_multiline_docstring(self):
@@ -309,7 +321,7 @@ class TestTaskCreated:
                 )
             ],
         )
-        code = task.generate_code()
+        code = task.generated_file.content
         assert "Line one." in code
         assert "Line two." in code
 
@@ -335,7 +347,7 @@ class TestTaskCreated:
                 ),
             ],
         )
-        code = task.generate_code()
+        code = task.generated_file.content
         assert code.count("self.verify(") == 2
 
 

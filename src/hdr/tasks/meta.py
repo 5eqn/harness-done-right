@@ -141,26 +141,15 @@ class TaskCreated(Task):
             self.verify(neg_condition, expected_score=1, inject_self_quote=False)
 
         # Generate the Python file and validate it with PythonFileWritten
-        file_content = self.generate_full_file_content()
-        file_path = self.generate_file_path()
+        file_content = self._generate_file_content()
+        file_path = self._generate_file_path()
 
         # Write the content to disk
         with open(file_path, "w") as f:
             f.write(file_content)
 
-        # Run ruff format on the file to ensure it meets formatting standards
-        import subprocess
-
-        subprocess.run(["ruff", "format", file_path], capture_output=True, text=True)
-
-        # Read the formatted content back
-        with open(file_path, "r") as f:
-            formatted_content = f.read()
-
-        # Create PythonFileWritten instance to validate the file
-        self.generated_file = PythonFileWritten(
-            path=file_path, content=formatted_content
-        )
+        # Create PythonFileWritten instance to validate the file (auto-reads content, runs format)
+        self.generated_file = PythonFileWritten(path=file_path)
 
     def _to_example(self, values: dict[str, Any]) -> Example:
         """Convert a dict of field values into an Example for quoting."""
@@ -178,7 +167,7 @@ class TaskCreated(Task):
         s = re.sub("(.)([A-Z][a-z]+)", r"\1_\2", s)
         return re.sub("([a-z0-9])([A-Z])", r"\1_\2", s).lower()
 
-    def generate_full_file_content(self) -> str:
+    def _generate_file_content(self) -> str:
         """Generate the complete Python file content including imports and class code."""
         lines = []
         # Add imports
@@ -186,14 +175,14 @@ class TaskCreated(Task):
             lines.append(import_line)
         lines.append("")
         # Add class code
-        lines.append(self.generate_code())
+        lines.append(self._generate_code())
         return "\n".join(lines)
 
-    def generate_file_path(self) -> str:
+    def _generate_file_path(self) -> str:
         """Generate the snake_case .py filename from the class name."""
         return f"{self._camel_to_snake(self.class_name)}.py"
 
-    def generate_code(self) -> str:
+    def _generate_code(self) -> str:
         """
         Generate the complete Python code for the task class.
 
