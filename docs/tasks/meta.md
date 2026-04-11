@@ -13,6 +13,7 @@ Meta-task for creating well-formed HDR tasks. Validates task definitions at cons
 - LLM-verifies that positive examples pass the condition (score 5) and negative examples fail (score 1)
 - Generates production-ready task class code with embedded examples for clarity
 - Automatically creates a valid Python file (snake_case filename from class name) that passes PyRight and Ruff checks
+- Refuses to overwrite an existing file unless it starts with the HDR auto-generated marker. Generated files include regeneration guidance and a do-not-edit hint in the header.
 - Returns a `PythonFileWritten` instance for the created file in the `generated_file` field
 
 **Fields:**

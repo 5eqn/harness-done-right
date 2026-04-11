@@ -4,6 +4,7 @@ Uses a fixed temp workspace created via tempfile.mkdtemp.
 """
 
 import os
+import subprocess
 import tempfile
 
 import pytest
@@ -41,6 +42,50 @@ class TestPythonFileWritten:
             f = PythonFileWritten(path=file_path)
             assert f.path == file_path
             assert 'name = "world"\nprint(f"Hello, {name}!")\n' in f.content
+
+    def test_py_file_content_reflects_formatted_file(self):
+        """Test PythonFileWritten content is read after ruff format mutates disk."""
+        from hdr.tasks.coding import PythonFileWritten
+
+        with tempfile.TemporaryDirectory() as tmpdir:
+            file_path = os.path.join(tmpdir, "formatted.py")
+            with open(file_path, "w") as f:
+                f.write("x=1\n")
+            f = PythonFileWritten(path=file_path)
+            assert f.content == "x = 1\n"
+
+
+class TestMarkdownFileWritten:
+    """Tests for MarkdownFileWritten task class."""
+
+    def test_markdown_runs_non_fix_lint_after_format(self, monkeypatch):
+        """Test MarkdownFileWritten runs a plain markdownlint pass after --fix."""
+        from hdr.tasks.coding import MarkdownFileWritten
+
+        calls: list[list[str]] = []
+
+        def fake_run(
+            command,
+            capture_output=False,
+            text=False,
+            cwd=None,
+        ):
+            calls.append(command)
+            return subprocess.CompletedProcess(command, 0, "", "")
+
+        monkeypatch.setattr("shutil.which", lambda name: "/bin/markdownlint-cli2")
+        monkeypatch.setattr("subprocess.run", fake_run)
+
+        with tempfile.TemporaryDirectory() as tmpdir:
+            file_path = os.path.join(tmpdir, "test.md")
+            with open(file_path, "w") as f:
+                f.write("# Hello\n")
+            MarkdownFileWritten(path=file_path)
+
+        assert calls == [
+            ["markdownlint-cli2", "--fix", file_path],
+            ["markdownlint-cli2", file_path],
+        ]
 
 
 class TestPythonWorkspaceBuilt:

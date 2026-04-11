@@ -25,7 +25,7 @@ Validates that a file exists at the given path and optionally reads its content.
 **Validates:**
 - File exists at `path` (`os.path.exists`).
 - File is readable.
-- Content is automatically populated from the actual file content.
+- Content is automatically populated from the actual file content and frozen after initialization.
 
 **Example:**
 ```python
@@ -47,7 +47,7 @@ Validates that a directory exists and gathers its file content recursively, resp
 
 **Validates:**
 - Directory exists at `path` (`os.path.isdir`).
-- Recursively gathers file content, skipping entries matching `.gitignore` patterns.
+- Recursively gathers file content, skipping entries matching `.gitignore` patterns, including nested `.gitignore` files.
 
 **Example:**
 ```python

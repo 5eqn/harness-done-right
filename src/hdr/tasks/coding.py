@@ -6,6 +6,10 @@ These tasks validate Python files and workspaces, using tools like ruff and pyri
 
 import shutil
 import subprocess
+from typing import Any
+import os
+
+from pydantic import model_validator
 
 from hdr.tasks.std import DirectoryCreated, FileWritten
 
@@ -22,10 +26,30 @@ class PythonFileWritten(FileWritten):
     - ruff format reports clean formatting for the file
     """
 
+    @model_validator(mode="before")
+    @classmethod
+    def _format_python_and_fill_content(cls, data: Any) -> Any:
+        if not isinstance(data, dict):
+            return data
+
+        data = dict(data)
+        path = data.get("path")
+        if not isinstance(path, str) or not path.endswith(".py"):
+            return data
+
+        cls._validate_python_file(path)
+        data["_hdr_content"] = cls._read_file_content(path)
+        return data
+
     def __init__(self, **data):
         super().__init__(**data)
         if not self.path.endswith(".py"):
             raise AssertionError(f"Path '{self.path}' does not end with '.py'")
+
+    @staticmethod
+    def _validate_python_file(path: str) -> None:
+        if not os.path.exists(path):
+            raise AssertionError(f"File at {path} does not exist")
 
         # Check pyright is installed
         pyright_path = shutil.which("pyright")
@@ -36,7 +60,7 @@ class PythonFileWritten(FileWritten):
 
         # Run pyright on the single file
         result_pyright = subprocess.run(
-            ["pyright", "--outputjson", self.path],
+            ["pyright", "--outputjson", path],
             capture_output=True,
             text=True,
         )
@@ -49,34 +73,34 @@ class PythonFileWritten(FileWritten):
             if error_count > 0 or warning_count > 0:
                 raise AssertionError(
                     f"pyright found {error_count} error(s) and {warning_count} warning(s) "
-                    f"in {self.path}. Run 'pyright {self.path}' for details."
+                    f"in {path}. Run 'pyright {path}' for details."
                 )
         except (json.JSONDecodeError, KeyError):
             raise AssertionError(
-                f"pyright produced unexpected output for {self.path} "
-                f"(exit code {result_pyright.returncode}). Could not verify. Run 'pyright {self.path}' for details."
+                f"pyright produced unexpected output for {path} "
+                f"(exit code {result_pyright.returncode}). Could not verify. Run 'pyright {path}' for details."
             )
 
         # Run ruff check on the single file
         result_ruff = subprocess.run(
-            ["ruff", "check", self.path],
+            ["ruff", "check", path],
             capture_output=True,
             text=True,
         )
         if result_ruff.returncode != 0:
             raise AssertionError(
-                f"ruff found lint errors in {self.path}:\n{result_ruff.stdout}\n{result_ruff.stderr}"
+                f"ruff found lint errors in {path}:\n{result_ruff.stdout}\n{result_ruff.stderr}"
             )
 
         # Run ruff format on the single file to ensure consistent formatting
         result_ruff_fmt = subprocess.run(
-            ["ruff", "format", self.path],
+            ["ruff", "format", path],
             capture_output=True,
             text=True,
         )
         if result_ruff_fmt.returncode != 0:
             raise AssertionError(
-                f"ruff format failed for {self.path}:\n{result_ruff_fmt.stdout}\n{result_ruff_fmt.stderr}"
+                f"ruff format failed for {path}:\n{result_ruff_fmt.stdout}\n{result_ruff_fmt.stderr}"
             )
 
 
@@ -93,10 +117,30 @@ class MarkdownFileWritten(FileWritten):
     - The content field is updated with the formatted content
     """
 
+    @model_validator(mode="before")
+    @classmethod
+    def _format_markdown_and_fill_content(cls, data: Any) -> Any:
+        if not isinstance(data, dict):
+            return data
+
+        data = dict(data)
+        path = data.get("path")
+        if not isinstance(path, str) or not path.endswith(".md"):
+            return data
+
+        cls._validate_markdown_file(path)
+        data["_hdr_content"] = cls._read_file_content(path)
+        return data
+
     def __init__(self, **data):
         super().__init__(**data)
         if not self.path.endswith(".md"):
             raise AssertionError(f"Path '{self.path}' does not end with '.md'")
+
+    @staticmethod
+    def _validate_markdown_file(path: str) -> None:
+        if not os.path.exists(path):
+            raise AssertionError(f"File at {path} does not exist")
 
         # Check markdownlint-cli2 is installed
         markdownlint_path = shutil.which("markdownlint-cli2")
@@ -107,21 +151,25 @@ class MarkdownFileWritten(FileWritten):
 
         # Run markdownlint-cli2 --fix to auto format the file
         result_fix = subprocess.run(
-            ["markdownlint-cli2", "--fix", self.path],
+            ["markdownlint-cli2", "--fix", path],
             capture_output=True,
             text=True,
         )
         if result_fix.returncode != 0:
             raise AssertionError(
-                f"markdownlint-cli2 --fix failed for {self.path}:\n{result_fix.stderr}\n{result_fix.stdout}"
+                f"markdownlint-cli2 --fix failed for {path}:\n{result_fix.stderr}\n{result_fix.stdout}"
             )
 
-        # Re-read the file content after formatting (content can't be manually assigned)
-        try:
-            with open(self.path, "r") as f:
-                self.content = f.read()
-        except (IOError, OSError):
-            raise AssertionError(f"Could not read file at {self.path} after formatting")
+        result_lint = subprocess.run(
+            ["markdownlint-cli2", path],
+            capture_output=True,
+            text=True,
+        )
+        if result_lint.returncode != 0:
+            raise AssertionError(
+                f"markdownlint-cli2 found issues in {path} after formatting:\n"
+                f"{result_lint.stderr}\n{result_lint.stdout}"
+            )
 
 
 class PythonWorkspaceBuilt(DirectoryCreated):
@@ -136,6 +184,8 @@ class PythonWorkspaceBuilt(DirectoryCreated):
     - ruff check reports no lint errors in the workspace
     - ruff format runs cleanly in the workspace
     """
+
+    gather_content_on_init = False
 
     def __init__(self, **data):
         super().__init__(**data)
@@ -201,3 +251,8 @@ class PythonWorkspaceBuilt(DirectoryCreated):
             raise AssertionError(
                 f"ruff format failed in {self.path}:\n{result_ruff_fmt.stdout}\n{result_ruff_fmt.stderr}"
             )
+
+        if not self.content:
+            self.content = self._gather_content(self.path)
+            total_files = len(self.content)
+            print(f"[Directory] Total files in {self.path}: {total_files}")

@@ -5,6 +5,7 @@ Uses a fixed temp workspace created via tempfile.mkdtemp.
 
 import tempfile
 import pytest
+from pydantic import ValidationError
 from hdr.tasks.std import DirectoryCreated, FileWritten
 from hdr.tasks.coding import MarkdownFileWritten
 
@@ -23,6 +24,18 @@ class TestFileWritten:
             f = FileWritten(path=file_path)
             assert f.path == file_path
             assert f.content == "hello"
+
+    def test_content_is_frozen_after_read(self):
+        """Test FileWritten content cannot be manually assigned after init."""
+        with tempfile.TemporaryDirectory() as tmpdir:
+            import os
+
+            file_path = os.path.join(tmpdir, "test.txt")
+            with open(file_path, "w") as f:
+                f.write("hello")
+            f = FileWritten(path=file_path)
+            with pytest.raises(ValidationError, match="Field is frozen"):
+                f.content = "manual"
 
     def test_file_not_exists(self):
         """Test FileWritten validation fails when file does not exist"""
@@ -54,9 +67,6 @@ class TestDirectoryCreated:
             with open(file_path, "w") as f:
                 f.write("custom content")
             file = FileWritten(path=file_path)
-            file.content = (
-                "custom content"  # Set content after init since init doesn't accept it
-            )
             d = DirectoryCreated(
                 path=tmpdir,
                 content=[file],
@@ -80,6 +90,26 @@ class TestDirectoryCreated:
             contents = [f.content for f in d.content]
             assert "content a" in contents
             assert "content b" in contents
+
+    def test_directory_respects_nested_gitignore(self):
+        """Test DirectoryCreated applies .gitignore files in nested directories."""
+        with tempfile.TemporaryDirectory() as tmpdir:
+            import os
+
+            nested = os.path.join(tmpdir, "nested")
+            os.mkdir(nested)
+            with open(os.path.join(nested, ".gitignore"), "w") as f:
+                f.write("secret.txt\n")
+            with open(os.path.join(nested, "secret.txt"), "w") as f:
+                f.write("secret")
+            with open(os.path.join(nested, "keep.txt"), "w") as f:
+                f.write("keep")
+
+            d = DirectoryCreated(path=tmpdir)
+
+            paths = {os.path.relpath(f.path, tmpdir) for f in d.content}
+            assert "nested/keep.txt" in paths
+            assert "nested/secret.txt" not in paths
 
 
 class TestMarkdownFileWritten:

@@ -10,12 +10,13 @@ import hashlib
 import json
 import os
 import re
-from typing import Any, Sequence
+from dataclasses import dataclass
+from typing import Any, ClassVar, Sequence
 
 import anthropic
 from anthropic.types import ThinkingConfigEnabledParam
 from hdr.config import load_verify_config
-from pydantic import BaseModel, Field
+from pydantic import BaseModel, Field, model_validator
 
 
 class Example:
@@ -322,6 +323,13 @@ Then, output your final score using the format: <score>N</score>, N ranges from:
         print(f"[verify] score={score} {_summarize_condition(condition)}")
 
 
+@dataclass(frozen=True, slots=True)
+class _GitignoreRule:
+    base_rel: str
+    pattern: str
+    directory_only: bool
+
+
 class FileWritten(Task):
     """
     Validates that a file exists at the given path using os.path.exists().
@@ -335,20 +343,48 @@ class FileWritten(Task):
     path: str = Field(description="Path to the file")
     content: str = Field(
         init=False,
+        frozen=True,
         default="",
         description="Content of the file, auto-filled from disk (cannot be manually assigned)",
     )
 
+    @model_validator(mode="before")
+    @classmethod
+    def _fill_content(cls, data: Any) -> Any:
+        """Populate frozen content from disk before model construction."""
+        if not isinstance(data, dict):
+            return data
+
+        data = dict(data)
+        data.pop("content", None)
+        path = data.get("path")
+        if not isinstance(path, str):
+            return data
+        if not os.path.exists(path):
+            raise AssertionError(f"File at {path} does not exist")
+
+        content = data.pop("_hdr_content", None)
+        if content is None:
+            content = cls._read_file_content(path)
+
+        data["content"] = content
+        return data
+
     def __init__(self, **data):
+        path = data.get("path")
+        if isinstance(path, str) and not os.path.exists(path):
+            raise AssertionError(f"File at {path} does not exist")
         super().__init__(**data)
         if not os.path.exists(self.path):
             raise AssertionError(f"File at {self.path} does not exist")
-        # Always auto-fill content from actual file since it can't be passed
+
+    @staticmethod
+    def _read_file_content(path: str) -> str:
         try:
-            with open(self.path, "r") as f:
-                self.content = f.read()
+            with open(path, "r") as f:
+                return f.read()
         except (IOError, OSError):
-            raise AssertionError(f"Could not read file at {self.path}")
+            raise AssertionError(f"Could not read file at {path}")
 
 
 class DirectoryCreated(Task):
@@ -359,6 +395,8 @@ class DirectoryCreated(Task):
     Content is a list of FileWritten objects representing the files in the directory,
     gathered recursively and respecting .gitignore patterns.
     """
+
+    gather_content_on_init: ClassVar[bool] = True
 
     path: str = Field(description="Path to the directory")
     content: list[FileWritten] = Field(
@@ -371,7 +409,7 @@ class DirectoryCreated(Task):
         if not os.path.isdir(self.path):
             raise AssertionError(f"Directory at {self.path} does not exist")
         # Auto-fill content from actual directory if not provided
-        if not self.content:
+        if self.gather_content_on_init and not self.content:
             self.content = self._gather_content(self.path)
             total_files = len(self.content)
             print(f"[Directory] Total files in {self.path}: {total_files}")
@@ -379,59 +417,108 @@ class DirectoryCreated(Task):
     def _gather_content(self, dir_path: str) -> list[FileWritten]:
         """Gather content from directory as list[FileWritten], respecting .gitignore and recursing."""
         files: list[FileWritten] = []
-        gitignore_path = os.path.join(dir_path, ".gitignore")
-        gitignore_patterns = []
-        if os.path.exists(gitignore_path):
-            try:
-                with open(gitignore_path, "r") as f:
-                    gitignore_patterns = [
-                        line.strip()
-                        for line in f
-                        if line.strip() and not line.startswith("#")
-                    ]
-            except (IOError, OSError):
-                pass
+        gitignore_rules: list[_GitignoreRule] = []
 
         for root, dirs, filenames in os.walk(dir_path):
+            self._extend_gitignore_rules(dir_path, root, gitignore_rules)
+
             # Calculate relative path for filtering directories
             rel_root = os.path.relpath(root, dir_path)
             # Filter out directories matching gitignore patterns
             dirs[:] = [
                 d
                 for d in dirs
-                if not self._is_ignored(os.path.join(rel_root, d), gitignore_patterns)
+                if not self._is_ignored(
+                    self._join_rel(rel_root, d), gitignore_rules, is_dir=True
+                )
             ]
 
             for filename in filenames:
                 filepath = os.path.join(root, filename)
                 rel_path = os.path.relpath(filepath, dir_path)
                 # Check if file should be ignored
-                if self._is_ignored(rel_path, gitignore_patterns):
+                if self._is_ignored(rel_path, gitignore_rules, is_dir=False):
                     continue
                 try:
-                    with open(filepath, "r") as f:
-                        file_content = f.read()
-                    files.append(FileWritten(path=filepath, content=file_content))
+                    files.append(FileWritten(path=filepath))
                 except (IOError, OSError):
                     pass
 
         return files
 
-    def _is_ignored(self, rel_path: str, patterns: list[str]) -> bool:
+    def _extend_gitignore_rules(
+        self, dir_path: str, root: str, rules: list[_GitignoreRule]
+    ) -> None:
+        """Load .gitignore rules scoped to the current walked directory."""
+        gitignore_path = os.path.join(root, ".gitignore")
+        if not os.path.exists(gitignore_path):
+            return
+
+        base_rel = os.path.relpath(root, dir_path)
+        if base_rel == ".":
+            base_rel = ""
+
+        try:
+            with open(gitignore_path, "r") as f:
+                for line in f:
+                    pattern = line.strip()
+                    if (
+                        not pattern
+                        or pattern.startswith("#")
+                        or pattern.startswith("!")
+                    ):
+                        continue
+                    directory_only = pattern.endswith("/")
+                    rules.append(
+                        _GitignoreRule(
+                            base_rel=base_rel,
+                            pattern=pattern.strip("/"),
+                            directory_only=directory_only,
+                        )
+                    )
+        except (IOError, OSError):
+            pass
+
+    def _is_ignored(
+        self, rel_path: str, rules: list[_GitignoreRule], is_dir: bool
+    ) -> bool:
         """Check if a path matches any gitignore pattern."""
         import fnmatch
 
-        for pattern in patterns:
-            if pattern.endswith("/"):
-                # Directory pattern
-                dir_pattern = pattern.rstrip("/")
-                if fnmatch.fnmatch(rel_path, dir_pattern) or fnmatch.fnmatch(
-                    rel_path, dir_pattern + "/*"
-                ):
+        normalized_path = rel_path.replace(os.sep, "/")
+
+        for rule in rules:
+            if rule.directory_only and not is_dir:
+                continue
+
+            scoped_path = self._path_relative_to_rule_base(
+                normalized_path, rule.base_rel
+            )
+            if scoped_path is None:
+                continue
+
+            pattern = rule.pattern
+            if "/" in pattern:
+                if fnmatch.fnmatch(scoped_path, pattern):
                     return True
-            else:
-                if fnmatch.fnmatch(rel_path, pattern) or fnmatch.fnmatch(
-                    os.path.basename(rel_path), pattern
-                ):
-                    return True
+            elif fnmatch.fnmatch(os.path.basename(scoped_path), pattern):
+                return True
         return False
+
+    @staticmethod
+    def _join_rel(rel_root: str, name: str) -> str:
+        if rel_root == ".":
+            return name
+        return os.path.join(rel_root, name)
+
+    @staticmethod
+    def _path_relative_to_rule_base(rel_path: str, base_rel: str) -> str | None:
+        if not base_rel:
+            return rel_path
+        base_rel = base_rel.replace(os.sep, "/")
+        if rel_path == base_rel:
+            return ""
+        prefix = f"{base_rel}/"
+        if rel_path.startswith(prefix):
+            return rel_path[len(prefix) :]
+        return None

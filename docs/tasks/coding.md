@@ -13,7 +13,7 @@ Validates that a Python file exists and passes linting and type checking.
 - `pyright` is installed (`shutil.which("pyright")`).
 - `pyright --outputjson <file>` reports zero errors and zero warnings for the file.
 - `ruff check <file>` reports no lint errors.
-- `ruff format --check <file>` reports clean formatting.
+- `ruff format <file>` runs successfully and may update the file. The `content` field is populated after formatting, so it reflects the final disk content.
 
 **Example:**
 ```python
@@ -32,7 +32,7 @@ Validates that a markdown file exists at the given path, auto-formats it, and ch
 **Validates/does (in addition to file existence):**
 - Path ends with `.md`.
 - `markdownlint-cli2` is installed.
-- `markdownlint-cli2 --fix <file>` runs successfully to auto format the file.
+- `markdownlint-cli2 --fix <file>` runs successfully and may update the file.
 - `markdownlint-cli2 <file>` reports no remaining issues after formatting.
 - The `content` field is updated with the formatted content from disk (cannot be manually assigned).
 
@@ -55,7 +55,7 @@ Extends `DirectoryCreated` — validates a Python workspace is properly configur
 - `pyright` is installed (`shutil.which("pyright")`).
 - `pyright --outputjson` reports zero errors and zero warnings.
 - `ruff check .` reports no lint errors.
-- `ruff format .` runs cleanly.
+- `ruff format .` runs successfully and may update files. Directory content is gathered after formatting, so it reflects the final disk content.
 
 **Example:**
 ```python
