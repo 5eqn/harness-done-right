@@ -1,0 +1,4 @@
+interface:
+  display_name: "HDR Finish"
+  short_description: "Finish HDR work scripts from task files"
+  default_prompt: "Use $hdr-finish to implement and complete this HDR task file by building the final task instance in work.py."
