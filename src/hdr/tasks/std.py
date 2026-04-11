@@ -320,7 +320,7 @@ Then, output your final score using the format: <score>N</score>, N ranges from:
             raise AssertionError(
                 f"Verification failed with score {score} (expected {expected_score}).\nDescription: {description}"
             )
-        print(f"[verify] score={score} {_summarize_condition(condition)}")
+        print(f"[verify] score={score} {_summarize_condition(condition)}", flush=True)
 
 
 @dataclass(frozen=True, slots=True)
