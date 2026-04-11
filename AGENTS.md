@@ -1,7 +1,7 @@
 # Repository Guidelines
 
 ## Project Structure & Module Organization
-Core library code lives in `src/hdr/`, with task implementations under `src/hdr/tasks/` (`std.py`, `coding.py`, `meta.py`, `mind.py`). Tests live in `tests/` and follow the same domain split, for example `tests/test_std.py`. User-facing docs are in `docs/tasks/`, and runnable examples are in `examples/` with paired `task.py` and `work.py` files. Top-level references include `README.md` and `SKILL.md`.
+Core library code lives in `src/hdr/`, with task implementations under `src/hdr/tasks/` (`std.py`, `coding.py`, `meta.py`, `mind.py`). Tests live in `tests/` and follow the same domain split, for example `tests/test_std.py`. User-facing docs are in `docs/tasks/`, and runnable examples are in `examples/` with paired `task.py` and `work.py` files. Documented solutions live in `docs/solutions/`, organized by category with YAML frontmatter such as `module`, `tags`, and `problem_type`; they are relevant when implementing or debugging in documented areas. Top-level references include `README.md` and `SKILL.md`.
 
 ## Build, Test, and Development Commands
 Use Python 3.12 and `uv` for local setup.
