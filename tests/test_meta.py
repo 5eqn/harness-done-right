@@ -42,6 +42,7 @@ class TestTaskCreated:
             "my_task.py",
             "summarized.py",
             "multi_task.py",
+            "conditional_task.py",
         ]
         for file in generated_files:
             if os.path.exists(file):
@@ -360,6 +361,56 @@ class TestTaskCreated:
         with open("my_task.py", "r") as f:
             code = f.read()
         assert code.count("self.verify(") == 2
+
+    def test_generate_code_with_conditional_verify(self):
+        """generate_code can guard LLM verifies behind a Python expression."""
+        TaskCreated(
+            class_name="ConditionalTask",
+            docstring="A task with a conditional verify.",
+            fields=[
+                FieldSpec(name="kind", type_annotation="str", description="Kind"),
+                FieldSpec(name="value", type_annotation="str", description="Value"),
+            ],
+            verifies=[
+                VerifySpec(
+                    condition="value is specific when kind is special",
+                    applies_when='self.kind == "special"',
+                    positive_example={"kind": "special", "value": "good"},
+                    negative_example={
+                        "kind": "special",
+                        "value": "<mock>1</mock>",
+                    },
+                )
+            ],
+        )
+
+        with open("conditional_task.py", "r") as f:
+            code = f.read()
+        assert 'if self.kind == "special":' in code
+        assert "            self.verify(" in code
+
+    def test_conditional_verify_requires_valid_expression(self):
+        """applies_when must be a non-empty Python expression."""
+        with pytest.raises(AssertionError, match="valid Python expression"):
+            TaskCreated(
+                class_name="MyTask",
+                docstring="A task.",
+                fields=[
+                    FieldSpec(name="kind", type_annotation="str", description="Kind"),
+                    FieldSpec(name="value", type_annotation="str", description="Value"),
+                ],
+                verifies=[
+                    VerifySpec(
+                        condition="value is specific",
+                        applies_when="self.kind ==",
+                        positive_example={"kind": "special", "value": "good"},
+                        negative_example={
+                            "kind": "special",
+                            "value": "<mock>1</mock>",
+                        },
+                    )
+                ],
+            )
 
     def test_existing_unmarked_file_is_not_overwritten(self):
         """TaskCreated refuses to overwrite a file without the generated marker."""

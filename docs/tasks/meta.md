@@ -10,6 +10,7 @@ Meta-task for creating well-formed HDR tasks. Validates task definitions at cons
 - Validates class names and field names are valid Python identifiers
 - Ensures all fields have proper descriptions
 - Validates that verify examples include all required fields and no extra fields
+- Validates optional conditional verify guards as Python expressions
 - LLM-verifies that positive examples pass the condition (score 5) and negative examples fail (score 1)
 - Generates production-ready task class code with embedded examples for clarity
 - Automatically creates a valid Python file (snake_case filename from class name) that passes PyRight and Ruff checks
@@ -23,7 +24,7 @@ Meta-task for creating well-formed HDR tasks. Validates task definitions at cons
 - `fields: list[FieldSpec]` — List of field specifications (name, type annotation, description, optional default)
 - `imports: list[str] = ["from pydantic import Field", "from hdr.tasks.std import Task"]` — List of import statements to include at the top of the generated file
 - `programmatic_checks: list[str] = []` — Python code snippets for programmatic validations executed before LLM verifies
-- `verifies: list[VerifySpec]` — List of verify specifications with positive and negative examples
+- `verifies: list[VerifySpec]` — List of verify specifications with positive and negative examples. Each `VerifySpec` can include `applies_when: str | None`, a Python expression such as `self.mode == "strict"` that guards the generated LLM verify when the semantic rule only applies to some task instances.
 - `generated_file: PythonFileWritten | None` — The generated Python file task instance, available after successful creation (cannot be manually assigned; will always be non-None after successful initialization)
 
 **Methods:**
@@ -61,6 +62,7 @@ task_spec = TaskCreated(
     verifies=[
         {
             "condition": "The sentiment correctly reflects the tone of the input text.",
+            "applies_when": "self.sentiment in ['positive', 'negative', 'neutral']",
             "positive_example": {
                 "input_text": "I love this product! It works perfectly.",
                 "sentiment": "positive"

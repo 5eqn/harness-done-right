@@ -303,6 +303,7 @@ for field_name in ("content", "before", "after"):
                 "grounded detail that the target reader can immediately recognize. "
                 "It must not be generic abstraction."
             ),
+            applies_when="self.purpose == MovePurpose.BUILD",
             positive_example={
                 "context": empty_context,
                 "purpose": MovePurpose.BUILD,
@@ -339,6 +340,7 @@ for field_name in ("content", "before", "after"):
                 "mechanism understanding, pressure, or preparation for a later "
                 "shift. Pure atmosphere fails."
             ),
+            applies_when="self.purpose == MovePurpose.BUILD",
             positive_example={
                 "context": empty_context,
                 "purpose": MovePurpose.BUILD,
@@ -375,6 +377,7 @@ for field_name in ("content", "before", "after"):
                 "too early. It should prepare mental material that makes a later "
                 "SHIFT needed, not define the whole target concept in advance."
             ),
+            applies_when="self.purpose == MovePurpose.BUILD",
             positive_example={
                 "context": empty_context,
                 "purpose": MovePurpose.BUILD,
@@ -410,6 +413,7 @@ for field_name in ("content", "before", "after"):
                 "of already-built material through the contrast axis. It is not "
                 "another concrete detail, example, or standalone definition."
             ),
+            applies_when="self.purpose == MovePurpose.SHIFT",
             positive_example={
                 "context": context_after_build,
                 "purpose": MovePurpose.SHIFT,
@@ -419,12 +423,9 @@ for field_name in ("content", "before", "after"):
                     "reject the missing requirement."
                 ),
                 "contrast": "soft vs enforceable",
-                "before": (
-                    "The reader reads the rollback miss as a reminder problem."
-                ),
+                "before": ("The reader reads the rollback miss as a reminder problem."),
                 "after": (
-                    "The reader reads the rollback miss as an enforceability "
-                    "problem."
+                    "The reader reads the rollback miss as an enforceability problem."
                 ),
             },
             negative_example={
@@ -446,6 +447,7 @@ for field_name in ("content", "before", "after"):
                 "higher-level lens only when the context has supplied concrete "
                 "material that makes the lens immediately legible."
             ),
+            applies_when="self.purpose == MovePurpose.SHIFT",
             positive_example={
                 "context": context_after_build,
                 "purpose": MovePurpose.SHIFT,
@@ -455,8 +457,7 @@ for field_name in ("content", "before", "after"):
                 ),
                 "contrast": "suggestive vs contractual",
                 "before": (
-                    "The reader sees the rollback miss as a loose instruction "
-                    "problem."
+                    "The reader sees the rollback miss as a loose instruction problem."
                 ),
                 "after": (
                     "The reader sees it as a contract gap between what prose asks "
@@ -482,6 +483,7 @@ for field_name in ("content", "before", "after"):
                 "cannot honestly return to before without ignoring the stated "
                 "distinction."
             ),
+            applies_when="self.purpose == MovePurpose.SHIFT",
             positive_example={
                 "context": context_after_build,
                 "purpose": MovePurpose.SHIFT,

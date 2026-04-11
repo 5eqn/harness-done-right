@@ -317,7 +317,8 @@ MoveChosen(
   before = 'The reader thinks the agent needs clearer instructions.' # Relevant local reader lens before this move, focused only on the dimension the move changes
   after = 'The reader understands HDR as a proof-theoretic object.' # Relevant local reader lens after this move, focused on the same dimension as before and contrast
 )""")
-        self.verify("""When purpose is BUILD, content creates concrete pressure using a real-looking mechanism, failure tendency, system behavior, or grounded detail that the target reader can immediately recognize. It must not be generic abstraction.
+        if self.purpose == MovePurpose.BUILD:
+            self.verify("""When purpose is BUILD, content creates concrete pressure using a real-looking mechanism, failure tendency, system behavior, or grounded detail that the target reader can immediately recognize. It must not be generic abstraction.
 
 Example that PASSES (score 5):
 MoveChosen(
@@ -360,7 +361,8 @@ MoveChosen(
   before = 'The reader knows agents can miss things.' # Relevant local reader lens before this move, focused only on the dimension the move changes
   after = 'The reader knows validation can help.' # Relevant local reader lens after this move, focused on the same dimension as before and contrast
 )""")
-        self.verify("""When purpose is BUILD, every vivid detail in content is load-bearing. Removing the detail would weaken attention, mechanism understanding, pressure, or preparation for a later shift. Pure atmosphere fails.
+        if self.purpose == MovePurpose.BUILD:
+            self.verify("""When purpose is BUILD, every vivid detail in content is load-bearing. Removing the detail would weaken attention, mechanism understanding, pressure, or preparation for a later shift. Pure atmosphere fails.
 
 Example that PASSES (score 5):
 MoveChosen(
@@ -403,7 +405,8 @@ MoveChosen(
   before = 'The reader imagines an ordinary markdown plan.' # Relevant local reader lens before this move, focused only on the dimension the move changes
   after = 'The reader imagines a better-formatted markdown plan.' # Relevant local reader lens after this move, focused on the same dimension as before and contrast
 )""")
-        self.verify("""When purpose is BUILD, content must not resolve the target concept too early. It should prepare mental material that makes a later SHIFT needed, not define the whole target concept in advance.
+        if self.purpose == MovePurpose.BUILD:
+            self.verify("""When purpose is BUILD, content must not resolve the target concept too early. It should prepare mental material that makes a later SHIFT needed, not define the whole target concept in advance.
 
 Example that PASSES (score 5):
 MoveChosen(
@@ -446,7 +449,8 @@ MoveChosen(
   before = 'The reader does not know HDR yet.' # Relevant local reader lens before this move, focused only on the dimension the move changes
   after = 'The reader has already received the full HDR definition.' # Relevant local reader lens after this move, focused on the same dimension as before and contrast
 )""")
-        self.verify("""When purpose is SHIFT, content changes the reader's interpretation of already-built material through the contrast axis. It is not another concrete detail, example, or standalone definition.
+        if self.purpose == MovePurpose.SHIFT:
+            self.verify("""When purpose is SHIFT, content changes the reader's interpretation of already-built material through the contrast axis. It is not another concrete detail, example, or standalone definition.
 
 Example that PASSES (score 5):
 MoveChosen(
@@ -505,7 +509,8 @@ MoveChosen(
   before = 'The reader has seen one missed rollback example.' # Relevant local reader lens before this move, focused only on the dimension the move changes
   after = 'The reader has seen three more missed fields.' # Relevant local reader lens after this move, focused on the same dimension as before and contrast
 )""")
-        self.verify("""When purpose is SHIFT, any abstraction in content is earned by target_reader or prior BUILD moves. The sentence may name a higher-level lens only when the context has supplied concrete material that makes the lens immediately legible.
+        if self.purpose == MovePurpose.SHIFT:
+            self.verify("""When purpose is SHIFT, any abstraction in content is earned by target_reader or prior BUILD moves. The sentence may name a higher-level lens only when the context has supplied concrete material that makes the lens immediately legible.
 
 Example that PASSES (score 5):
 MoveChosen(
@@ -556,7 +561,8 @@ MoveChosen(
   before = 'The reader has not yet seen any concrete failure.' # Relevant local reader lens before this move, focused only on the dimension the move changes
   after = 'The reader understands a contract gap.' # Relevant local reader lens after this move, focused on the same dimension as before and contrast
 )""")
-        self.verify("""When purpose is SHIFT, after is an irreversible cognition upgrade from before. After accepting content, a capable target reader cannot honestly return to before without ignoring the stated distinction.
+        if self.purpose == MovePurpose.SHIFT:
+            self.verify("""When purpose is SHIFT, after is an irreversible cognition upgrade from before. After accepting content, a capable target reader cannot honestly return to before without ignoring the stated distinction.
 
 Example that PASSES (score 5):
 MoveChosen(

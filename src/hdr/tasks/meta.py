@@ -5,6 +5,7 @@ TaskCreated validates task definitions at construction time and generates
 complete task class code with examples embedded in verify conditions.
 """
 
+import ast
 import re
 from typing import Any
 from pydantic import Field, BaseModel, model_validator
@@ -44,6 +45,13 @@ class VerifySpec(BaseModel):
     """Specification for a single verify call with required examples."""
 
     condition: str = Field(description="The condition text to verify")
+    applies_when: str | None = Field(
+        default=None,
+        description=(
+            "Optional Python expression evaluated on the generated task instance; "
+            "when present, the LLM verify only runs if this expression is true"
+        ),
+    )
     positive_example: dict[str, Any] = Field(
         description="Field values that should score 5 (definitely true)"
     )
@@ -207,6 +215,7 @@ class TaskCreated(Task):
         all_fields = {f.name for f in fields}
 
         for i, verify_spec in enumerate(verifies):
+            cls._validate_applies_when(i, verify_spec)
             for label, example in [
                 ("positive_example", verify_spec.positive_example),
                 ("negative_example", verify_spec.negative_example),
@@ -222,6 +231,21 @@ class TaskCreated(Task):
                     raise AssertionError(
                         f"Verify #{i + 1} {label} has unknown fields: {extra}"
                     )
+
+    @staticmethod
+    def _validate_applies_when(index: int, verify_spec: VerifySpec) -> None:
+        if verify_spec.applies_when is None:
+            return
+
+        if not verify_spec.applies_when.strip():
+            raise AssertionError(f"Verify #{index + 1} applies_when must not be empty")
+
+        try:
+            ast.parse(verify_spec.applies_when, mode="eval")
+        except SyntaxError as exc:
+            raise AssertionError(
+                f"Verify #{index + 1} applies_when must be a valid Python expression"
+            ) from exc
 
     def _to_example(self, values: dict[str, Any]) -> Example:
         """Convert a dict of field values into an Example for quoting."""
@@ -377,7 +401,11 @@ class TaskCreated(Task):
                     class_name, fields, verify_spec
                 )
                 escaped = _escape_multiline(condition_with_examples)
-                lines.append(f"        self.verify({escaped})")
+                if verify_spec.applies_when:
+                    lines.append(f"        if {verify_spec.applies_when.strip()}:")
+                    lines.append(f"            self.verify({escaped})")
+                else:
+                    lines.append(f"        self.verify({escaped})")
 
         return "\n".join(lines)
 
