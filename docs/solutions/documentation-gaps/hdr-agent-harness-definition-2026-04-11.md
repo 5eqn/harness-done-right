@@ -134,6 +134,7 @@ ConceptDescribed task completed: HDR
 
 ## Related
 
+- `docs/solutions/workflow-issues/hdr-finish-content-reflecting-runners-2026-04-11.md`
 - `examples/build_concept_task/hdr_target_reader.md`
 - `examples/build_concept_task/hdr_description.md`
 - `examples/build_concept_task/finish_concept_described.py`

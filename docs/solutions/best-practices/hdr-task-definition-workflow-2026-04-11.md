@@ -190,6 +190,7 @@ uv run pytest
 
 ## Related
 
+- `docs/solutions/workflow-issues/hdr-finish-content-reflecting-runners-2026-04-11.md`
 - `docs/solutions/best-practices/hdr-contract-evolution-directions-2026-04-11.md`
 - `docs/solutions/documentation-gaps/hdr-agent-harness-definition-2026-04-11.md`
 - `examples/build_move_task/define_move_chosen.py`
