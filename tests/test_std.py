@@ -6,7 +6,7 @@ Uses a fixed temp workspace created via tempfile.mkdtemp.
 import tempfile
 import pytest
 from pydantic import ValidationError
-from hdr.contracts.std import Directory, File
+from hdr.contracts.std import Directory, File, Image
 from hdr.contracts.coding import MarkdownFile
 
 
@@ -110,6 +110,102 @@ class TestDirectory:
             paths = {os.path.relpath(f.path, tmpdir) for f in d.content}
             assert "nested/keep.txt" in paths
             assert "nested/secret.txt" not in paths
+
+
+class TestImage:
+    """Tests for Image contract class."""
+
+    def test_svg_image_reads_content_and_dimensions(self):
+        """Test SVG images expose text content and dimensions."""
+        with tempfile.TemporaryDirectory() as tmpdir:
+            import os
+
+            image_path = os.path.join(tmpdir, "diagram.svg")
+            with open(image_path, "w") as f:
+                f.write(
+                    '<svg xmlns="http://www.w3.org/2000/svg" width="640" height="360">'
+                    '<rect width="640" height="360" />'
+                    "</svg>"
+                )
+
+            image = Image(path=image_path)
+
+            assert image.path == image_path
+            assert image.media_type == "image/svg+xml"
+            assert image.is_vector is True
+            assert image.width == 640
+            assert image.height == 360
+            assert image.content.startswith("<svg")
+            assert image.size_bytes > 0
+
+    def test_svg_image_uses_viewbox_dimensions(self):
+        """Test SVG dimensions can be inferred from viewBox."""
+        with tempfile.TemporaryDirectory() as tmpdir:
+            import os
+
+            image_path = os.path.join(tmpdir, "diagram.svg")
+            with open(image_path, "w") as f:
+                f.write(
+                    '<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 800 450">'
+                    "</svg>"
+                )
+
+            image = Image(path=image_path)
+
+            assert image.width == 800
+            assert image.height == 450
+
+    def test_png_image_reads_metadata_without_text_content(self):
+        """Test bitmap images expose metadata without reading binary as text."""
+        with tempfile.TemporaryDirectory() as tmpdir:
+            import os
+
+            image_path = os.path.join(tmpdir, "diagram.png")
+            png_header = (
+                b"\x89PNG\r\n\x1a\n"
+                b"\x00\x00\x00\r"
+                b"IHDR"
+                + (320).to_bytes(4, "big")
+                + (180).to_bytes(4, "big")
+                + b"\x08\x02\x00\x00\x00"
+            )
+            with open(image_path, "wb") as f:
+                f.write(png_header)
+
+            image = Image(path=image_path)
+
+            assert image.media_type == "image/png"
+            assert image.is_vector is False
+            assert image.width == 320
+            assert image.height == 180
+            assert image.content == ""
+            assert image.size_bytes == len(png_header)
+
+    def test_image_rejects_unsupported_extension(self):
+        """Test Image fails when extension is not an image type."""
+        with tempfile.TemporaryDirectory() as tmpdir:
+            import os
+
+            image_path = os.path.join(tmpdir, "diagram.txt")
+            with open(image_path, "w") as f:
+                f.write("not an image")
+
+            with pytest.raises(AssertionError, match="Image path must end"):
+                Image(path=image_path)
+
+    def test_image_metadata_is_frozen(self):
+        """Test Image auto-filled metadata cannot be manually assigned."""
+        with tempfile.TemporaryDirectory() as tmpdir:
+            import os
+
+            image_path = os.path.join(tmpdir, "diagram.svg")
+            with open(image_path, "w") as f:
+                f.write('<svg xmlns="http://www.w3.org/2000/svg"></svg>')
+
+            image = Image(path=image_path)
+
+            with pytest.raises(ValidationError, match="Field is frozen"):
+                image.media_type = "image/png"
 
 
 class TestMarkdownFile:

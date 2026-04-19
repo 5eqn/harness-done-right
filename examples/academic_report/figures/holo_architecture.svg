@@ -1,0 +1,94 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="1400" height="820" viewBox="0 0 1400 820" role="img" aria-labelledby="title desc">
+  <title id="title">HoloMotion v1.2 policy architecture</title>
+  <desc id="desc">A paper-style block diagram of the HoloMotion v1.2 actor-critic policy, showing reference, robot-state and future-reference observations feeding a routed grouped MoE transformer actor and a privileged-observation critic.</desc>
+  <defs>
+    <marker id="arrow" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="8" markerHeight="8" orient="auto-start-reverse">
+      <path d="M 0 0 L 10 5 L 0 10 z" fill="#202124"/>
+    </marker>
+    <style>
+      .panel{fill:#ffffff;stroke:#202124;stroke-width:1.8}
+      .soft{fill:#f7f8fa;stroke:#202124;stroke-width:1.4}
+      .accent{fill:#e8f0fe;stroke:#174ea6;stroke-width:1.6}
+      .green{fill:#e6f4ea;stroke:#137333;stroke-width:1.6}
+      .yellow{fill:#fef7e0;stroke:#b06000;stroke-width:1.6}
+      .line{stroke:#202124;stroke-width:1.8;fill:none;marker-end:url(#arrow)}
+      .dash{stroke:#5f6368;stroke-width:1.5;fill:none;stroke-dasharray:7 6;marker-end:url(#arrow)}
+      text{font-family:Arial,Helvetica,sans-serif;fill:#202124}
+      .title{font-size:28px;font-weight:700}
+      .label{font-size:18px;font-weight:700}
+      .body{font-size:15px}
+      .small{font-size:13px;fill:#3c4043}
+      .mono{font-family:Menlo,Consolas,monospace;font-size:13px}
+    </style>
+  </defs>
+
+  <text x="60" y="56" class="title">HoloMotion v1.2: Reference-routed Grouped-MoE Transformer Policy</text>
+  <text x="60" y="84" class="small">Source-grounded reconstruction from public HoloMotion repository and v1.2 checkpoint configuration.</text>
+
+  <rect x="52" y="118" width="300" height="172" rx="8" class="accent"/>
+  <text x="78" y="150" class="label">Current reference</text>
+  <text x="78" y="180" class="body">projected gravity</text>
+  <text x="78" y="205" class="body">base linear / angular velocity</text>
+  <text x="78" y="230" class="body">reference joint positions</text>
+  <text x="78" y="255" class="body">root height</text>
+
+  <rect x="52" y="324" width="300" height="190" rx="8" class="green"/>
+  <text x="78" y="356" class="label">Robot proprioception</text>
+  <text x="78" y="386" class="body">projected gravity</text>
+  <text x="78" y="411" class="body">relative root angular velocity</text>
+  <text x="78" y="436" class="body">joint position / velocity</text>
+  <text x="78" y="461" class="body">previous action</text>
+  <text x="78" y="486" class="small">EMA observation normalization</text>
+
+  <rect x="52" y="548" width="300" height="172" rx="8" class="yellow"/>
+  <text x="78" y="580" class="label">Future reference window</text>
+  <text x="78" y="610" class="body">future reference joints</text>
+  <text x="78" y="635" class="body">future root height</text>
+  <text x="78" y="660" class="body">future gravity, base v, base omega</text>
+  <text x="78" y="692" class="mono">max context length = 32</text>
+
+  <rect x="436" y="170" width="250" height="118" rx="8" class="soft"/>
+  <text x="462" y="203" class="label">Observation embedding</text>
+  <text x="462" y="234" class="mono">obs embedding dim = 2048</text>
+  <text x="462" y="259" class="mono">router embedding dim = 2048</text>
+
+  <rect x="436" y="356" width="250" height="118" rx="8" class="soft"/>
+  <text x="462" y="389" class="label">Token construction</text>
+  <text x="462" y="420" class="body">reference-routed tokens</text>
+  <text x="462" y="445" class="body">grouped by observation source</text>
+
+  <rect x="770" y="164" width="318" height="318" rx="8" class="accent"/>
+  <text x="800" y="198" class="label">Actor: 3 Transformer-MoE blocks</text>
+  <text x="800" y="232" class="mono">d_model=512, n_heads=8</text>
+  <text x="800" y="257" class="mono">n_kv_heads=4</text>
+  <text x="800" y="282" class="mono">fine experts=16</text>
+  <text x="800" y="307" class="mono">shared experts=1</text>
+  <text x="800" y="332" class="mono">top_k=2</text>
+  <text x="800" y="357" class="mono">FFN multiplier=2.0</text>
+  <text x="800" y="382" class="mono">dense FFN multiplier=4</text>
+  <text x="800" y="420" class="body">gated attention + RMSNorm</text>
+  <text x="800" y="447" class="body">direct low-level robot action</text>
+
+  <rect x="1162" y="246" width="180" height="154" rx="8" class="green"/>
+  <text x="1194" y="282" class="label">Action head</text>
+  <text x="1194" y="315" class="body">Unitree G1</text>
+  <text x="1194" y="340" class="body">23DoF / 29DoF</text>
+  <text x="1194" y="372" class="small">PD target offset or</text>
+  <text x="1194" y="392" class="small">low-level control target</text>
+
+  <rect x="436" y="570" width="652" height="126" rx="8" class="yellow"/>
+  <text x="462" y="603" class="label">Critic: privileged-observation MLP</text>
+  <text x="462" y="634" class="body">reference and robot body-link velocities, positions, rotations, joint state, previous action</text>
+  <text x="462" y="661" class="mono">4 x 2048 hidden dims, SiLU, RMSNorm -> scalar value</text>
+
+  <path d="M 352 204 C 386 204 398 212 436 224" class="line"/>
+  <path d="M 352 420 C 388 420 398 404 436 404" class="line"/>
+  <path d="M 352 632 C 388 632 398 456 436 438" class="line"/>
+  <path d="M 686 414 L 770 323" class="line"/>
+  <path d="M 1088 323 L 1162 323" class="line"/>
+  <path d="M 352 420 C 410 545 420 612 436 632" class="dash"/>
+  <path d="M 352 204 C 410 520 420 590 436 610" class="dash"/>
+  <path d="M 352 632 C 385 646 402 652 436 654" class="dash"/>
+
+  <text x="60" y="778" class="small">Figure. Actor and critic are separated: the actor receives deployable reference/proprioceptive streams, while the critic uses privileged state during PPO training.</text>
+</svg>

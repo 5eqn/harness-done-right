@@ -1,0 +1,81 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="1400" height="820" viewBox="0 0 1400 820" role="img" aria-labelledby="title desc">
+  <title id="title">SONIC training workflow</title>
+  <desc id="desc">A paper-style workflow diagram of SONIC training, from large-scale motion data filtering to Isaac Lab PPO training, convergence monitoring, evaluation and ONNX export.</desc>
+  <defs>
+    <marker id="arrow" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="8" markerHeight="8" orient="auto-start-reverse">
+      <path d="M 0 0 L 10 5 L 0 10 z" fill="#202124"/>
+    </marker>
+    <style>
+      .data{fill:#e8f0fe;stroke:#174ea6;stroke-width:1.6}
+      .train{fill:#e6f4ea;stroke:#137333;stroke-width:1.6}
+      .eval{fill:#fef7e0;stroke:#b06000;stroke-width:1.6}
+      .box{fill:#ffffff;stroke:#202124;stroke-width:1.8}
+      .line{stroke:#202124;stroke-width:1.9;fill:none;marker-end:url(#arrow)}
+      .dash{stroke:#5f6368;stroke-width:1.4;fill:none;stroke-dasharray:7 6;marker-end:url(#arrow)}
+      text{font-family:Arial,Helvetica,sans-serif;fill:#202124}
+      .title{font-size:28px;font-weight:700}
+      .label{font-size:18px;font-weight:700}
+      .body{font-size:15px}
+      .small{font-size:13px;fill:#3c4043}
+      .mono{font-family:Menlo,Consolas,monospace;font-size:13px}
+    </style>
+  </defs>
+
+  <text x="58" y="56" class="title">SONIC Training: Scaling Motion Tracking for Whole-body Control</text>
+  <text x="58" y="84" class="small">Public training guide parameters plus paper-reported scaling axes: model size, data scale and GPU-hours.</text>
+
+  <rect x="58" y="142" width="252" height="144" rx="8" class="data"/>
+  <text x="88" y="177" class="label">Raw motion data</text>
+  <text x="88" y="210" class="body">Bones-SEED CSV</text>
+  <text x="88" y="236" class="body">SMPL motion files</text>
+  <text x="88" y="262" class="mono">120 fps source -> 30 fps</text>
+
+  <rect x="372" y="142" width="252" height="144" rx="8" class="data"/>
+  <text x="402" y="177" class="label">Feasibility filtering</text>
+  <text x="402" y="210" class="body">remove furniture, vehicles</text>
+  <text x="402" y="236" class="body">acrobatics, elevated surfaces</text>
+  <text x="402" y="262" class="mono">~130K / 142K motions kept</text>
+
+  <rect x="686" y="142" width="284" height="144" rx="8" class="box"/>
+  <text x="716" y="177" class="label">Multi-modal motion lib</text>
+  <text x="716" y="210" class="body">G1 + teleop + SMPL encoders</text>
+  <text x="716" y="236" class="body">optional SOMA/BVH encoder</text>
+  <text x="716" y="262" class="mono">&gt;100M frames / ~700 h</text>
+
+  <rect x="1032" y="142" width="286" height="144" rx="8" class="train"/>
+  <text x="1062" y="177" class="label">Isaac Lab PPO</text>
+  <text x="1062" y="210" class="mono">num_envs=4096</text>
+  <text x="1062" y="236" class="mono">+exp=.../sonic_release</text>
+  <text x="1062" y="262" class="body">auxiliary losses</text>
+
+  <rect x="214" y="432" width="286" height="162" rx="8" class="train"/>
+  <text x="244" y="467" class="label">Compute envelope</text>
+  <text x="244" y="500" class="body">64+ GPUs recommended</text>
+  <text x="244" y="526" class="body">8x H100: ~2-3 days</text>
+  <text x="244" y="552" class="body">8x A100: ~3-5 days</text>
+  <text x="244" y="578" class="small">paper reports 9k to 32k GPU-hours by setting</text>
+
+  <rect x="562" y="432" width="286" height="162" rx="8" class="eval"/>
+  <text x="592" y="467" class="label">Training health metrics</text>
+  <text x="592" y="500" class="mono">rewards/total &gt; 3.0</text>
+  <text x="592" y="526" class="mono">root error &lt; 0.15 m</text>
+  <text x="592" y="552" class="mono">body error &lt; 0.10 m</text>
+  <text x="592" y="578" class="mono">throughput &gt; 4000 fps</text>
+
+  <rect x="910" y="432" width="286" height="162" rx="8" class="eval"/>
+  <text x="940" y="467" class="label">Evaluation and export</text>
+  <text x="940" y="500" class="mono">success rate &gt; .98</text>
+  <text x="940" y="526" class="mono">local MPJPE &lt; 29 mm</text>
+  <text x="940" y="552" class="body">modality-specific ONNX</text>
+  <text x="940" y="578" class="mono">*_encoder, *_decoder</text>
+
+  <path d="M 310 214 L 372 214" class="line"/>
+  <path d="M 624 214 L 686 214" class="line"/>
+  <path d="M 970 214 L 1032 214" class="line"/>
+  <path d="M 1175 286 C 1175 374 1086 392 1053 432" class="line"/>
+  <path d="M 1032 214 C 740 320 460 354 357 432" class="dash"/>
+  <path d="M 500 513 L 562 513" class="line"/>
+  <path d="M 848 513 L 910 513" class="line"/>
+
+  <text x="58" y="742" class="small">Figure. The training recipe makes SONIC reproducible as a large-scale motion-tracking RL run: curated data, universal encoders, PPO, metric gates, and ONNX export.</text>
+</svg>

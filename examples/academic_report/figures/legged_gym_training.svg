@@ -1,0 +1,82 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="1400" height="820" viewBox="0 0 1400 820" role="img" aria-labelledby="title desc">
+  <title id="title">legged_gym and Unitree RL Gym training loop</title>
+  <desc id="desc">A paper-style training loop diagram for legged_gym and Unitree RL Gym, showing task configuration, parallel rollout collection, PPO updates, domain randomization, export, and sim-to-real progression.</desc>
+  <defs>
+    <marker id="arrow" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="8" markerHeight="8" orient="auto-start-reverse">
+      <path d="M 0 0 L 10 5 L 0 10 z" fill="#202124"/>
+    </marker>
+    <style>
+      .box{fill:#ffffff;stroke:#202124;stroke-width:1.8}
+      .blue{fill:#e8f0fe;stroke:#174ea6;stroke-width:1.6}
+      .green{fill:#e6f4ea;stroke:#137333;stroke-width:1.6}
+      .yellow{fill:#fef7e0;stroke:#b06000;stroke-width:1.6}
+      .line{stroke:#202124;stroke-width:1.9;fill:none;marker-end:url(#arrow)}
+      .dash{stroke:#5f6368;stroke-width:1.4;fill:none;stroke-dasharray:7 6;marker-end:url(#arrow)}
+      text{font-family:Arial,Helvetica,sans-serif;fill:#202124}
+      .title{font-size:28px;font-weight:700}
+      .label{font-size:18px;font-weight:700}
+      .body{font-size:15px}
+      .small{font-size:13px;fill:#3c4043}
+      .mono{font-family:Menlo,Consolas,monospace;font-size:13px}
+    </style>
+  </defs>
+
+  <text x="58" y="56" class="title">legged_gym / Unitree RL Gym Training: PPO Rollout-Update Loop</text>
+  <text x="58" y="84" class="small">A reproducible baseline workflow for Go2, G1, H1 and H1_2 tasks.</text>
+
+  <rect x="68" y="146" width="258" height="154" rx="8" class="blue"/>
+  <text x="98" y="181" class="label">Task configuration</text>
+  <text x="98" y="214" class="body">robot URDF and joints</text>
+  <text x="98" y="240" class="body">commands and rewards</text>
+  <text x="98" y="266" class="mono">python train.py --task=g1</text>
+
+  <rect x="392" y="146" width="286" height="154" rx="8" class="green"/>
+  <text x="422" y="181" class="label">Parallel rollout</text>
+  <text x="422" y="214" class="mono">num_envs=4096</text>
+  <text x="422" y="240" class="mono">num_steps_per_env=24</text>
+  <text x="422" y="266" class="body">GPU Isaac Gym simulation</text>
+
+  <rect x="744" y="146" width="286" height="154" rx="8" class="green"/>
+  <text x="774" y="181" class="label">PPO update</text>
+  <text x="774" y="214" class="mono">clip=.2, gamma=.99, lam=.95</text>
+  <text x="774" y="240" class="mono">epochs=5, mini_batches=4</text>
+  <text x="774" y="266" class="mono">lr=1e-3 adaptive</text>
+
+  <rect x="1096" y="146" width="236" height="154" rx="8" class="box"/>
+  <text x="1126" y="181" class="label">Checkpoints</text>
+  <text x="1126" y="214" class="body">model iteration files</text>
+  <text x="1126" y="240" class="mono">logs/.../model_*.pt</text>
+  <text x="1126" y="266" class="small">G1 max_iterations=10000</text>
+
+  <rect x="214" y="434" width="300" height="170" rx="8" class="yellow"/>
+  <text x="244" y="469" class="label">Sim-to-real randomization</text>
+  <text x="244" y="502" class="mono">friction=[0.1, 1.25]</text>
+  <text x="244" y="528" class="mono">base mass=[-1, 3] kg</text>
+  <text x="244" y="554" class="mono">push every 5 s, max 1.5 m/s</text>
+  <text x="244" y="580" class="body">stiffness / damping tuned per joint</text>
+
+  <rect x="586" y="434" width="300" height="170" rx="8" class="yellow"/>
+  <text x="616" y="469" class="label">Reward shaping</text>
+  <text x="616" y="502" class="body">velocity tracking</text>
+  <text x="616" y="528" class="body">orientation and base height</text>
+  <text x="616" y="554" class="body">action rate and dof limits</text>
+  <text x="616" y="580" class="body">contact and alive terms</text>
+
+  <rect x="958" y="434" width="300" height="170" rx="8" class="box"/>
+  <text x="988" y="469" class="label">Export and transfer</text>
+  <text x="988" y="502" class="mono">policy_1.pt</text>
+  <text x="988" y="528" class="mono">policy_lstm_1.pt</text>
+  <text x="988" y="554" class="body">Sim2Sim validation</text>
+  <text x="988" y="580" class="body">Sim2Real deployment</text>
+
+  <path d="M 326 223 L 392 223" class="line"/>
+  <path d="M 678 223 L 744 223" class="line"/>
+  <path d="M 1030 223 L 1096 223" class="line"/>
+  <path d="M 887 300 C 842 360 785 390 736 434" class="line"/>
+  <path d="M 736 604 C 736 674 535 684 535 300" class="dash"/>
+  <path d="M 514 519 L 586 519" class="line"/>
+  <path d="M 886 519 L 958 519" class="line"/>
+  <path d="M 364 434 C 342 365 310 326 260 300" class="dash"/>
+
+  <text x="58" y="742" class="small">Figure. The method is a strong academic baseline because every major lever is explicit: task config, PPO hyperparameters, randomization, reward terms and export path.</text>
+</svg>

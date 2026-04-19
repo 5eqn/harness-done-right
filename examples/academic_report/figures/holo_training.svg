@@ -1,0 +1,82 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="1400" height="820" viewBox="0 0 1400 820" role="img" aria-labelledby="title desc">
+  <title id="title">HoloMotion v1.2 training workflow</title>
+  <desc id="desc">A paper-style training pipeline for HoloMotion v1.2, showing human motion preprocessing, retargeting, IsaacLab PPO training with domain randomization, and ONNX deployment.</desc>
+  <defs>
+    <marker id="arrow" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="8" markerHeight="8" orient="auto-start-reverse">
+      <path d="M 0 0 L 10 5 L 0 10 z" fill="#202124"/>
+    </marker>
+    <style>
+      .box{fill:#ffffff;stroke:#202124;stroke-width:1.8}
+      .data{fill:#e8f0fe;stroke:#174ea6;stroke-width:1.6}
+      .train{fill:#e6f4ea;stroke:#137333;stroke-width:1.6}
+      .eval{fill:#fef7e0;stroke:#b06000;stroke-width:1.6}
+      .line{stroke:#202124;stroke-width:1.9;fill:none;marker-end:url(#arrow)}
+      .dash{stroke:#5f6368;stroke-width:1.4;fill:none;stroke-dasharray:7 6;marker-end:url(#arrow)}
+      text{font-family:Arial,Helvetica,sans-serif;fill:#202124}
+      .title{font-size:28px;font-weight:700}
+      .label{font-size:18px;font-weight:700}
+      .body{font-size:15px}
+      .small{font-size:13px;fill:#3c4043}
+      .mono{font-family:Menlo,Consolas,monospace;font-size:13px}
+    </style>
+  </defs>
+
+  <text x="58" y="56" class="title">HoloMotion v1.2 Training: Motion Prior + PPO in IsaacLab</text>
+  <text x="58" y="84" class="small">Workflow reconstructed from public release notes, checkpoint config and repository documentation.</text>
+
+  <rect x="64" y="150" width="210" height="142" rx="8" class="data"/>
+  <text x="91" y="184" class="label">Human motion</text>
+  <text x="91" y="216" class="body">AMASS-compatible SMPL</text>
+  <text x="91" y="241" class="body">AMASS / LAFAN1 / pico</text>
+  <text x="91" y="266" class="mono">sampling: .60 / .35 / .05</text>
+
+  <rect x="338" y="150" width="210" height="142" rx="8" class="box"/>
+  <text x="365" y="184" class="label">GMR retargeting</text>
+  <text x="365" y="216" class="body">human to Unitree G1</text>
+  <text x="365" y="241" class="body">kinematic alignment</text>
+  <text x="365" y="266" class="mono">robot motion HDF5</text>
+
+  <rect x="612" y="150" width="250" height="142" rx="8" class="train"/>
+  <text x="641" y="184" class="label">IsaacLab simulation</text>
+  <text x="641" y="216" class="mono">num_envs=8192</text>
+  <text x="641" y="241" class="mono">num_processes=64</text>
+  <text x="641" y="266" class="body">rough terrain generator</text>
+
+  <rect x="926" y="150" width="286" height="142" rx="8" class="train"/>
+  <text x="956" y="184" class="label">PPOTF optimization</text>
+  <text x="956" y="216" class="mono">steps/env=32, epochs=3</text>
+  <text x="956" y="241" class="mono">mini_batches=24, gamma=.99</text>
+  <text x="956" y="266" class="mono">actor lr=3e-5, critic lr=5e-5</text>
+
+  <rect x="214" y="430" width="300" height="172" rx="8" class="eval"/>
+  <text x="244" y="464" class="label">Domain randomization</text>
+  <text x="244" y="496" class="body">root pose perturbation</text>
+  <text x="244" y="521" class="body">actuator stiffness / damping scale</text>
+  <text x="244" y="546" class="body">observation noise</text>
+  <text x="244" y="571" class="mono">scale range: 0.9-1.1</text>
+
+  <rect x="588" y="430" width="300" height="172" rx="8" class="eval"/>
+  <text x="618" y="464" class="label">Auxiliary prediction</text>
+  <text x="618" y="496" class="body">base linear velocity</text>
+  <text x="618" y="521" class="body">key-body contact</text>
+  <text x="618" y="546" class="body">relative key-body positions</text>
+  <text x="618" y="571" class="small">stabilizes tracking and contact timing</text>
+
+  <rect x="962" y="430" width="284" height="172" rx="8" class="box"/>
+  <text x="992" y="464" class="label">Export and evaluation</text>
+  <text x="992" y="496" class="body">ONNX checkpoints</text>
+  <text x="992" y="521" class="body">MuJoCo evaluation sweep</text>
+  <text x="992" y="546" class="body">ROS2 deployment path</text>
+  <text x="992" y="571" class="mono">model_1000 ... model_20000</text>
+
+  <path d="M 274 221 L 338 221" class="line"/>
+  <path d="M 548 221 L 612 221" class="line"/>
+  <path d="M 862 221 L 926 221" class="line"/>
+  <path d="M 1069 292 C 1069 354 1104 374 1104 430" class="line"/>
+  <path d="M 737 292 C 680 354 644 374 644 430" class="dash"/>
+  <path d="M 737 292 C 502 354 364 374 364 430" class="dash"/>
+  <path d="M 514 516 L 588 516" class="line"/>
+  <path d="M 888 516 L 962 516" class="line"/>
+
+  <text x="58" y="742" class="small">Figure. The public v1.2 release exposes enough configuration to reconstruct rollout scale, PPO hyperparameters, robustness mechanisms and deployment artifacts.</text>
+</svg>

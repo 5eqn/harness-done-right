@@ -387,6 +387,274 @@ class File(BaseContract):
             raise AssertionError(f"Could not read file at {path}")
 
 
+class Image(BaseContract):
+    """
+    Validates that an image exists and records render-oriented metadata.
+
+    SVG is preferred: its text content is auto-filled so agents can inspect the
+    diagram. Bitmap images are supported without reading binary bytes into a
+    text field; their content is intentionally empty while media type, size, and
+    dimensions are recorded when the header can be parsed.
+    """
+
+    supported_extensions: ClassVar[dict[str, str]] = {
+        ".svg": "image/svg+xml",
+        ".png": "image/png",
+        ".jpg": "image/jpeg",
+        ".jpeg": "image/jpeg",
+        ".gif": "image/gif",
+        ".webp": "image/webp",
+    }
+
+    path: str = Field(description="Path to the image file")
+    media_type: str = Field(
+        init=False,
+        frozen=True,
+        default="",
+        description="Image media type inferred from file extension",
+    )
+    is_vector: bool = Field(
+        init=False,
+        frozen=True,
+        default=False,
+        description="True for SVG images, false for bitmap images",
+    )
+    width: int | None = Field(
+        init=False,
+        frozen=True,
+        default=None,
+        description="Image width in pixels when it can be inferred",
+    )
+    height: int | None = Field(
+        init=False,
+        frozen=True,
+        default=None,
+        description="Image height in pixels when it can be inferred",
+    )
+    size_bytes: int = Field(
+        init=False,
+        frozen=True,
+        default=0,
+        description="Image file size in bytes",
+    )
+    content: str = Field(
+        init=False,
+        frozen=True,
+        default="",
+        description="SVG text content; empty for bitmap images",
+    )
+
+    @model_validator(mode="before")
+    @classmethod
+    def _fill_metadata(cls, data: Any) -> Any:
+        """Populate image metadata before construction."""
+        if not isinstance(data, dict):
+            return data
+
+        data = dict(data)
+        for field_name in (
+            "media_type",
+            "is_vector",
+            "width",
+            "height",
+            "size_bytes",
+            "content",
+        ):
+            data.pop(field_name, None)
+
+        path = data.get("path")
+        if not isinstance(path, str):
+            return data
+        if not os.path.exists(path):
+            raise AssertionError(f"Image at {path} does not exist")
+
+        extension = cls._extension(path)
+        media_type = cls.supported_extensions.get(extension)
+        if media_type is None:
+            supported = ", ".join(sorted(cls.supported_extensions))
+            raise AssertionError(f"Image path must end with one of: {supported}")
+
+        content = ""
+        width: int | None = None
+        height: int | None = None
+        if extension == ".svg":
+            content = cls._read_svg_content(path)
+            width, height = cls._parse_svg_dimensions(content)
+        else:
+            width, height = cls._parse_bitmap_dimensions(path, extension)
+
+        data["media_type"] = media_type
+        data["is_vector"] = extension == ".svg"
+        data["width"] = width
+        data["height"] = height
+        data["size_bytes"] = os.path.getsize(path)
+        data["content"] = content
+        return data
+
+    def __init__(self, **data):
+        path = data.get("path")
+        if isinstance(path, str):
+            if not os.path.exists(path):
+                raise AssertionError(f"Image at {path} does not exist")
+            if self._extension(path) not in self.supported_extensions:
+                supported = ", ".join(sorted(self.supported_extensions))
+                raise AssertionError(f"Image path must end with one of: {supported}")
+        super().__init__(**data)
+        if not os.path.exists(self.path):
+            raise AssertionError(f"Image at {self.path} does not exist")
+
+    @staticmethod
+    def _extension(path: str) -> str:
+        return os.path.splitext(path)[1].lower()
+
+    @staticmethod
+    def _read_svg_content(path: str) -> str:
+        try:
+            with open(path, "r") as f:
+                return f.read()
+        except (IOError, OSError):
+            raise AssertionError(f"Could not read SVG image at {path}")
+
+    @classmethod
+    def _parse_svg_dimensions(cls, content: str) -> tuple[int | None, int | None]:
+        width = cls._parse_svg_length(cls._svg_attr(content, "width"))
+        height = cls._parse_svg_length(cls._svg_attr(content, "height"))
+        if width is not None and height is not None:
+            return width, height
+
+        view_box = cls._svg_attr(content, "viewBox")
+        if view_box is None:
+            return width, height
+        values = re.split(r"[\s,]+", view_box.strip())
+        if len(values) != 4:
+            return width, height
+        try:
+            return width or round(float(values[2])), height or round(float(values[3]))
+        except ValueError:
+            return width, height
+
+    @staticmethod
+    def _svg_attr(content: str, name: str) -> str | None:
+        match = re.search(rf"\b{name}\s*=\s*['\"]([^'\"]+)['\"]", content)
+        if match:
+            return match.group(1)
+        return None
+
+    @staticmethod
+    def _parse_svg_length(value: str | None) -> int | None:
+        if value is None or value.strip().endswith("%"):
+            return None
+        match = re.match(r"^\s*([0-9]+(?:\.[0-9]+)?)", value)
+        if not match:
+            return None
+        return round(float(match.group(1)))
+
+    @classmethod
+    def _parse_bitmap_dimensions(
+        cls, path: str, extension: str
+    ) -> tuple[int | None, int | None]:
+        try:
+            with open(path, "rb") as f:
+                header = f.read(65536)
+        except (IOError, OSError):
+            raise AssertionError(f"Could not read image at {path}")
+
+        if extension == ".png":
+            return cls._parse_png_dimensions(header)
+        if extension == ".gif":
+            return cls._parse_gif_dimensions(header)
+        if extension in {".jpg", ".jpeg"}:
+            return cls._parse_jpeg_dimensions(header)
+        if extension == ".webp":
+            return cls._parse_webp_dimensions(header)
+        return None, None
+
+    @staticmethod
+    def _parse_png_dimensions(header: bytes) -> tuple[int | None, int | None]:
+        if header.startswith(b"\x89PNG\r\n\x1a\n") and len(header) >= 24:
+            return int.from_bytes(header[16:20], "big"), int.from_bytes(
+                header[20:24], "big"
+            )
+        return None, None
+
+    @staticmethod
+    def _parse_gif_dimensions(header: bytes) -> tuple[int | None, int | None]:
+        if header[:6] in {b"GIF87a", b"GIF89a"} and len(header) >= 10:
+            return int.from_bytes(header[6:8], "little"), int.from_bytes(
+                header[8:10], "little"
+            )
+        return None, None
+
+    @staticmethod
+    def _parse_jpeg_dimensions(header: bytes) -> tuple[int | None, int | None]:
+        if not header.startswith(b"\xff\xd8"):
+            return None, None
+
+        i = 2
+        start_of_frame_markers = {
+            0xC0,
+            0xC1,
+            0xC2,
+            0xC3,
+            0xC5,
+            0xC6,
+            0xC7,
+            0xC9,
+            0xCA,
+            0xCB,
+            0xCD,
+            0xCE,
+            0xCF,
+        }
+        while i + 9 < len(header):
+            if header[i] != 0xFF:
+                i += 1
+                continue
+            while i < len(header) and header[i] == 0xFF:
+                i += 1
+            if i >= len(header):
+                break
+            marker = header[i]
+            i += 1
+            if marker in {0xD8, 0xD9}:
+                continue
+            if i + 2 > len(header):
+                break
+            segment_length = int.from_bytes(header[i : i + 2], "big")
+            if segment_length < 2:
+                break
+            if marker in start_of_frame_markers and i + 7 < len(header):
+                height = int.from_bytes(header[i + 3 : i + 5], "big")
+                width = int.from_bytes(header[i + 5 : i + 7], "big")
+                return width, height
+            i += segment_length
+        return None, None
+
+    @staticmethod
+    def _parse_webp_dimensions(header: bytes) -> tuple[int | None, int | None]:
+        if (
+            len(header) < 30
+            or not header.startswith(b"RIFF")
+            or header[8:12] != b"WEBP"
+        ):
+            return None, None
+        chunk_type = header[12:16]
+        if chunk_type == b"VP8X" and len(header) >= 30:
+            width = int.from_bytes(header[24:27], "little") + 1
+            height = int.from_bytes(header[27:30], "little") + 1
+            return width, height
+        if chunk_type == b"VP8 " and len(header) >= 30:
+            width = int.from_bytes(header[26:28], "little") & 0x3FFF
+            height = int.from_bytes(header[28:30], "little") & 0x3FFF
+            return width, height
+        if chunk_type == b"VP8L" and len(header) >= 25:
+            bits = int.from_bytes(header[21:25], "little")
+            width = (bits & 0x3FFF) + 1
+            height = ((bits >> 14) & 0x3FFF) + 1
+            return width, height
+        return None, None
+
+
 class Directory(BaseContract):
     """
     Validates that a directory exists at the given path using os.path.isdir().
