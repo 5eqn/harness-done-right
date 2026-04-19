@@ -74,16 +74,6 @@ legged_gym_references = [
 ]
 
 
-figure_dir = "examples/academic_report/figures"
-
-holo_architecture_figure = Image(path=f"{figure_dir}/holo_architecture.svg")
-holo_training_figure = Image(path=f"{figure_dir}/holo_training.svg")
-sonic_architecture_figure = Image(path=f"{figure_dir}/sonic_architecture.svg")
-sonic_training_figure = Image(path=f"{figure_dir}/sonic_training.svg")
-legged_gym_architecture_figure = Image(path=f"{figure_dir}/legged_gym_architecture.svg")
-legged_gym_training_figure = Image(path=f"{figure_dir}/legged_gym_training.svg")
-
-
 report = AcademicReport(
     topic=topic,
     author=author,
@@ -111,7 +101,7 @@ report = AcademicReport(
                 "都有 EMA observation normalization、clip range 10.0，并每 4 个 step 同步统计量。"
             ),
             references=holo_references,
-            figures=[holo_architecture_figure],
+            figures=[],
         ),
         ModelTraining(
             content=(
@@ -136,7 +126,7 @@ report = AcademicReport(
                 "提交说明其模型同样使用 AMP 训练，导出 checkpoint 为 `model_29500.onnx`。"
             ),
             references=holo_references,
-            figures=[holo_training_figure],
+            figures=[],
         ),
         ModelArchitecture(
             content=(
@@ -158,7 +148,7 @@ report = AcademicReport(
                 "了 Decoupled WBC（下肢 RL + 上肢 IK）与 GEAR-SONIC；SONIC 是更统一的全身策略路线。"
             ),
             references=sonic_references,
-            figures=[sonic_architecture_figure],
+            figures=[],
         ),
         ModelTraining(
             content=(
@@ -184,7 +174,7 @@ report = AcademicReport(
                 "`*_decoder.onnx`。"
             ),
             references=sonic_references,
-            figures=[sonic_training_figure],
+            figures=[],
         ),
         ModelArchitecture(
             content=(
@@ -207,7 +197,7 @@ report = AcademicReport(
                 "运动先验 token 化表达。"
             ),
             references=legged_gym_references,
-            figures=[legged_gym_architecture_figure],
+            figures=[],
         ),
         ModelTraining(
             content=(
@@ -232,7 +222,7 @@ report = AcademicReport(
                 "但需要为每个技能和机器人仔细调 reward、domain randomization 与课程。"
             ),
             references=legged_gym_references,
-            figures=[legged_gym_training_figure],
+            figures=[],
         ),
     ],
 )
