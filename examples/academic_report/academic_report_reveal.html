@@ -1,0 +1,448 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>人形机器人底层运控：接口如何开放</title>
+  <meta name="author" content="github@5eqn">
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/reveal.js@5/dist/reset.css">
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/reveal.js@5/dist/reveal.css">
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/reveal.js@5/dist/theme/white.css">
+  <style>
+    :root {
+      --r-main-font: -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+      --r-heading-font: -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+      --r-heading-text-transform: none;
+      --r-main-color: #172026;
+      --r-heading-color: #0e1a21;
+      --r-link-color: #126b84;
+      --r-selection-background-color: #d9edf2;
+    }
+    .reveal {
+      font-size: 31px;
+    }
+    .reveal h1,
+    .reveal h2,
+    .reveal h3 {
+      letter-spacing: 0;
+      line-height: 1.12;
+    }
+    .reveal h1 {
+      font-size: 2.05em;
+    }
+    .reveal h2 {
+      font-size: 1.45em;
+      margin-bottom: 0.65em;
+    }
+    .reveal p,
+    .reveal li {
+      line-height: 1.45;
+    }
+    .reveal ul,
+    .reveal ol {
+      margin-left: 1.25em;
+    }
+    .reveal table {
+      font-size: 0.68em;
+      width: 100%;
+    }
+    .reveal th,
+    .reveal td {
+      padding: 0.38em 0.5em;
+      vertical-align: top;
+    }
+    .reveal code {
+      color: #8a3b12;
+      background: #f4f0eb;
+      padding: 0.05em 0.22em;
+      border-radius: 5px;
+    }
+    .reveal pre code {
+      padding: 1em;
+      border-radius: 8px;
+    }
+    .reveal blockquote {
+      border-left: 6px solid #126b84;
+      box-shadow: none;
+      color: #26363d;
+      font-size: 1em;
+      padding: 0.25em 0 0.25em 0.8em;
+      width: 86%;
+    }
+  </style>
+</head>
+<body>
+  <div class="reveal">
+    <div class="slides">
+      <section data-markdown data-separator="^---$" data-separator-vertical="^--$">
+        <textarea data-template>
+# 人形机器人底层运控：接口如何开放
+
+从 legged_gym 到 SWITCH、HoloMotion 与 SONIC
+
+---
+
+## 核心问题
+
+底层控制器不只是“让机器人动起来”。
+
+它决定了上层智能能说什么、不能说什么，以及说错时系统如何保持安全。
+
+| 路线 | 向上层开放的接口 | 代价 |
+| --- | --- | --- |
+| legged_gym | 几个低维速度命令 | 稳定，但能力封闭 |
+| SWITCH | 选择具体技能 | 可切换，但技能离散 |
+| HoloMotion | 全身参考运动 | 更开放，但需要强跟踪 |
+| SONIC | 多模态运动 token | 最通用，也最重 |
+
+---
+
+# 1. legged_gym
+
+最简单、最透明、最适合作为基线。
+
+---
+
+## legged_gym 的控制边界
+
+legged_gym / Unitree RL Gym 是 Isaac Gym + RSL-RL PPO 的经典低层控制路线。
+
+它没有向上层开放复杂接口。上层只给低维 command，例如目标速度；policy 直接根据机器人观测输出关节控制目标。
+
+这让系统简单、稳定、便宜：
+
+- actor-critic MLP 或 recurrent actor-critic
+- actor 看普通观测
+- critic 可看 privileged observations
+- 动作通常是 PD target offset
+- 训练和部署链路短
+
+---
+
+## legged_gym 的训练方式
+
+训练方式是直接的 PPO locomotion：
+
+```bash
+python legged_gym/scripts/train.py --task=g1
+```
+
+典型配置：
+
+- `num_envs=4096`
+- `num_steps_per_env=24`
+- `clip_param=0.2`
+- `gamma=0.99`
+- `lam=0.95`
+- `learning_rate=1e-3`
+
+Unitree G1 训练还加入摩擦、质量、外部 push 等 domain randomization，用于 Sim2Real。
+
+---
+
+## legged_gym 的限制
+
+legged_gym 的强项正是它的限制。
+
+它训练的是一个封闭技能 policy，而不是一个开放动作接口。
+
+上层系统很难表达：
+
+- “现在从下蹲切到踢腿”
+- “按这段人体动作做全身跟踪”
+- “用 VR 手柄给出身体目标”
+- “让 VLA 输出更抽象的运动意图”
+
+下一步问题变成：底层控制器应该开放什么接口？
+
+---
+
+# 2. 接口谱系
+
+开放越多，表达越强；开放越多，安全责任也越重。
+
+---
+
+## 不能只开放关节角
+
+最直接的想法是把关节角、速度或力矩开放给上层。
+
+这给了上层最大自由度，也把风险一起交了出去。
+
+机器人真实执行时必须满足：
+
+- joint range
+- velocity limits
+- actuator saturation
+- collision avoidance
+- contact stability
+- human-robot coexistence constraints
+
+constrained control 和 reference governor 工作反复强调：执行参考需要实时过滤和约束，否则“可表达”不等于“可安全执行”。
+
+---
+
+## 四种接口选择
+
+| 接口选择 | 代表系统 | 上层能表达什么 |
+| --- | --- | --- |
+| 不开放复杂接口 | legged_gym | 速度命令 |
+| 选择具体技能 | SWITCH | 切到哪一个技能 |
+| 开放全身参考运动 | HoloMotion | 跟踪什么 motion |
+| 开放多模态 motion token | SONIC | VR / SMPL / VLA / planner 意图 |
+
+真正的问题不是“接口越低层越好”，而是接口能否同时做到表达力、可学习性和安全恢复。
+
+---
+
+# 3. SWITCH
+
+开放“选择技能”的接口。
+
+---
+
+## SWITCH 的模型架构
+
+SWITCH 不是让上层直接输出关节角。
+
+它让上层选择目标 skill，然后由系统自己寻找可执行过渡路径。
+
+三个核心组件：
+
+- Skill Graph：把 motion frame 作为节点
+- Whole-body tracking policy：执行技能和过渡
+- Online skill scheduler：实时选择路径并触发恢复
+
+当两个技能之间姿态相近，Skill Graph 加入跨技能边；差距较大时，插入 buffer nodes，让过渡变得可学。
+
+---
+
+## SWITCH 的训练方式
+
+SWITCH 用 PPO 训练 whole-body tracking policy。
+
+训练数据不是孤立技能，而是 Skill Graph 增广后的多技能轨迹。
+
+关键机制：
+
+- Reference State Initialization
+- buffer-aware imitation learning
+- unified imitation rewards
+- foot-ground contact reward
+- skill augmentation curriculum
+- reward / termination curriculum
+
+部署时，如果用户切换技能或 tracking error 过大，scheduler 会在图上重新规划，而不是让跟踪误差继续积累。
+
+---
+
+## SWITCH 打开的接口
+
+SWITCH 的接口是离散的，但非常清晰：
+
+&gt; 上层不决定关节怎么走，只决定要切到哪个技能。
+
+这适合动态技能库：
+
+- get up
+- kick
+- dance
+- kungfu squat
+- recovery
+
+它的关键贡献不是“有更多技能”，而是让技能之间可以被实时、安全地切换。
+
+---
+
+# 4. HoloMotion v1.2
+
+开放 motion-tracking-ish 的全身参考接口。
+
+---
+
+## HoloMotion 的模型架构
+
+HoloMotion v1.2 面向 Unitree G1 的 29DoF/23DoF 全身控制。
+
+它开放的是参考运动接口：当前参考状态、未来参考片段、机器人自身状态一起进入策略。
+
+核心 actor 是 `ReferenceRoutedGroupedMoETransformerPolicy`：
+
+- 2048 维 observation embedding
+- 2048 维 router embedding
+- 3 层 Transformer / MoE
+- `d_model=512`
+- 8 attention heads
+- 16 fine experts
+- top-k 2 expert routing
+
+输出是机器人动作，通常进入 PD 控制目标。
+
+---
+
+## HoloMotion 的训练方式
+
+训练链路更像“低层控制基础模型”：
+
+1. 人体动作数据转为 AMASS-compatible SMPL
+2. GMR 重定向到机器人 HDF5
+3. IsaacLab 中训练 motion / velocity tracking policy
+4. 导出 ONNX
+5. MuJoCo / ROS2 评估和部署
+
+典型配置：
+
+- `num_envs=8192`
+- `num_steps_per_env=32`
+- `num_learning_iterations=20001`
+- actor LR `3e-5`
+- critic LR `5e-5`
+- rough terrain + domain randomization
+
+---
+
+## HoloMotion 打开的接口
+
+HoloMotion 把接口从“选技能”推进到“给运动”。
+
+上层不再只能说“切到 kick”，而可以给出更连续的参考运动。
+
+这种接口的优势：
+
+- 能利用大规模人体动作数据
+- 能覆盖更多过渡和变体
+- 更接近动作生成模型的输出形态
+
+风险也更明显：参考运动越自由，底层 tracker 越需要处理动态可行性、接触稳定性和异常恢复。
+
+---
+
+# 5. SONIC / GR00T-WBC
+
+开放 motion tracking 与抽象意图之间的统一接口。
+
+---
+
+## SONIC 的模型架构
+
+SONIC 面向 Unitree G1 29DoF，目标是统一多种动作来源。
+
+它不是给每种输入写一个控制器，而是把它们编码到共享 token space。
+
+输入可以来自：
+
+- G1 joint trajectories
+- VR teleop 三点目标
+- SMPL 人体关节位置
+- SOMA / BVH skeleton positions
+- VLA 或 planner 的 head / wrist / base command
+
+多个 encoder 进入共享 latent tokens，再由单一 decoder 输出 G1 关节动作。
+
+---
+
+## SONIC 的训练方式
+
+SONIC 把 motion tracking 扩展到大数据和大模型规模。
+
+公开材料报告：
+
+- 模型从约 1.2M 扩到 42M 参数
+- 数据超过 100M frames / 700 小时
+- 训练 compute 约 9k GPU hours
+- 大规模 tracker 实验使用 128 GPUs 训练 3 天，约 32k GPU hours
+
+训练入口使用 Isaac Lab + PPO + auxiliary losses。
+
+`sonic_release` 默认包含 G1、teleop、SMPL 三个 encoder；`sonic_bones_seed` 增加 SOMA encoder。
+
+---
+
+## SONIC 打开的接口
+
+SONIC 的接口最接近“上层智能的动作端口”。
+
+上层可以来自人、传感器、生成模型或规划器；底层看到的是统一 motion token。
+
+这让同一个 whole-body controller 可以服务于：
+
+- VR 遥操作
+- 视频人体动作估计
+- 文本或音乐生成动作
+- VLA 输出的身体目标
+- kinematic planner 的未来轨迹
+
+SONIC 的价值在于把 motion tracking 变成多模态机器人系统的共同语言。
+
+---
+
+# 6. 总结
+
+底层控制正在从“训练一个技能”走向“设计一个接口”。
+
+---
+
+## 接口演化
+
+| 系统 | 接口边界 | 核心能力 |
+| --- | --- | --- |
+| legged_gym | 低维 command | 稳定 locomotion baseline |
+| SWITCH | skill label + scheduler | 技能切换与恢复 |
+| HoloMotion | 全身参考运动 | 大规模 motion tracking |
+| SONIC | 多模态 motion tokens | 抽象意图到全身控制 |
+
+越往后，上层表达力越强；越往后，底层越需要处理安全、约束、恢复和泛化。
+
+---
+
+## 研究展望
+
+未来的人形机器人底层运控，很可能不是单一 policy 的胜利，而是接口设计的胜利。
+
+一个好的接口需要同时满足：
+
+- 上层能表达足够丰富的意图
+- 底层能判断这个意图是否可执行
+- 失败前能过滤，失败时能恢复
+- 训练数据能覆盖接口承诺的行为范围
+- 部署系统能在实时约束下运行
+
+真正重要的问题是：我们开放了什么，又用什么机制把开放带来的风险收回来。
+
+---
+
+# 参考来源
+
+- [unitree_rl_gym](https://github.com/unitreerobotics/unitree_rl_gym)
+- [legged_gym](https://github.com/leggedrobotics/legged_gym)
+- [Training](https://deepwiki.com/unitreerobotics/unitree_rl_gym/2.1-training)
+- [Real-time motion control of robotic manipulators for safe human-robot coexistence](https://www.sciencedirect.com/science/article/abs/pii/S0736584521001022)
+- [Switch: Learning Agile Skills Switching for Humanoid Robots](https://arxiv.org/html/2604.14834v1)
+- [HoloMotion: A Foundation Model for Whole-Body Humanoid Control](https://github.com/HorizonRobotics/HoloMotion)
+- [HorizonRobotics/HoloMotion_v1.2](https://huggingface.co/HorizonRobotics/HoloMotion_v1.2)
+- [SONIC: Supersizing Motion Tracking for Natural Humanoid Whole-Body Control](https://arxiv.org/abs/2511.07820)
+- [GR00T-WholeBodyControl](https://github.com/NVlabs/GR00T-WholeBodyControl)
+- [Training Guide](https://nvlabs.github.io/GR00T-WholeBodyControl/user_guide/training.html)
+
+
+        </textarea>
+      </section>
+    </div>
+  </div>
+  <script src="https://cdn.jsdelivr.net/npm/reveal.js@5/dist/reveal.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/reveal.js@5/plugin/markdown/markdown.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/reveal.js@5/plugin/highlight/highlight.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/reveal.js@5/plugin/notes/notes.js"></script>
+  <script>
+    Reveal.initialize({
+      hash: true,
+      slideNumber: true,
+      transition: "slide",
+      width: 1280,
+      height: 720,
+      margin: 0.08,
+      plugins: [RevealMarkdown, RevealHighlight, RevealNotes]
+    });
+  </script>
+</body>
+</html>
