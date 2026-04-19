@@ -30,7 +30,7 @@ class FieldSpec(BaseModel):
 
     name: str = Field(description="Name of the field")
     type_annotation: str = Field(
-        description="Type annotation as a string (e.g., 'str', 'list[int]', 'FileWritten')"
+        description="Type annotation as a string (e.g., 'str', 'list[int]', 'File')"
     )
     description: str = Field(
         description="Human-readable description of what this field represents"

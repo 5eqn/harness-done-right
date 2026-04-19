@@ -51,12 +51,12 @@ class Move(BaseContract):
 Example that PASSES (score 5):
 Move(
   context = MoveContext(
-    target_reader = MarkdownFileWritten(
+    target_reader = MarkdownFile(
       path = 'hdr_target_reader.md' # Path to the file
       content = '# Target Reader\\n\\nThe intended reader already knows:\\n\\n- AI agents that receive goals and use tools\\n- The definition `Agent = Model + Harness`\\n- Harnesses as the runtime framework around a model, including context window,\\n  memory, tool use, and control flow\\n- Python classes, runtime validation, and software contracts\\n- LLM prompts and responses\\n\\nThe intended reader does not already know HDR.\\n' # Content of the file, auto-filled from disk (cannot be manually assigned)
     ) # Markdown file describing what the intended reader already knows
     target_concept = 'HDR' # Concept the move chain is introducing
-    target_meaning = MarkdownFileWritten(
+    target_meaning = MarkdownFile(
       path = 'hdr_target_meaning.md' # Path to the file
       content = '# Target Meaning\\n\\nIntroduce HDR as a harness design pattern for agent work.\\n\\nThe reader should understand that ordinary prose instructions can make an agent\\nsound careful while still leaving completion soft. HDR changes the completion\\nboundary by representing the intended outcome as an explicit Python task object:\\ntyped fields hold required evidence, programmatic checks reject malformed shape,\\nand semantic `self.verify()` assertions reject missing meaning.\\n\\nBy the end, the reader should see HDR as the move from conversational promises\\nto enforceable construction. The agent is not merely asked to do better; it must\\nkeep working until the final task instance constructs successfully.\\n' # Content of the file, auto-filled from disk (cannot be manually assigned)
     ) # Markdown file describing the full conceptual payload the chain must express
@@ -80,12 +80,12 @@ Move(
 Example that FAILS (score 1):
 Move(
   context = MoveContext(
-    target_reader = MarkdownFileWritten(
+    target_reader = MarkdownFile(
       path = 'hdr_target_reader.md' # Path to the file
       content = '# Target Reader\\n\\nThe intended reader already knows:\\n\\n- AI agents that receive goals and use tools\\n- The definition `Agent = Model + Harness`\\n- Harnesses as the runtime framework around a model, including context window,\\n  memory, tool use, and control flow\\n- Python classes, runtime validation, and software contracts\\n- LLM prompts and responses\\n\\nThe intended reader does not already know HDR.\\n' # Content of the file, auto-filled from disk (cannot be manually assigned)
     ) # Markdown file describing what the intended reader already knows
     target_concept = 'HDR' # Concept the move chain is introducing
-    target_meaning = MarkdownFileWritten(
+    target_meaning = MarkdownFile(
       path = 'hdr_target_meaning.md' # Path to the file
       content = '# Target Meaning\\n\\nIntroduce HDR as a harness design pattern for agent work.\\n\\nThe reader should understand that ordinary prose instructions can make an agent\\nsound careful while still leaving completion soft. HDR changes the completion\\nboundary by representing the intended outcome as an explicit Python task object:\\ntyped fields hold required evidence, programmatic checks reject malformed shape,\\nand semantic `self.verify()` assertions reject missing meaning.\\n\\nBy the end, the reader should see HDR as the move from conversational promises\\nto enforceable construction. The agent is not merely asked to do better; it must\\nkeep working until the final task instance constructs successfully.\\n' # Content of the file, auto-filled from disk (cannot be manually assigned)
     ) # Markdown file describing the full conceptual payload the chain must express
@@ -110,12 +110,12 @@ Move(
 Example that PASSES (score 5):
 Move(
   context = MoveContext(
-    target_reader = MarkdownFileWritten(
+    target_reader = MarkdownFile(
       path = 'hdr_target_reader.md' # Path to the file
       content = '# Target Reader\\n\\nThe intended reader already knows:\\n\\n- AI agents that receive goals and use tools\\n- The definition `Agent = Model + Harness`\\n- Harnesses as the runtime framework around a model, including context window,\\n  memory, tool use, and control flow\\n- Python classes, runtime validation, and software contracts\\n- LLM prompts and responses\\n\\nThe intended reader does not already know HDR.\\n' # Content of the file, auto-filled from disk (cannot be manually assigned)
     ) # Markdown file describing what the intended reader already knows
     target_concept = 'HDR' # Concept the move chain is introducing
-    target_meaning = MarkdownFileWritten(
+    target_meaning = MarkdownFile(
       path = 'hdr_target_meaning.md' # Path to the file
       content = '# Target Meaning\\n\\nIntroduce HDR as a harness design pattern for agent work.\\n\\nThe reader should understand that ordinary prose instructions can make an agent\\nsound careful while still leaving completion soft. HDR changes the completion\\nboundary by representing the intended outcome as an explicit Python task object:\\ntyped fields hold required evidence, programmatic checks reject malformed shape,\\nand semantic `self.verify()` assertions reject missing meaning.\\n\\nBy the end, the reader should see HDR as the move from conversational promises\\nto enforceable construction. The agent is not merely asked to do better; it must\\nkeep working until the final task instance constructs successfully.\\n' # Content of the file, auto-filled from disk (cannot be manually assigned)
     ) # Markdown file describing the full conceptual payload the chain must express
@@ -139,12 +139,12 @@ Move(
 Example that FAILS (score 1):
 Move(
   context = MoveContext(
-    target_reader = MarkdownFileWritten(
+    target_reader = MarkdownFile(
       path = 'hdr_target_reader.md' # Path to the file
       content = '# Target Reader\\n\\nThe intended reader already knows:\\n\\n- AI agents that receive goals and use tools\\n- The definition `Agent = Model + Harness`\\n- Harnesses as the runtime framework around a model, including context window,\\n  memory, tool use, and control flow\\n- Python classes, runtime validation, and software contracts\\n- LLM prompts and responses\\n\\nThe intended reader does not already know HDR.\\n' # Content of the file, auto-filled from disk (cannot be manually assigned)
     ) # Markdown file describing what the intended reader already knows
     target_concept = 'HDR' # Concept the move chain is introducing
-    target_meaning = MarkdownFileWritten(
+    target_meaning = MarkdownFile(
       path = 'hdr_target_meaning.md' # Path to the file
       content = '# Target Meaning\\n\\nIntroduce HDR as a harness design pattern for agent work.\\n\\nThe reader should understand that ordinary prose instructions can make an agent\\nsound careful while still leaving completion soft. HDR changes the completion\\nboundary by representing the intended outcome as an explicit Python task object:\\ntyped fields hold required evidence, programmatic checks reject malformed shape,\\nand semantic `self.verify()` assertions reject missing meaning.\\n\\nBy the end, the reader should see HDR as the move from conversational promises\\nto enforceable construction. The agent is not merely asked to do better; it must\\nkeep working until the final task instance constructs successfully.\\n' # Content of the file, auto-filled from disk (cannot be manually assigned)
     ) # Markdown file describing the full conceptual payload the chain must express
@@ -169,12 +169,12 @@ Move(
 Example that PASSES (score 5):
 Move(
   context = MoveContext(
-    target_reader = MarkdownFileWritten(
+    target_reader = MarkdownFile(
       path = 'hdr_target_reader.md' # Path to the file
       content = '# Target Reader\\n\\nThe intended reader already knows:\\n\\n- AI agents that receive goals and use tools\\n- The definition `Agent = Model + Harness`\\n- Harnesses as the runtime framework around a model, including context window,\\n  memory, tool use, and control flow\\n- Python classes, runtime validation, and software contracts\\n- LLM prompts and responses\\n\\nThe intended reader does not already know HDR.\\n' # Content of the file, auto-filled from disk (cannot be manually assigned)
     ) # Markdown file describing what the intended reader already knows
     target_concept = 'HDR' # Concept the move chain is introducing
-    target_meaning = MarkdownFileWritten(
+    target_meaning = MarkdownFile(
       path = 'hdr_target_meaning.md' # Path to the file
       content = '# Target Meaning\\n\\nIntroduce HDR as a harness design pattern for agent work.\\n\\nThe reader should understand that ordinary prose instructions can make an agent\\nsound careful while still leaving completion soft. HDR changes the completion\\nboundary by representing the intended outcome as an explicit Python task object:\\ntyped fields hold required evidence, programmatic checks reject malformed shape,\\nand semantic `self.verify()` assertions reject missing meaning.\\n\\nBy the end, the reader should see HDR as the move from conversational promises\\nto enforceable construction. The agent is not merely asked to do better; it must\\nkeep working until the final task instance constructs successfully.\\n' # Content of the file, auto-filled from disk (cannot be manually assigned)
     ) # Markdown file describing the full conceptual payload the chain must express
@@ -198,12 +198,12 @@ Move(
 Example that FAILS (score 1):
 Move(
   context = MoveContext(
-    target_reader = MarkdownFileWritten(
+    target_reader = MarkdownFile(
       path = 'hdr_target_reader.md' # Path to the file
       content = '# Target Reader\\n\\nThe intended reader already knows:\\n\\n- AI agents that receive goals and use tools\\n- The definition `Agent = Model + Harness`\\n- Harnesses as the runtime framework around a model, including context window,\\n  memory, tool use, and control flow\\n- Python classes, runtime validation, and software contracts\\n- LLM prompts and responses\\n\\nThe intended reader does not already know HDR.\\n' # Content of the file, auto-filled from disk (cannot be manually assigned)
     ) # Markdown file describing what the intended reader already knows
     target_concept = 'HDR' # Concept the move chain is introducing
-    target_meaning = MarkdownFileWritten(
+    target_meaning = MarkdownFile(
       path = 'hdr_target_meaning.md' # Path to the file
       content = '# Target Meaning\\n\\nIntroduce HDR as a harness design pattern for agent work.\\n\\nThe reader should understand that ordinary prose instructions can make an agent\\nsound careful while still leaving completion soft. HDR changes the completion\\nboundary by representing the intended outcome as an explicit Python task object:\\ntyped fields hold required evidence, programmatic checks reject malformed shape,\\nand semantic `self.verify()` assertions reject missing meaning.\\n\\nBy the end, the reader should see HDR as the move from conversational promises\\nto enforceable construction. The agent is not merely asked to do better; it must\\nkeep working until the final task instance constructs successfully.\\n' # Content of the file, auto-filled from disk (cannot be manually assigned)
     ) # Markdown file describing the full conceptual payload the chain must express
@@ -228,12 +228,12 @@ Move(
 Example that PASSES (score 5):
 Move(
   context = MoveContext(
-    target_reader = MarkdownFileWritten(
+    target_reader = MarkdownFile(
       path = 'hdr_target_reader.md' # Path to the file
       content = '# Target Reader\\n\\nThe intended reader already knows:\\n\\n- AI agents that receive goals and use tools\\n- The definition `Agent = Model + Harness`\\n- Harnesses as the runtime framework around a model, including context window,\\n  memory, tool use, and control flow\\n- Python classes, runtime validation, and software contracts\\n- LLM prompts and responses\\n\\nThe intended reader does not already know HDR.\\n' # Content of the file, auto-filled from disk (cannot be manually assigned)
     ) # Markdown file describing what the intended reader already knows
     target_concept = 'HDR' # Concept the move chain is introducing
-    target_meaning = MarkdownFileWritten(
+    target_meaning = MarkdownFile(
       path = 'hdr_target_meaning.md' # Path to the file
       content = '# Target Meaning\\n\\nIntroduce HDR as a harness design pattern for agent work.\\n\\nThe reader should understand that ordinary prose instructions can make an agent\\nsound careful while still leaving completion soft. HDR changes the completion\\nboundary by representing the intended outcome as an explicit Python task object:\\ntyped fields hold required evidence, programmatic checks reject malformed shape,\\nand semantic `self.verify()` assertions reject missing meaning.\\n\\nBy the end, the reader should see HDR as the move from conversational promises\\nto enforceable construction. The agent is not merely asked to do better; it must\\nkeep working until the final task instance constructs successfully.\\n' # Content of the file, auto-filled from disk (cannot be manually assigned)
     ) # Markdown file describing the full conceptual payload the chain must express
@@ -249,12 +249,12 @@ Move(
 Example that FAILS (score 1):
 Move(
   context = MoveContext(
-    target_reader = MarkdownFileWritten(
+    target_reader = MarkdownFile(
       path = 'hdr_target_reader.md' # Path to the file
       content = '# Target Reader\\n\\nThe intended reader already knows:\\n\\n- AI agents that receive goals and use tools\\n- The definition `Agent = Model + Harness`\\n- Harnesses as the runtime framework around a model, including context window,\\n  memory, tool use, and control flow\\n- Python classes, runtime validation, and software contracts\\n- LLM prompts and responses\\n\\nThe intended reader does not already know HDR.\\n' # Content of the file, auto-filled from disk (cannot be manually assigned)
     ) # Markdown file describing what the intended reader already knows
     target_concept = 'HDR' # Concept the move chain is introducing
-    target_meaning = MarkdownFileWritten(
+    target_meaning = MarkdownFile(
       path = 'hdr_target_meaning.md' # Path to the file
       content = '# Target Meaning\\n\\nIntroduce HDR as a harness design pattern for agent work.\\n\\nThe reader should understand that ordinary prose instructions can make an agent\\nsound careful while still leaving completion soft. HDR changes the completion\\nboundary by representing the intended outcome as an explicit Python task object:\\ntyped fields hold required evidence, programmatic checks reject malformed shape,\\nand semantic `self.verify()` assertions reject missing meaning.\\n\\nBy the end, the reader should see HDR as the move from conversational promises\\nto enforceable construction. The agent is not merely asked to do better; it must\\nkeep working until the final task instance constructs successfully.\\n' # Content of the file, auto-filled from disk (cannot be manually assigned)
     ) # Markdown file describing the full conceptual payload the chain must express
@@ -271,12 +271,12 @@ Move(
 Example that PASSES (score 5):
 Move(
   context = MoveContext(
-    target_reader = MarkdownFileWritten(
+    target_reader = MarkdownFile(
       path = 'hdr_target_reader.md' # Path to the file
       content = '# Target Reader\\n\\nThe intended reader already knows:\\n\\n- AI agents that receive goals and use tools\\n- The definition `Agent = Model + Harness`\\n- Harnesses as the runtime framework around a model, including context window,\\n  memory, tool use, and control flow\\n- Python classes, runtime validation, and software contracts\\n- LLM prompts and responses\\n\\nThe intended reader does not already know HDR.\\n' # Content of the file, auto-filled from disk (cannot be manually assigned)
     ) # Markdown file describing what the intended reader already knows
     target_concept = 'HDR' # Concept the move chain is introducing
-    target_meaning = MarkdownFileWritten(
+    target_meaning = MarkdownFile(
       path = 'hdr_target_meaning.md' # Path to the file
       content = '# Target Meaning\\n\\nIntroduce HDR as a harness design pattern for agent work.\\n\\nThe reader should understand that ordinary prose instructions can make an agent\\nsound careful while still leaving completion soft. HDR changes the completion\\nboundary by representing the intended outcome as an explicit Python task object:\\ntyped fields hold required evidence, programmatic checks reject malformed shape,\\nand semantic `self.verify()` assertions reject missing meaning.\\n\\nBy the end, the reader should see HDR as the move from conversational promises\\nto enforceable construction. The agent is not merely asked to do better; it must\\nkeep working until the final task instance constructs successfully.\\n' # Content of the file, auto-filled from disk (cannot be manually assigned)
     ) # Markdown file describing the full conceptual payload the chain must express
@@ -300,12 +300,12 @@ Move(
 Example that FAILS (score 1):
 Move(
   context = MoveContext(
-    target_reader = MarkdownFileWritten(
+    target_reader = MarkdownFile(
       path = 'hdr_target_reader.md' # Path to the file
       content = '# Target Reader\\n\\nThe intended reader already knows:\\n\\n- AI agents that receive goals and use tools\\n- The definition `Agent = Model + Harness`\\n- Harnesses as the runtime framework around a model, including context window,\\n  memory, tool use, and control flow\\n- Python classes, runtime validation, and software contracts\\n- LLM prompts and responses\\n\\nThe intended reader does not already know HDR.\\n' # Content of the file, auto-filled from disk (cannot be manually assigned)
     ) # Markdown file describing what the intended reader already knows
     target_concept = 'HDR' # Concept the move chain is introducing
-    target_meaning = MarkdownFileWritten(
+    target_meaning = MarkdownFile(
       path = 'hdr_target_meaning.md' # Path to the file
       content = '# Target Meaning\\n\\nIntroduce HDR as a harness design pattern for agent work.\\n\\nThe reader should understand that ordinary prose instructions can make an agent\\nsound careful while still leaving completion soft. HDR changes the completion\\nboundary by representing the intended outcome as an explicit Python task object:\\ntyped fields hold required evidence, programmatic checks reject malformed shape,\\nand semantic `self.verify()` assertions reject missing meaning.\\n\\nBy the end, the reader should see HDR as the move from conversational promises\\nto enforceable construction. The agent is not merely asked to do better; it must\\nkeep working until the final task instance constructs successfully.\\n' # Content of the file, auto-filled from disk (cannot be manually assigned)
     ) # Markdown file describing the full conceptual payload the chain must express
@@ -323,12 +323,12 @@ Move(
 Example that PASSES (score 5):
 Move(
   context = MoveContext(
-    target_reader = MarkdownFileWritten(
+    target_reader = MarkdownFile(
       path = 'hdr_target_reader.md' # Path to the file
       content = '# Target Reader\\n\\nThe intended reader already knows:\\n\\n- AI agents that receive goals and use tools\\n- The definition `Agent = Model + Harness`\\n- Harnesses as the runtime framework around a model, including context window,\\n  memory, tool use, and control flow\\n- Python classes, runtime validation, and software contracts\\n- LLM prompts and responses\\n\\nThe intended reader does not already know HDR.\\n' # Content of the file, auto-filled from disk (cannot be manually assigned)
     ) # Markdown file describing what the intended reader already knows
     target_concept = 'HDR' # Concept the move chain is introducing
-    target_meaning = MarkdownFileWritten(
+    target_meaning = MarkdownFile(
       path = 'hdr_target_meaning.md' # Path to the file
       content = '# Target Meaning\\n\\nIntroduce HDR as a harness design pattern for agent work.\\n\\nThe reader should understand that ordinary prose instructions can make an agent\\nsound careful while still leaving completion soft. HDR changes the completion\\nboundary by representing the intended outcome as an explicit Python task object:\\ntyped fields hold required evidence, programmatic checks reject malformed shape,\\nand semantic `self.verify()` assertions reject missing meaning.\\n\\nBy the end, the reader should see HDR as the move from conversational promises\\nto enforceable construction. The agent is not merely asked to do better; it must\\nkeep working until the final task instance constructs successfully.\\n' # Content of the file, auto-filled from disk (cannot be manually assigned)
     ) # Markdown file describing the full conceptual payload the chain must express
@@ -344,12 +344,12 @@ Move(
 Example that FAILS (score 1):
 Move(
   context = MoveContext(
-    target_reader = MarkdownFileWritten(
+    target_reader = MarkdownFile(
       path = 'hdr_target_reader.md' # Path to the file
       content = '# Target Reader\\n\\nThe intended reader already knows:\\n\\n- AI agents that receive goals and use tools\\n- The definition `Agent = Model + Harness`\\n- Harnesses as the runtime framework around a model, including context window,\\n  memory, tool use, and control flow\\n- Python classes, runtime validation, and software contracts\\n- LLM prompts and responses\\n\\nThe intended reader does not already know HDR.\\n' # Content of the file, auto-filled from disk (cannot be manually assigned)
     ) # Markdown file describing what the intended reader already knows
     target_concept = 'HDR' # Concept the move chain is introducing
-    target_meaning = MarkdownFileWritten(
+    target_meaning = MarkdownFile(
       path = 'hdr_target_meaning.md' # Path to the file
       content = '# Target Meaning\\n\\nIntroduce HDR as a harness design pattern for agent work.\\n\\nThe reader should understand that ordinary prose instructions can make an agent\\nsound careful while still leaving completion soft. HDR changes the completion\\nboundary by representing the intended outcome as an explicit Python task object:\\ntyped fields hold required evidence, programmatic checks reject malformed shape,\\nand semantic `self.verify()` assertions reject missing meaning.\\n\\nBy the end, the reader should see HDR as the move from conversational promises\\nto enforceable construction. The agent is not merely asked to do better; it must\\nkeep working until the final task instance constructs successfully.\\n' # Content of the file, auto-filled from disk (cannot be manually assigned)
     ) # Markdown file describing the full conceptual payload the chain must express
@@ -367,12 +367,12 @@ Move(
 Example that PASSES (score 5):
 Move(
   context = MoveContext(
-    target_reader = MarkdownFileWritten(
+    target_reader = MarkdownFile(
       path = 'hdr_target_reader.md' # Path to the file
       content = '# Target Reader\\n\\nThe intended reader already knows:\\n\\n- AI agents that receive goals and use tools\\n- The definition `Agent = Model + Harness`\\n- Harnesses as the runtime framework around a model, including context window,\\n  memory, tool use, and control flow\\n- Python classes, runtime validation, and software contracts\\n- LLM prompts and responses\\n\\nThe intended reader does not already know HDR.\\n' # Content of the file, auto-filled from disk (cannot be manually assigned)
     ) # Markdown file describing what the intended reader already knows
     target_concept = 'HDR' # Concept the move chain is introducing
-    target_meaning = MarkdownFileWritten(
+    target_meaning = MarkdownFile(
       path = 'hdr_target_meaning.md' # Path to the file
       content = '# Target Meaning\\n\\nIntroduce HDR as a harness design pattern for agent work.\\n\\nThe reader should understand that ordinary prose instructions can make an agent\\nsound careful while still leaving completion soft. HDR changes the completion\\nboundary by representing the intended outcome as an explicit Python task object:\\ntyped fields hold required evidence, programmatic checks reject malformed shape,\\nand semantic `self.verify()` assertions reject missing meaning.\\n\\nBy the end, the reader should see HDR as the move from conversational promises\\nto enforceable construction. The agent is not merely asked to do better; it must\\nkeep working until the final task instance constructs successfully.\\n' # Content of the file, auto-filled from disk (cannot be manually assigned)
     ) # Markdown file describing the full conceptual payload the chain must express
@@ -388,12 +388,12 @@ Move(
 Example that FAILS (score 1):
 Move(
   context = MoveContext(
-    target_reader = MarkdownFileWritten(
+    target_reader = MarkdownFile(
       path = 'hdr_target_reader.md' # Path to the file
       content = '# Target Reader\\n\\nThe intended reader already knows:\\n\\n- AI agents that receive goals and use tools\\n- The definition `Agent = Model + Harness`\\n- Harnesses as the runtime framework around a model, including context window,\\n  memory, tool use, and control flow\\n- Python classes, runtime validation, and software contracts\\n- LLM prompts and responses\\n\\nThe intended reader does not already know HDR.\\n' # Content of the file, auto-filled from disk (cannot be manually assigned)
     ) # Markdown file describing what the intended reader already knows
     target_concept = 'HDR' # Concept the move chain is introducing
-    target_meaning = MarkdownFileWritten(
+    target_meaning = MarkdownFile(
       path = 'hdr_target_meaning.md' # Path to the file
       content = '# Target Meaning\\n\\nIntroduce HDR as a harness design pattern for agent work.\\n\\nThe reader should understand that ordinary prose instructions can make an agent\\nsound careful while still leaving completion soft. HDR changes the completion\\nboundary by representing the intended outcome as an explicit Python task object:\\ntyped fields hold required evidence, programmatic checks reject malformed shape,\\nand semantic `self.verify()` assertions reject missing meaning.\\n\\nBy the end, the reader should see HDR as the move from conversational promises\\nto enforceable construction. The agent is not merely asked to do better; it must\\nkeep working until the final task instance constructs successfully.\\n' # Content of the file, auto-filled from disk (cannot be manually assigned)
     ) # Markdown file describing the full conceptual payload the chain must express
@@ -411,12 +411,12 @@ Move(
 Example that PASSES (score 5):
 Move(
   context = MoveContext(
-    target_reader = MarkdownFileWritten(
+    target_reader = MarkdownFile(
       path = 'hdr_target_reader.md' # Path to the file
       content = '# Target Reader\\n\\nThe intended reader already knows:\\n\\n- AI agents that receive goals and use tools\\n- The definition `Agent = Model + Harness`\\n- Harnesses as the runtime framework around a model, including context window,\\n  memory, tool use, and control flow\\n- Python classes, runtime validation, and software contracts\\n- LLM prompts and responses\\n\\nThe intended reader does not already know HDR.\\n' # Content of the file, auto-filled from disk (cannot be manually assigned)
     ) # Markdown file describing what the intended reader already knows
     target_concept = 'HDR' # Concept the move chain is introducing
-    target_meaning = MarkdownFileWritten(
+    target_meaning = MarkdownFile(
       path = 'hdr_target_meaning.md' # Path to the file
       content = '# Target Meaning\\n\\nIntroduce HDR as a harness design pattern for agent work.\\n\\nThe reader should understand that ordinary prose instructions can make an agent\\nsound careful while still leaving completion soft. HDR changes the completion\\nboundary by representing the intended outcome as an explicit Python task object:\\ntyped fields hold required evidence, programmatic checks reject malformed shape,\\nand semantic `self.verify()` assertions reject missing meaning.\\n\\nBy the end, the reader should see HDR as the move from conversational promises\\nto enforceable construction. The agent is not merely asked to do better; it must\\nkeep working until the final task instance constructs successfully.\\n' # Content of the file, auto-filled from disk (cannot be manually assigned)
     ) # Markdown file describing the full conceptual payload the chain must express
@@ -432,12 +432,12 @@ Move(
 Example that FAILS (score 1):
 Move(
   context = MoveContext(
-    target_reader = MarkdownFileWritten(
+    target_reader = MarkdownFile(
       path = 'hdr_target_reader.md' # Path to the file
       content = '# Target Reader\\n\\nThe intended reader already knows:\\n\\n- AI agents that receive goals and use tools\\n- The definition `Agent = Model + Harness`\\n- Harnesses as the runtime framework around a model, including context window,\\n  memory, tool use, and control flow\\n- Python classes, runtime validation, and software contracts\\n- LLM prompts and responses\\n\\nThe intended reader does not already know HDR.\\n' # Content of the file, auto-filled from disk (cannot be manually assigned)
     ) # Markdown file describing what the intended reader already knows
     target_concept = 'HDR' # Concept the move chain is introducing
-    target_meaning = MarkdownFileWritten(
+    target_meaning = MarkdownFile(
       path = 'hdr_target_meaning.md' # Path to the file
       content = '# Target Meaning\\n\\nIntroduce HDR as a harness design pattern for agent work.\\n\\nThe reader should understand that ordinary prose instructions can make an agent\\nsound careful while still leaving completion soft. HDR changes the completion\\nboundary by representing the intended outcome as an explicit Python task object:\\ntyped fields hold required evidence, programmatic checks reject malformed shape,\\nand semantic `self.verify()` assertions reject missing meaning.\\n\\nBy the end, the reader should see HDR as the move from conversational promises\\nto enforceable construction. The agent is not merely asked to do better; it must\\nkeep working until the final task instance constructs successfully.\\n' # Content of the file, auto-filled from disk (cannot be manually assigned)
     ) # Markdown file describing the full conceptual payload the chain must express
@@ -455,12 +455,12 @@ Move(
 Example that PASSES (score 5):
 Move(
   context = MoveContext(
-    target_reader = MarkdownFileWritten(
+    target_reader = MarkdownFile(
       path = 'hdr_target_reader.md' # Path to the file
       content = '# Target Reader\\n\\nThe intended reader already knows:\\n\\n- AI agents that receive goals and use tools\\n- The definition `Agent = Model + Harness`\\n- Harnesses as the runtime framework around a model, including context window,\\n  memory, tool use, and control flow\\n- Python classes, runtime validation, and software contracts\\n- LLM prompts and responses\\n\\nThe intended reader does not already know HDR.\\n' # Content of the file, auto-filled from disk (cannot be manually assigned)
     ) # Markdown file describing what the intended reader already knows
     target_concept = 'HDR' # Concept the move chain is introducing
-    target_meaning = MarkdownFileWritten(
+    target_meaning = MarkdownFile(
       path = 'hdr_target_meaning.md' # Path to the file
       content = '# Target Meaning\\n\\nIntroduce HDR as a harness design pattern for agent work.\\n\\nThe reader should understand that ordinary prose instructions can make an agent\\nsound careful while still leaving completion soft. HDR changes the completion\\nboundary by representing the intended outcome as an explicit Python task object:\\ntyped fields hold required evidence, programmatic checks reject malformed shape,\\nand semantic `self.verify()` assertions reject missing meaning.\\n\\nBy the end, the reader should see HDR as the move from conversational promises\\nto enforceable construction. The agent is not merely asked to do better; it must\\nkeep working until the final task instance constructs successfully.\\n' # Content of the file, auto-filled from disk (cannot be manually assigned)
     ) # Markdown file describing the full conceptual payload the chain must express
@@ -484,12 +484,12 @@ Move(
 Example that FAILS (score 1):
 Move(
   context = MoveContext(
-    target_reader = MarkdownFileWritten(
+    target_reader = MarkdownFile(
       path = 'hdr_target_reader.md' # Path to the file
       content = '# Target Reader\\n\\nThe intended reader already knows:\\n\\n- AI agents that receive goals and use tools\\n- The definition `Agent = Model + Harness`\\n- Harnesses as the runtime framework around a model, including context window,\\n  memory, tool use, and control flow\\n- Python classes, runtime validation, and software contracts\\n- LLM prompts and responses\\n\\nThe intended reader does not already know HDR.\\n' # Content of the file, auto-filled from disk (cannot be manually assigned)
     ) # Markdown file describing what the intended reader already knows
     target_concept = 'HDR' # Concept the move chain is introducing
-    target_meaning = MarkdownFileWritten(
+    target_meaning = MarkdownFile(
       path = 'hdr_target_meaning.md' # Path to the file
       content = '# Target Meaning\\n\\nIntroduce HDR as a harness design pattern for agent work.\\n\\nThe reader should understand that ordinary prose instructions can make an agent\\nsound careful while still leaving completion soft. HDR changes the completion\\nboundary by representing the intended outcome as an explicit Python task object:\\ntyped fields hold required evidence, programmatic checks reject malformed shape,\\nand semantic `self.verify()` assertions reject missing meaning.\\n\\nBy the end, the reader should see HDR as the move from conversational promises\\nto enforceable construction. The agent is not merely asked to do better; it must\\nkeep working until the final task instance constructs successfully.\\n' # Content of the file, auto-filled from disk (cannot be manually assigned)
     ) # Markdown file describing the full conceptual payload the chain must express
@@ -515,12 +515,12 @@ Move(
 Example that PASSES (score 5):
 Move(
   context = MoveContext(
-    target_reader = MarkdownFileWritten(
+    target_reader = MarkdownFile(
       path = 'hdr_target_reader.md' # Path to the file
       content = '# Target Reader\\n\\nThe intended reader already knows:\\n\\n- AI agents that receive goals and use tools\\n- The definition `Agent = Model + Harness`\\n- Harnesses as the runtime framework around a model, including context window,\\n  memory, tool use, and control flow\\n- Python classes, runtime validation, and software contracts\\n- LLM prompts and responses\\n\\nThe intended reader does not already know HDR.\\n' # Content of the file, auto-filled from disk (cannot be manually assigned)
     ) # Markdown file describing what the intended reader already knows
     target_concept = 'HDR' # Concept the move chain is introducing
-    target_meaning = MarkdownFileWritten(
+    target_meaning = MarkdownFile(
       path = 'hdr_target_meaning.md' # Path to the file
       content = '# Target Meaning\\n\\nIntroduce HDR as a harness design pattern for agent work.\\n\\nThe reader should understand that ordinary prose instructions can make an agent\\nsound careful while still leaving completion soft. HDR changes the completion\\nboundary by representing the intended outcome as an explicit Python task object:\\ntyped fields hold required evidence, programmatic checks reject malformed shape,\\nand semantic `self.verify()` assertions reject missing meaning.\\n\\nBy the end, the reader should see HDR as the move from conversational promises\\nto enforceable construction. The agent is not merely asked to do better; it must\\nkeep working until the final task instance constructs successfully.\\n' # Content of the file, auto-filled from disk (cannot be manually assigned)
     ) # Markdown file describing the full conceptual payload the chain must express
@@ -544,12 +544,12 @@ Move(
 Example that FAILS (score 1):
 Move(
   context = MoveContext(
-    target_reader = MarkdownFileWritten(
+    target_reader = MarkdownFile(
       path = 'hdr_target_reader.md' # Path to the file
       content = '# Target Reader\\n\\nThe intended reader already knows:\\n\\n- AI agents that receive goals and use tools\\n- The definition `Agent = Model + Harness`\\n- Harnesses as the runtime framework around a model, including context window,\\n  memory, tool use, and control flow\\n- Python classes, runtime validation, and software contracts\\n- LLM prompts and responses\\n\\nThe intended reader does not already know HDR.\\n' # Content of the file, auto-filled from disk (cannot be manually assigned)
     ) # Markdown file describing what the intended reader already knows
     target_concept = 'HDR' # Concept the move chain is introducing
-    target_meaning = MarkdownFileWritten(
+    target_meaning = MarkdownFile(
       path = 'hdr_target_meaning.md' # Path to the file
       content = '# Target Meaning\\n\\nIntroduce HDR as a harness design pattern for agent work.\\n\\nThe reader should understand that ordinary prose instructions can make an agent\\nsound careful while still leaving completion soft. HDR changes the completion\\nboundary by representing the intended outcome as an explicit Python task object:\\ntyped fields hold required evidence, programmatic checks reject malformed shape,\\nand semantic `self.verify()` assertions reject missing meaning.\\n\\nBy the end, the reader should see HDR as the move from conversational promises\\nto enforceable construction. The agent is not merely asked to do better; it must\\nkeep working until the final task instance constructs successfully.\\n' # Content of the file, auto-filled from disk (cannot be manually assigned)
     ) # Markdown file describing the full conceptual payload the chain must express
@@ -567,12 +567,12 @@ Move(
 Example that PASSES (score 5):
 Move(
   context = MoveContext(
-    target_reader = MarkdownFileWritten(
+    target_reader = MarkdownFile(
       path = 'hdr_target_reader.md' # Path to the file
       content = '# Target Reader\\n\\nThe intended reader already knows:\\n\\n- AI agents that receive goals and use tools\\n- The definition `Agent = Model + Harness`\\n- Harnesses as the runtime framework around a model, including context window,\\n  memory, tool use, and control flow\\n- Python classes, runtime validation, and software contracts\\n- LLM prompts and responses\\n\\nThe intended reader does not already know HDR.\\n' # Content of the file, auto-filled from disk (cannot be manually assigned)
     ) # Markdown file describing what the intended reader already knows
     target_concept = 'HDR' # Concept the move chain is introducing
-    target_meaning = MarkdownFileWritten(
+    target_meaning = MarkdownFile(
       path = 'hdr_target_meaning.md' # Path to the file
       content = '# Target Meaning\\n\\nIntroduce HDR as a harness design pattern for agent work.\\n\\nThe reader should understand that ordinary prose instructions can make an agent\\nsound careful while still leaving completion soft. HDR changes the completion\\nboundary by representing the intended outcome as an explicit Python task object:\\ntyped fields hold required evidence, programmatic checks reject malformed shape,\\nand semantic `self.verify()` assertions reject missing meaning.\\n\\nBy the end, the reader should see HDR as the move from conversational promises\\nto enforceable construction. The agent is not merely asked to do better; it must\\nkeep working until the final task instance constructs successfully.\\n' # Content of the file, auto-filled from disk (cannot be manually assigned)
     ) # Markdown file describing the full conceptual payload the chain must express
@@ -596,12 +596,12 @@ Move(
 Example that FAILS (score 1):
 Move(
   context = MoveContext(
-    target_reader = MarkdownFileWritten(
+    target_reader = MarkdownFile(
       path = 'hdr_target_reader.md' # Path to the file
       content = '# Target Reader\\n\\nThe intended reader already knows:\\n\\n- AI agents that receive goals and use tools\\n- The definition `Agent = Model + Harness`\\n- Harnesses as the runtime framework around a model, including context window,\\n  memory, tool use, and control flow\\n- Python classes, runtime validation, and software contracts\\n- LLM prompts and responses\\n\\nThe intended reader does not already know HDR.\\n' # Content of the file, auto-filled from disk (cannot be manually assigned)
     ) # Markdown file describing what the intended reader already knows
     target_concept = 'HDR' # Concept the move chain is introducing
-    target_meaning = MarkdownFileWritten(
+    target_meaning = MarkdownFile(
       path = 'hdr_target_meaning.md' # Path to the file
       content = '# Target Meaning\\n\\nIntroduce HDR as a harness design pattern for agent work.\\n\\nThe reader should understand that ordinary prose instructions can make an agent\\nsound careful while still leaving completion soft. HDR changes the completion\\nboundary by representing the intended outcome as an explicit Python task object:\\ntyped fields hold required evidence, programmatic checks reject malformed shape,\\nand semantic `self.verify()` assertions reject missing meaning.\\n\\nBy the end, the reader should see HDR as the move from conversational promises\\nto enforceable construction. The agent is not merely asked to do better; it must\\nkeep working until the final task instance constructs successfully.\\n' # Content of the file, auto-filled from disk (cannot be manually assigned)
     ) # Markdown file describing the full conceptual payload the chain must express
