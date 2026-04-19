@@ -1,13 +1,13 @@
 from __future__ import annotations
 
-from hdr.tasks.coding import MarkdownFileWritten
+from hdr.tasks.coding import MarkdownFile
 
-from move_chosen import MoveChosen
+from move import Move
 from move_support import MoveContext, MovePurpose, MoveSnapshot
 
 
-target_reader = MarkdownFileWritten(path="hdr_target_reader.md")
-target_meaning = MarkdownFileWritten(path="hdr_target_meaning.md")
+target_reader = MarkdownFile(path="hdr_target_reader.md")
+target_meaning = MarkdownFile(path="hdr_target_meaning.md")
 
 prior_moves: list[MoveSnapshot] = []
 
@@ -28,8 +28,8 @@ def choose_move(
     contrast: str,
     before: str,
     after: str,
-) -> MoveChosen:
-    move_chosen = MoveChosen(
+) -> Move:
+    move_contract = Move(
         context=move_context(),
         purpose=purpose,
         content=content,
@@ -39,17 +39,17 @@ def choose_move(
     )
     prior_moves.append(
         MoveSnapshot(
-            purpose=move_chosen.purpose,
-            content=move_chosen.content,
-            contrast=move_chosen.contrast,
-            before=move_chosen.before,
-            after=move_chosen.after,
+            purpose=move_contract.purpose,
+            content=move_contract.content,
+            contrast=move_contract.contrast,
+            before=move_contract.before,
+            after=move_contract.after,
         )
     )
-    return move_chosen
+    return move_contract
 
 
-move_chosen_steps = [
+move_steps = [
     choose_move(
         purpose=MovePurpose.BUILD,
         content=(
@@ -75,8 +75,7 @@ move_chosen_steps = [
         ),
         contrast="suggestive vs contractual",
         before=(
-            "The reader sees the missed requirement as a loose instruction "
-            "problem."
+            "The reader sees the missed requirement as a loose instruction problem."
         ),
         after=(
             "The reader sees it as a contract gap between what prose suggests "
@@ -86,7 +85,7 @@ move_chosen_steps = [
     choose_move(
         purpose=MovePurpose.SHIFT,
         content=(
-            "HDR closes that gap by making the intended outcome a Python task "
+            "HDR closes that gap by making the intended outcome a Python contract "
             "object, so completion means constructing the object rather than "
             "merely declaring the prose satisfied."
         ),
@@ -97,7 +96,7 @@ move_chosen_steps = [
         ),
         after=(
             "The reader treats completion as successful construction of an "
-            "explicit task object."
+            "explicit contract object."
         ),
     ),
     choose_move(
@@ -139,7 +138,7 @@ move_chosen_steps = [
         content=(
             "Then semantic self.verify() checks reject missing meaning, turning "
             "the remaining question from 'did the agent sound careful?' into "
-            "'does this constructed task actually satisfy the intended meaning?'"
+            "'does this constructed contract actually satisfy the intended meaning?'"
         ),
         contrast="performative vs semantic",
         before=(
@@ -147,14 +146,14 @@ move_chosen_steps = [
             "after the shape checks pass."
         ),
         after=(
-            "The reader judges the constructed task by whether it satisfies the "
+            "The reader judges the constructed contract by whether it satisfies the "
             "intended meaning."
         ),
     ),
     choose_move(
         purpose=MovePurpose.SHIFT,
         content=(
-            "Because the run is not complete until the final task instance "
+            "Because the run is not complete until the final contract instance "
             "constructs successfully, the agent has to keep working where a "
             "prose-only instruction could have stopped at a plausible answer."
         ),
@@ -164,12 +163,12 @@ move_chosen_steps = [
             "stopping point."
         ),
         after=(
-            "The reader sees successful task construction as the stopping point "
+            "The reader sees successful contract construction as the stopping point "
             "that makes the agent keep working."
         ),
     ),
 ]
 
-move_chosen = move_chosen_steps[-1]
+move_contract = move_steps[-1]
 
-print(f"MoveChosen chain completed with {len(move_chosen_steps)} atomic moves.")
+print(f"Move chain completed with {len(move_steps)} atomic moves.")

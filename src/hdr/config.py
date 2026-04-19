@@ -16,7 +16,7 @@ DEFAULT_VERIFY_CACHE_DIR = Path("/tmp/claude/hdr_verify_cache")
 
 @dataclass(frozen=True, slots=True)
 class VerifyConfig:
-    """Resolved configuration used by Task.verify()."""
+    """Resolved configuration used by BaseContract.verify()."""
 
     anthropic_auth_token: str
     anthropic_model: str = DEFAULT_ANTHROPIC_MODEL
@@ -27,7 +27,7 @@ class VerifyConfig:
 def config_template() -> str:
     """Return the starter config content written on first use."""
     return f"""# HDR verification config
-# Fill in the Anthropic API token before calling Task.verify().
+# Fill in the Anthropic API token before calling BaseContract.verify().
 anthropic_auth_token: ""
 anthropic_model: "{DEFAULT_ANTHROPIC_MODEL}"
 anthropic_base_url: "{DEFAULT_ANTHROPIC_BASE_URL}"

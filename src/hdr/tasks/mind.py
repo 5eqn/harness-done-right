@@ -1,26 +1,24 @@
 """
-Humanities and mind-related task types for HDR.
+Humanities and mind-related contract types for HDR.
 
-These tasks cover conceptual documentation, knowledge management, and human-centric
+These contracts cover conceptual documentation, knowledge management, and human-centric
 validation use cases that require qualitative judgment.
 """
 
 from pydantic import Field
 
-from hdr.tasks.std import Task
-from hdr.tasks.coding import MarkdownFileWritten
+from hdr.tasks.std import BaseContract
+from hdr.tasks.coding import MarkdownFile
 
 
-class ConceptDescribed(Task):
+class Concept(BaseContract):
     """
     Represents a documented concept within a context.
     """
 
-    context: MarkdownFileWritten = Field(
-        description="File explaining the parent context"
-    )
+    context: MarkdownFile = Field(description="File explaining the parent context")
     name: str = Field(description="Name of the concept")
-    description: MarkdownFileWritten = Field(
+    description: MarkdownFile = Field(
         description="File containing the concept description"
     )
 

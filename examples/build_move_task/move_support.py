@@ -2,7 +2,7 @@ from enum import Enum
 
 from pydantic import BaseModel, Field
 
-from hdr.tasks.coding import MarkdownFileWritten
+from hdr.tasks.coding import MarkdownFile
 
 
 class MovePurpose(str, Enum):
@@ -19,14 +19,14 @@ class MoveSnapshot(BaseModel):
 
 
 class MoveContext(BaseModel):
-    target_reader: MarkdownFileWritten = Field(
+    target_reader: MarkdownFile = Field(
         description="Markdown file describing what the intended reader already knows"
     )
     target_concept: str = Field(description="Concept the move chain is introducing")
-    target_meaning: MarkdownFileWritten = Field(
+    target_meaning: MarkdownFile = Field(
         description="Markdown file describing the full conceptual payload the chain must express"
     )
     prior_moves: list[MoveSnapshot] = Field(
         default_factory=list,
-        description="Previously chosen moves, stored as snapshots to avoid recursive task generation",
+        description="Previously chosen moves, stored as snapshots to avoid recursive generation",
     )

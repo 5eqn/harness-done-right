@@ -3,21 +3,21 @@ Tests for HDR quote functionality.
 """
 
 import pytest
-from hdr.tasks.std import Task, quote
+from hdr.tasks.std import BaseContract, quote
 from pydantic import BaseModel, Field
 
 
 # Pydantic test classes
-class StringTask(BaseModel):
+class StringBaseContract(BaseModel):
     name: str
 
 
-class NumberTask(BaseModel):
+class NumberBaseContract(BaseModel):
     count: int
     price: float
 
 
-class ListTask(BaseModel):
+class ListBaseContract(BaseModel):
     items: list[str]
     scores: list[int]
 
@@ -26,7 +26,7 @@ class NestedItem(BaseModel):
     value: int
 
 
-class ParentTask(BaseModel):
+class ParentBaseContract(BaseModel):
     item: NestedItem
     name: str
 
@@ -58,30 +58,30 @@ def test_quote_function():
     assert "value = 42" in quoted_model
 
     # Test nested BaseModel
-    parent = ParentTask(name="test", item=nested)
+    parent = ParentBaseContract(name="test", item=nested)
     quoted_parent = quote(parent)
-    assert "ParentTask(" in quoted_parent
+    assert "ParentBaseContract(" in quoted_parent
     assert "name = 'test'" in quoted_parent
     assert "item = " in quoted_parent
     assert "NestedItem(" in quoted_parent
     assert "value = 42" in quoted_parent
 
     # Test that quote works with BaseModel instances
-    task = StringTask(name="test task")
+    task = StringBaseContract(name="test task")
     quoted_task = quote(task)
-    assert "StringTask(" in quoted_task
+    assert "StringBaseContract(" in quoted_task
     assert "name = 'test task'" in quoted_task
 
 
 def test_quote_includes_field_descriptions():
     """Test that quote function includes field descriptions in output"""
 
-    class TestTask(Task):
+    class TestBaseContract(BaseContract):
         value: int = Field(description="Test integer value")
         name: str = Field(description="Name of the test object")
         is_active: bool = Field(description="Whether the task is active")
 
-    task = TestTask(value=42, name="test task", is_active=True)
+    task = TestBaseContract(value=42, name="test task", is_active=True)
     quoted = quote(task)
 
     # Check that descriptions are included

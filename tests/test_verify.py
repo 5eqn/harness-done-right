@@ -4,20 +4,20 @@ Tests for HDR verify functionality.
 
 import pytest
 import hdr.config as hdr_config
-from hdr.tasks.std import Task
+from hdr.tasks.std import BaseContract
 from pydantic import Field
 
 
-def test_task_verify_method():
-    """Test Task.verify method with automatic context injection"""
+def test_contract_verify_method():
+    """Test BaseContract.verify method with automatic context injection"""
 
-    # Create a test Task subclass
-    class TestTask(Task):
+    # Create a test BaseContract subclass
+    class TestContract(BaseContract):
         value: int = Field(description="Test value")
         name: str = Field(description="Test name")
 
     # Verify runs without error in mock mode (default score 5)
-    task = TestTask(value=42, name="test")
+    task = TestContract(value=42, name="test")
     task.verify("value is 42")
     task.verify("name is 'test'")
     task.verify("value is a positive integer")
@@ -26,10 +26,10 @@ def test_task_verify_method():
 def test_verify_logs_success_with_score_and_trimmed_condition(capsys):
     """Successful verify() calls log a one-line summary with the actual score."""
 
-    class TestTask(Task):
+    class TestBaseContract(BaseContract):
         value: int = Field(description="Test value")
 
-    task = TestTask(value=42)
+    task = TestBaseContract(value=42)
 
     task.verify(
         "value is 42 and the explanation should be trimmed onto one line "
@@ -49,10 +49,10 @@ def test_verify_logs_success_with_score_and_trimmed_condition(capsys):
 def test_verify_mock_score_parsing():
     """Test that verify correctly parses <mock>N</mock> pattern in pytest mode"""
 
-    class TestTask(Task):
+    class TestBaseContract(BaseContract):
         value: int = Field(description="Test value")
 
-    task = TestTask(value=42)
+    task = TestBaseContract(value=42)
 
     # Default mock score is 5, should pass with expected_score=5
     task.verify("default mock score")
@@ -75,13 +75,13 @@ def test_verify_mock_score_parsing():
 def test_verify_creates_config_template_when_missing(tmp_path, monkeypatch):
     """verify() should create ~/.hdr/config.yaml and ask the user to fill it in."""
 
-    class TestTask(Task):
+    class TestBaseContract(BaseContract):
         value: int = Field(description="Test value")
 
     monkeypatch.delenv("PYTEST_CURRENT_TEST", raising=False)
     monkeypatch.setattr(hdr_config, "CONFIG_PATH", tmp_path / ".hdr" / "config.yaml")
 
-    task = TestTask(value=42)
+    task = TestBaseContract(value=42)
 
     with pytest.raises(EnvironmentError, match="HDR config created at"):
         task.verify("value is 42")
@@ -98,7 +98,7 @@ def test_verify_creates_config_template_when_missing(tmp_path, monkeypatch):
 def test_verify_rejects_blank_token_in_config(tmp_path, monkeypatch):
     """verify() should fail clearly when the config file exists but token is blank."""
 
-    class TestTask(Task):
+    class TestBaseContract(BaseContract):
         value: int = Field(description="Test value")
 
     monkeypatch.delenv("PYTEST_CURRENT_TEST", raising=False)
@@ -112,7 +112,7 @@ def test_verify_rejects_blank_token_in_config(tmp_path, monkeypatch):
         f'verify_cache_dir: "{tmp_path / "cache"}"\n'
     )
 
-    task = TestTask(value=42)
+    task = TestBaseContract(value=42)
 
     with pytest.raises(EnvironmentError, match="anthropic_auth_token is empty"):
         task.verify("value is 42")
@@ -121,7 +121,7 @@ def test_verify_rejects_blank_token_in_config(tmp_path, monkeypatch):
 def test_verify_uses_config_values(tmp_path, monkeypatch):
     """verify() should read API settings from ~/.hdr/config.yaml."""
 
-    class TestTask(Task):
+    class TestBaseContract(BaseContract):
         value: int = Field(description="Test value")
 
     monkeypatch.delenv("PYTEST_CURRENT_TEST", raising=False)
@@ -152,9 +152,9 @@ def test_verify_uses_config_values(tmp_path, monkeypatch):
         captured["model"] = model
         return "Looks correct.", 5
 
-    monkeypatch.setattr(Task, "_call_llm_with_retry", fake_call_llm_with_retry)
+    monkeypatch.setattr(BaseContract, "_call_llm_with_retry", fake_call_llm_with_retry)
 
-    task = TestTask(value=42)
+    task = TestBaseContract(value=42)
     task.verify("value is 42")
 
     assert captured["api_key"] == "test-token"
@@ -166,7 +166,7 @@ def test_verify_uses_config_values(tmp_path, monkeypatch):
 def test_verify_logs_actual_score_on_non_default_success(tmp_path, monkeypatch, capsys):
     """Successful verify() logs the actual score without an expected score suffix."""
 
-    class TestTask(Task):
+    class TestBaseContract(BaseContract):
         value: int = Field(description="Test value")
 
     monkeypatch.delenv("PYTEST_CURRENT_TEST", raising=False)
@@ -191,9 +191,9 @@ def test_verify_logs_actual_score_on_non_default_success(tmp_path, monkeypatch, 
     ) -> tuple[str, int]:
         return "Looks mostly correct.", 3
 
-    monkeypatch.setattr(Task, "_call_llm_with_retry", fake_call_llm_with_retry)
+    monkeypatch.setattr(BaseContract, "_call_llm_with_retry", fake_call_llm_with_retry)
 
-    task = TestTask(value=42)
+    task = TestBaseContract(value=42)
     task.verify("value is acceptable", expected_score=3)
 
     captured = capsys.readouterr()

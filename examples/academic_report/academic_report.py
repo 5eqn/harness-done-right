@@ -8,7 +8,7 @@ class Reference(Task):
     # file (save to ~/.hdr/store/reference_validated/{filename}.pdf),
     # author, source (conference / other), ...
 
-class 
+class
 
 Also fulfill the core library as needed.
 

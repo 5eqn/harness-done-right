@@ -1,27 +1,27 @@
 """
-HDR Tasks - Standard library of common task types.
+HDR Contracts - Standard library of common contract types.
 """
 
 from hdr.tasks.std import (
-    DirectoryCreated,
-    FileWritten,
+    Directory,
+    File,
 )
 from hdr.tasks.coding import (
-    MarkdownFileWritten,
-    PythonFileWritten,
-    PythonWorkspaceBuilt,
+    MarkdownFile,
+    PythonFile,
+    PythonWorkspace,
 )
-from hdr.tasks.meta import TaskCreated, FieldSpec, VerifySpec
-from hdr.tasks.mind import ConceptDescribed
+from hdr.tasks.meta import Contract, FieldSpec, VerifySpec
+from hdr.tasks.mind import Concept
 
 __all__ = [
-    "ConceptDescribed",
-    "DirectoryCreated",
-    "FileWritten",
-    "MarkdownFileWritten",
-    "PythonFileWritten",
-    "PythonWorkspaceBuilt",
-    "TaskCreated",
+    "Concept",
+    "Directory",
+    "File",
+    "MarkdownFile",
+    "PythonFile",
+    "PythonWorkspace",
+    "Contract",
     "FieldSpec",
     "VerifySpec",
 ]

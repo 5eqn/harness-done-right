@@ -1,8 +1,8 @@
 """
-Tests for TaskCreated meta-task.
+Tests for Contract meta-contract.
 
 In pytest mode, verify() returns mock score 5 by default, or parses
-<mock>N</mock> from the condition string. For TaskCreated to pass verify
+<mock>N</mock> from the condition string. For Contract to pass verify
 in tests, negative examples embed <mock>1</mock> in a string field value
 so that neg_condition gets score 1 (matching expected_score=1).
 """
@@ -10,7 +10,7 @@ so that neg_condition gets score 1 (matching expected_score=1).
 import pytest
 import os
 from pydantic import ValidationError
-from hdr.tasks.meta import AUTO_GENERATED_FLAG, TaskCreated, FieldSpec, VerifySpec
+from hdr.tasks.meta import AUTO_GENERATED_FLAG, Contract, FieldSpec, VerifySpec
 
 
 def _valid_fields() -> list[FieldSpec]:
@@ -33,8 +33,8 @@ def _valid_verifies() -> list[VerifySpec]:
     ]
 
 
-class TestTaskCreated:
-    """Tests for TaskCreated meta-task."""
+class TestContract:
+    """Tests for Contract meta-task."""
 
     def teardown_method(self):
         """Clean up generated files after each test."""
@@ -49,22 +49,22 @@ class TestTaskCreated:
                 os.remove(file)
 
     def test_valid_construction(self):
-        """Valid TaskCreated passes all programmatic and mock-verify checks."""
-        task = TaskCreated(
+        """Valid Contract passes all programmatic and mock-verify checks."""
+        task = Contract(
             class_name="MyTask",
             docstring="A simple task.",
             fields=_valid_fields(),
             verifies=_valid_verifies(),
         )
         assert task.class_name == "MyTask"
-        assert task.parent_class == "Task"
+        assert task.parent_class == "BaseContract"
         assert len(task.fields) == 2
         assert len(task.verifies) == 1
 
     def test_invalid_class_name(self):
         """Class name must be a valid Python identifier."""
         with pytest.raises(AssertionError, match="not a valid Python identifier"):
-            TaskCreated(
+            Contract(
                 class_name="123-invalid",
                 docstring="Bad name.",
                 fields=_valid_fields(),
@@ -74,7 +74,7 @@ class TestTaskCreated:
     def test_field_missing_description(self):
         """All fields must have non-empty descriptions."""
         with pytest.raises(AssertionError, match="missing a description"):
-            TaskCreated(
+            Contract(
                 class_name="MyTask",
                 docstring="A task.",
                 fields=[
@@ -92,7 +92,7 @@ class TestTaskCreated:
     def test_invalid_field_name(self):
         """Field names must be valid Python identifiers."""
         with pytest.raises(AssertionError, match="not a valid Python identifier"):
-            TaskCreated(
+            Contract(
                 class_name="MyTask",
                 docstring="A task.",
                 fields=[
@@ -114,7 +114,7 @@ class TestTaskCreated:
     def test_example_missing_required_field(self):
         """Verify examples must include all required fields."""
         with pytest.raises(AssertionError, match="missing required fields"):
-            TaskCreated(
+            Contract(
                 class_name="MyTask",
                 docstring="A task.",
                 fields=_valid_fields(),
@@ -130,7 +130,7 @@ class TestTaskCreated:
     def test_example_extra_field(self):
         """Verify examples must not contain unknown fields."""
         with pytest.raises(AssertionError, match="unknown fields"):
-            TaskCreated(
+            Contract(
                 class_name="MyTask",
                 docstring="A task.",
                 fields=_valid_fields(),
@@ -149,7 +149,7 @@ class TestTaskCreated:
 
     def test_optional_field_not_required_in_examples(self):
         """Fields with defaults are not required in verify examples."""
-        task = TaskCreated(
+        task = Contract(
             class_name="MyTask",
             docstring="A task.",
             fields=[
@@ -172,8 +172,8 @@ class TestTaskCreated:
         assert task.class_name == "MyTask"
 
     def test_multiple_verifies(self):
-        """TaskCreated handles multiple verify specs."""
-        task = TaskCreated(
+        """Contract handles multiple verify specs."""
+        task = Contract(
             class_name="MultiTask",
             docstring="Task with multiple verifies.",
             fields=[
@@ -197,7 +197,7 @@ class TestTaskCreated:
 
     def test_generate_code_basic(self):
         """generate_code produces valid class structure."""
-        task = TaskCreated(
+        task = Contract(
             class_name="Summarized",
             docstring="Summarize input text.",
             fields=[
@@ -229,7 +229,7 @@ class TestTaskCreated:
         assert task.generated_file is not None
         with open(task.generated_file.path, "r") as f:
             code = f.read()
-        assert "class Summarized(Task):" in code
+        assert "class Summarized(BaseContract):" in code
         assert '"""Summarize input text."""' in code
         assert "input_text: str" in code
         assert "summary: str" in code
@@ -241,7 +241,7 @@ class TestTaskCreated:
 
     def test_generate_code_with_default(self):
         """generate_code includes default values for optional fields."""
-        task = TaskCreated(
+        task = Contract(
             class_name="MyTask",
             docstring="A task.",
             fields=[
@@ -268,7 +268,7 @@ class TestTaskCreated:
 
     def test_generate_code_with_programmatic_checks(self):
         """generate_code includes programmatic check code."""
-        TaskCreated(
+        Contract(
             class_name="MyTask",
             docstring="A task.",
             fields=[
@@ -292,13 +292,13 @@ class TestTaskCreated:
 
     def test_generate_code_custom_parent(self):
         """generate_code uses custom parent_class."""
-        TaskCreated(
+        Contract(
             class_name="MyTask",
-            parent_class="FileWritten",
-            docstring="A file task.",
+            parent_class="File",
+            docstring="A file contract.",
             imports=[
                 "from pydantic import Field",
-                "from hdr.tasks.std import FileWritten",
+                "from hdr.tasks.std import File",
             ],
             fields=[
                 FieldSpec(name="label", type_annotation="str", description="Label"),
@@ -313,11 +313,11 @@ class TestTaskCreated:
         )
         with open("my_task.py", "r") as f:
             code = f.read()
-        assert "class MyTask(FileWritten):" in code
+        assert "class MyTask(File):" in code
 
     def test_generate_code_multiline_docstring(self):
         """generate_code handles multi-line docstrings."""
-        TaskCreated(
+        Contract(
             class_name="MyTask",
             docstring="Line one.\nLine two.",
             fields=[
@@ -338,7 +338,7 @@ class TestTaskCreated:
 
     def test_generate_code_verify_count(self):
         """generate_code includes one self.verify per verify spec."""
-        TaskCreated(
+        Contract(
             class_name="MyTask",
             docstring="A task.",
             fields=[
@@ -364,7 +364,7 @@ class TestTaskCreated:
 
     def test_generate_code_with_conditional_verify(self):
         """generate_code can guard LLM verifies behind a Python expression."""
-        TaskCreated(
+        Contract(
             class_name="ConditionalTask",
             docstring="A task with a conditional verify.",
             fields=[
@@ -392,7 +392,7 @@ class TestTaskCreated:
     def test_conditional_verify_requires_valid_expression(self):
         """applies_when must be a non-empty Python expression."""
         with pytest.raises(AssertionError, match="valid Python expression"):
-            TaskCreated(
+            Contract(
                 class_name="MyTask",
                 docstring="A task.",
                 fields=[
@@ -413,12 +413,12 @@ class TestTaskCreated:
             )
 
     def test_existing_unmarked_file_is_not_overwritten(self):
-        """TaskCreated refuses to overwrite a file without the generated marker."""
+        """Contract refuses to overwrite a file without the generated marker."""
         with open("my_task.py", "w") as f:
             f.write("manual = True\n")
 
         with pytest.raises(AssertionError, match="Refusing to overwrite"):
-            TaskCreated(
+            Contract(
                 class_name="MyTask",
                 docstring="A task.",
                 fields=[
@@ -437,11 +437,11 @@ class TestTaskCreated:
             assert f.read() == "manual = True\n"
 
     def test_existing_marked_file_can_be_overwritten(self):
-        """TaskCreated can regenerate files carrying the generated marker."""
+        """Contract can regenerate files carrying the generated marker."""
         with open("my_task.py", "w") as f:
             f.write(f"{AUTO_GENERATED_FLAG}\nold = True\n")
 
-        TaskCreated(
+        Contract(
             class_name="MyTask",
             docstring="A task.",
             fields=[
@@ -460,11 +460,11 @@ class TestTaskCreated:
             code = f.read()
         assert code.startswith(AUTO_GENERATED_FLAG)
         assert "old = True" not in code
-        assert "class MyTask(Task):" in code
+        assert "class MyTask(BaseContract):" in code
 
     def test_generated_file_field_is_frozen(self):
         """generated_file cannot be manually reassigned after init."""
-        task = TaskCreated(
+        task = Contract(
             class_name="MyTask",
             docstring="A task.",
             fields=[

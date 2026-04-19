@@ -1,20 +1,20 @@
-# Standard Tasks
+# Standard Contracts
 
-Standard task types in `hdr.tasks.std` for common use cases. All tasks use relative paths by preference, as they are more portable and make projects easier to share and version control.
+Standard contract types in `hdr.tasks.std` for common use cases. All contracts use relative paths by preference, as they are more portable and make projects easier to share and version control.
 
 ## Base
 
-### Task
+### BaseContract
 
-Base class for all HDR tasks. Extends Pydantic `BaseModel` to provide automatic runtime type checking for all fields. Includes a built-in `self.verify()` method for LLM-powered validation.
+Base class for all HDR contracts. Extends Pydantic `BaseModel` to provide automatic runtime type checking for all fields. Includes a built-in `self.verify()` method for LLM-powered validation.
 
 **Key methods:**
 
-- `self.verify(condition: str) -> None` — Validates a condition against the current task state using Claude. Automatically includes the full pretty-printed task object as context. On first use, HDR creates `~/.hdr/config.yaml` if it does not exist; you must fill in `anthropic_auth_token` there before verification can run. The config also supports `verify_cache_dir`, which defaults to `/tmp/claude/hdr_verify_cache`. On success, logs a one-line message with the actual score and a trimmed condition preview. Throws `AssertionError` with reasoning and score if validation fails. Only passes at score 5/5 by default. Results are automatically cached by condition.
+- `self.verify(condition: str) -> None` — Validates a condition against the current contract state using Claude. Automatically includes the full pretty-printed contract object as context. On first use, HDR creates `~/.hdr/config.yaml` if it does not exist; you must fill in `anthropic_auth_token` there before verification can run. The config also supports `verify_cache_dir`, which defaults to `/tmp/claude/hdr_verify_cache`. On success, logs a one-line message with the actual score and a trimmed condition preview. Throws `AssertionError` with reasoning and score if validation fails. Only passes at score 5/5 by default. Results are automatically cached by condition.
 
-## File Tasks
+## File Contracts
 
-### FileWritten
+### File
 
 Validates that a file exists at the given path and optionally reads its content.
 
@@ -29,21 +29,21 @@ Validates that a file exists at the given path and optionally reads its content.
 
 **Example:**
 ```python
-from hdr.tasks.std import FileWritten
+from hdr.tasks.std import File
 
-file = FileWritten(path="config.json")
+file = File(path="config.json")
 print(file.content)  # auto-filled from disk
 ```
 
-## Directory Tasks
+## Directory Contracts
 
-### DirectoryCreated
+### Directory
 
 Validates that a directory exists and gathers its file content recursively, respecting `.gitignore` patterns.
 
 **Fields:**
 - `path: str` — Path to the directory.
-- `content: list[FileWritten]` — List of FileWritten objects representing files in the directory; auto-filled if not provided.
+- `content: list[File]` — List of File objects representing files in the directory; auto-filled if not provided.
 
 **Validates:**
 - Directory exists at `path` (`os.path.isdir`).
@@ -51,9 +51,9 @@ Validates that a directory exists and gathers its file content recursively, resp
 
 **Example:**
 ```python
-from hdr.tasks.std import DirectoryCreated
+from hdr.tasks.std import Directory
 
-directory = DirectoryCreated(path="src")
+directory = Directory(path="src")
 for f in directory.content:
     print(f.path, len(f.content))
 ```

@@ -1,8 +1,8 @@
 """
-Standard task types for common use cases.
+Standard contract types for common use cases.
 
-These tasks cover typical file operations, content validation, and transformations.
-All tasks use relative paths by preference, as they are more portable and make
+These contracts cover typical file operations, content validation, and transformations.
+All contracts use relative paths by preference, as they are more portable and make
 projects easier to share and version control.
 """
 
@@ -150,10 +150,10 @@ def _summarize_condition(condition: str, max_length: int = 63) -> str:
     return normalized[: max_length - 3].rstrip() + "..."
 
 
-class Task(BaseModel):
+class BaseContract(BaseModel):
     """
-    Base class for all HDR tasks.
-    Provides built-in verify method that automatically includes the task's pretty-printed state.
+    Base class for all HDR contracts.
+    Provides built-in verify method that automatically includes the contract's pretty-printed state.
     """
 
     def _call_llm_with_retry(
@@ -330,7 +330,7 @@ class _GitignoreRule:
     directory_only: bool
 
 
-class FileWritten(Task):
+class File(BaseContract):
     """
     Validates that a file exists at the given path using os.path.exists().
 
@@ -387,21 +387,21 @@ class FileWritten(Task):
             raise AssertionError(f"Could not read file at {path}")
 
 
-class DirectoryCreated(Task):
+class Directory(BaseContract):
     """
     Validates that a directory exists at the given path using os.path.isdir().
 
     The `content` field is auto-filled from the actual directory content if not specified.
-    Content is a list of FileWritten objects representing the files in the directory,
+    Content is a list of File objects representing the files in the directory,
     gathered recursively and respecting .gitignore patterns.
     """
 
     gather_content_on_init: ClassVar[bool] = True
 
     path: str = Field(description="Path to the directory")
-    content: list[FileWritten] = Field(
+    content: list[File] = Field(
         default_factory=list,
-        description="List of FileWritten objects in the directory, auto-filled if not provided",
+        description="List of File objects in the directory, auto-filled if not provided",
     )
 
     def __init__(self, **data):
@@ -414,9 +414,9 @@ class DirectoryCreated(Task):
             total_files = len(self.content)
             print(f"[Directory] Total files in {self.path}: {total_files}")
 
-    def _gather_content(self, dir_path: str) -> list[FileWritten]:
-        """Gather content from directory as list[FileWritten], respecting .gitignore and recursing."""
-        files: list[FileWritten] = []
+    def _gather_content(self, dir_path: str) -> list[File]:
+        """Gather content from directory as list[File], respecting .gitignore and recursing."""
+        files: list[File] = []
         gitignore_rules: list[_GitignoreRule] = []
 
         for root, dirs, filenames in os.walk(dir_path):
@@ -440,7 +440,7 @@ class DirectoryCreated(Task):
                 if self._is_ignored(rel_path, gitignore_rules, is_dir=False):
                     continue
                 try:
-                    files.append(FileWritten(path=filepath))
+                    files.append(File(path=filepath))
                 except (IOError, OSError):
                     pass
 

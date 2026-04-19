@@ -1,11 +1,11 @@
-from hdr.tasks.coding import MarkdownFileWritten
-from hdr.tasks.meta import FieldSpec, TaskCreated, VerifySpec
+from hdr.tasks.coding import MarkdownFile
+from hdr.tasks.meta import FieldSpec, Contract, VerifySpec
 
 from move_support import MoveContext, MovePurpose, MoveSnapshot
 
 
-target_reader = MarkdownFileWritten(path="hdr_target_reader.md")
-target_meaning = MarkdownFileWritten(path="hdr_target_meaning.md")
+target_reader = MarkdownFile(path="hdr_target_reader.md")
+target_meaning = MarkdownFile(path="hdr_target_meaning.md")
 
 empty_context = MoveContext(
     target_reader=target_reader,
@@ -38,16 +38,16 @@ context_after_build = MoveContext(
     prior_moves=[build_snapshot],
 )
 
-move_chosen_task = TaskCreated(
-    class_name="MoveChosen",
-    parent_class="Task",
+move_contract = Contract(
+    class_name="Move",
+    parent_class="BaseContract",
     docstring=(
         "Represents one chosen conceptual move in a language-agnostic outline, "
         "validated as a reader-state transition along one contrast axis."
     ),
     imports=[
         "from pydantic import Field",
-        "from hdr.tasks.std import Task",
+        "from hdr.tasks.std import BaseContract",
         "from move_support import MoveContext, MovePurpose",
     ],
     fields=[
@@ -163,7 +163,7 @@ for field_name in ("content", "before", "after"):
                 "purpose": MovePurpose.SHIFT,
                 "content": (
                     "A checklist in prose can remind the agent, but HDR makes the "
-                    "same requirement enforceable by putting it into a task object "
+                    "same requirement enforceable by putting it into a contract "
                     "that construction can reject."
                 ),
                 "contrast": "soft vs enforceable",
@@ -172,20 +172,20 @@ for field_name in ("content", "before", "after"):
                     "agent behavior."
                 ),
                 "after": (
-                    "The reader sees prose checklists as soft reminders and task "
-                    "objects as enforceable completion boundaries."
+                    "The reader sees prose checklists as soft reminders and contracts "
+                    "as enforceable completion boundaries."
                 ),
             },
             negative_example={
                 "context": context_after_build,
                 "purpose": MovePurpose.SHIFT,
                 "content": (
-                    "A checklist in prose is fast to write, while a task object "
+                    "A checklist in prose is fast to write, while a contract "
                     "adds more syntax, more imports, and more setup work."
                 ),
                 "contrast": "soft vs enforceable",
                 "before": "The reader thinks prose is fast to write.",
-                "after": "The reader thinks task objects add setup overhead.",
+                "after": "The reader thinks contracts add setup overhead.",
             },
         ),
         VerifySpec(
@@ -199,7 +199,7 @@ for field_name in ("content", "before", "after"):
                 "context": context_after_build,
                 "purpose": MovePurpose.SHIFT,
                 "content": (
-                    "Once rollback is a field the task must satisfy, a missing "
+                    "Once rollback is a field the contract must satisfy, a missing "
                     "rollback stops being a review comment and becomes a "
                     "construction failure."
                 ),
@@ -209,7 +209,7 @@ for field_name in ("content", "before", "after"):
                     "after the agent claims completion."
                 ),
                 "after": (
-                    "The reader sees missing rollback as something the task can "
+                    "The reader sees missing rollback as something the contract can "
                     "reject during construction before completion is accepted."
                 ),
             },
@@ -398,7 +398,7 @@ for field_name in ("content", "before", "after"):
                 "context": empty_context,
                 "purpose": MovePurpose.BUILD,
                 "content": (
-                    "HDR solves this by representing the whole task as a Python "
+                    "HDR solves this by representing the whole contract as a Python "
                     "class whose typed fields and semantic verifies must construct "
                     "successfully."
                 ),
@@ -488,7 +488,7 @@ for field_name in ("content", "before", "after"):
                 "context": context_after_build,
                 "purpose": MovePurpose.SHIFT,
                 "content": (
-                    "A checklist can ask for rollback, but a task field can make "
+                    "A checklist can ask for rollback, but a contract field can make "
                     "rollback absent in the only place that counts: construction."
                 ),
                 "contrast": "requested vs required",
@@ -516,4 +516,4 @@ for field_name in ("content", "before", "after"):
     ],
 )
 
-print("MoveChosen task specification created successfully.")
+print("Move contract specification created successfully.")

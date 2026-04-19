@@ -1,17 +1,17 @@
-# Mind & Humanities Tasks
+# Mind & Humanities Contracts
 
-Task types in `hdr.tasks.mind` for knowledge management, conceptual documentation, and human-centric validation use cases.
+Contract types in `hdr.tasks.mind` for knowledge management, conceptual documentation, and human-centric validation use cases.
 
-## Concept Tasks
+## Concept Contracts
 
-### ConceptDescribed
+### Concept
 
 Represents a documented concept within a context, with LLM validation of description quality.
 
 **Fields:**
-- `context: MarkdownFileWritten` — File explaining the parent context.
+- `context: MarkdownFile` — File explaining the parent context.
 - `name: str` — Name of the concept.
-- `description: MarkdownFileWritten` — File containing the concept description.
+- `description: MarkdownFile` — File containing the concept description.
 
 **Validates (via `self.verify`):**
 - The description is written for readers who understand context but do not yet know the concept name.
@@ -22,12 +22,12 @@ Represents a documented concept within a context, with LLM validation of descrip
 
 **Example:**
 ```python
-from hdr.tasks.coding import MarkdownFileWritten
-from hdr.tasks.mind import ConceptDescribed
+from hdr.tasks.coding import MarkdownFile
+from hdr.tasks.mind import Concept
 
-concept = ConceptDescribed(
-    context=MarkdownFileWritten(path="context.md"),
+concept = Concept(
+    context=MarkdownFile(path="context.md"),
     name="Connection Pooling",
-    description=MarkdownFileWritten(path="description.md"),
+    description=MarkdownFile(path="description.md"),
 )
 ```

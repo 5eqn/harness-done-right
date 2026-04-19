@@ -1,5 +1,5 @@
 """
-Tests for Coding tasks (PythonFileWritten, PythonWorkspaceBuilt).
+Tests for Coding contracts (PythonFile, PythonWorkspace).
 Uses a fixed temp workspace created via tempfile.mkdtemp.
 """
 
@@ -10,57 +10,57 @@ import tempfile
 import pytest
 
 
-class TestPythonFileWritten:
-    """Tests for PythonFileWritten task class."""
+class TestPythonFile:
+    """Tests for PythonFile contract class."""
 
     def test_py_file_not_exists(self):
-        """Test PythonFileWritten fails when file does not exist"""
-        from hdr.tasks.coding import PythonFileWritten
+        """Test PythonFile fails when file does not exist"""
+        from hdr.tasks.coding import PythonFile
 
         with pytest.raises(AssertionError, match="does not exist"):
-            PythonFileWritten(path="/nonexistent/path/12345.py")
+            PythonFile(path="/nonexistent/path/12345.py")
 
     def test_py_file_must_end_with_py(self):
-        """Test PythonFileWritten fails when path does not end with .py"""
-        from hdr.tasks.coding import PythonFileWritten
+        """Test PythonFile fails when path does not end with .py"""
+        from hdr.tasks.coding import PythonFile
 
         with tempfile.TemporaryDirectory() as tmpdir:
             file_path = os.path.join(tmpdir, "test.txt")
             with open(file_path, "w") as f:
                 f.write("hello")
             with pytest.raises(AssertionError, match=r".*\.py.*"):
-                PythonFileWritten(path=file_path)
+                PythonFile(path=file_path)
 
     def test_valid_py_file(self):
-        """Test PythonFileWritten passes for a clean Python file"""
-        from hdr.tasks.coding import PythonFileWritten
+        """Test PythonFile passes for a clean Python file"""
+        from hdr.tasks.coding import PythonFile
 
         with tempfile.TemporaryDirectory() as tmpdir:
             file_path = os.path.join(tmpdir, "hello.py")
             with open(file_path, "w") as f:
                 f.write('name = "world"\nprint(f"Hello, {name}!")\n')
-            f = PythonFileWritten(path=file_path)
+            f = PythonFile(path=file_path)
             assert f.path == file_path
             assert 'name = "world"\nprint(f"Hello, {name}!")\n' in f.content
 
     def test_py_file_content_reflects_formatted_file(self):
-        """Test PythonFileWritten content is read after ruff format mutates disk."""
-        from hdr.tasks.coding import PythonFileWritten
+        """Test PythonFile content is read after ruff format mutates disk."""
+        from hdr.tasks.coding import PythonFile
 
         with tempfile.TemporaryDirectory() as tmpdir:
             file_path = os.path.join(tmpdir, "formatted.py")
             with open(file_path, "w") as f:
                 f.write("x=1\n")
-            f = PythonFileWritten(path=file_path)
+            f = PythonFile(path=file_path)
             assert f.content == "x = 1\n"
 
 
-class TestMarkdownFileWritten:
-    """Tests for MarkdownFileWritten task class."""
+class TestMarkdownFile:
+    """Tests for MarkdownFile contract class."""
 
     def test_markdown_runs_non_fix_lint_after_format(self, monkeypatch):
-        """Test MarkdownFileWritten runs a plain markdownlint pass after --fix."""
-        from hdr.tasks.coding import MarkdownFileWritten
+        """Test MarkdownFile runs a plain markdownlint pass after --fix."""
+        from hdr.tasks.coding import MarkdownFile
 
         calls: list[list[str]] = []
 
@@ -80,7 +80,7 @@ class TestMarkdownFileWritten:
             file_path = os.path.join(tmpdir, "test.md")
             with open(file_path, "w") as f:
                 f.write("# Hello\n")
-            MarkdownFileWritten(path=file_path)
+            MarkdownFile(path=file_path)
 
         assert calls == [
             ["markdownlint-cli2", "--fix", file_path],
@@ -88,23 +88,23 @@ class TestMarkdownFileWritten:
         ]
 
 
-class TestPythonWorkspaceBuilt:
-    """Tests for PythonWorkspaceBuilt task class."""
+class TestPythonWorkspace:
+    """Tests for PythonWorkspace contract class."""
 
     def test_directory_exists(self):
-        """Test PythonWorkspaceBuilt validation passes when directory exists"""
-        from hdr.tasks.coding import PythonWorkspaceBuilt
+        """Test PythonWorkspace validation passes when directory exists"""
+        from hdr.tasks.coding import PythonWorkspace
 
         with tempfile.TemporaryDirectory() as tmpdir:
-            d = PythonWorkspaceBuilt(path=tmpdir)
+            d = PythonWorkspace(path=tmpdir)
             assert d.path == tmpdir
 
     def test_directory_not_exists(self):
-        """Test PythonWorkspaceBuilt validation fails when directory does not exist"""
-        from hdr.tasks.coding import PythonWorkspaceBuilt
+        """Test PythonWorkspace validation fails when directory does not exist"""
+        from hdr.tasks.coding import PythonWorkspace
 
         with pytest.raises(AssertionError, match="does not exist"):
-            PythonWorkspaceBuilt(path="/nonexistent/path/12345")
+            PythonWorkspace(path="/nonexistent/path/12345")
 
 
 if __name__ == "__main__":

@@ -1,12 +1,12 @@
-# Coding Tasks
+# Coding Contracts
 
-Coding task types in `hdr.tasks.coding` for programming-related validation. These tasks validate code files (Python, Markdown) using tools like `ruff`, `pyright`, and `markdownlint-cli2`.
+Coding contract types in `hdr.tasks.coding` for programming-related validation. These contracts validate code files (Python, Markdown) using tools like `ruff`, `pyright`, and `markdownlint-cli2`.
 
-## PythonFileWritten
+## PythonFile
 
 Validates that a Python file exists and passes linting and type checking.
 
-**Inherits:** All fields from `FileWritten`.
+**Inherits:** All fields from `File`.
 
 **Validates (in addition to file existence):**
 - Path ends with `.py` (without LLM).
@@ -17,17 +17,17 @@ Validates that a Python file exists and passes linting and type checking.
 
 **Example:**
 ```python
-from hdr.tasks.coding import PythonFileWritten
+from hdr.tasks.coding import PythonFile
 
-py_file = PythonFileWritten(path="src/my_project/main.py")
+py_file = PythonFile(path="src/my_project/main.py")
 print(py_file.content)  # auto-filled from disk
 ```
 
-## MarkdownFileWritten
+## MarkdownFile
 
 Validates that a markdown file exists at the given path, auto-formats it, and checks for valid syntax.
 
-**Inherits:** All fields from `FileWritten`.
+**Inherits:** All fields from `File`.
 
 **Validates/does (in addition to file existence):**
 - Path ends with `.md`.
@@ -38,17 +38,17 @@ Validates that a markdown file exists at the given path, auto-formats it, and ch
 
 **Example:**
 ```python
-from hdr.tasks.coding import MarkdownFileWritten
+from hdr.tasks.coding import MarkdownFile
 
-md_file = MarkdownFileWritten(path="README.md")
+md_file = MarkdownFile(path="README.md")
 print(md_file.content)  # auto-filled from disk (now formatted!)
 ```
 
-## PythonWorkspaceBuilt
+## PythonWorkspace
 
-Extends `DirectoryCreated` — validates a Python workspace is properly configured for linting and type checking.
+Extends `Directory` — validates a Python workspace is properly configured for linting and type checking.
 
-**Inherits:** All fields from `DirectoryCreated`.
+**Inherits:** All fields from `Directory`.
 
 **Validates (in addition to directory existence):**
 - `ruff` is installed (`shutil.which("ruff")`).
@@ -59,7 +59,7 @@ Extends `DirectoryCreated` — validates a Python workspace is properly configur
 
 **Example:**
 ```python
-from hdr.tasks.coding import PythonWorkspaceBuilt
+from hdr.tasks.coding import PythonWorkspace
 
-workspace = PythonWorkspaceBuilt(path="src/my_project")
+workspace = PythonWorkspace(path="src/my_project")
 ```

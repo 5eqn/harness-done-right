@@ -1,45 +1,45 @@
-from hdr.tasks.coding import MarkdownFileWritten
-from hdr.tasks.meta import FieldSpec, TaskCreated, VerifySpec
+from hdr.tasks.coding import MarkdownFile
+from hdr.tasks.meta import FieldSpec, Contract, VerifySpec
 
-target_reader = MarkdownFileWritten(path="target_reader.md")
+target_reader = MarkdownFile(path="target_reader.md")
 
-precision_good = MarkdownFileWritten(path="precision_good.md")
-precision_bad = MarkdownFileWritten(path="precision_bad.md")
+precision_good = MarkdownFile(path="precision_good.md")
+precision_bad = MarkdownFile(path="precision_bad.md")
 
-opening_scene_good = MarkdownFileWritten(path="opening_scene_good.md")
-opening_scene_bad = MarkdownFileWritten(path="opening_scene_bad.md")
+opening_scene_good = MarkdownFile(path="opening_scene_good.md")
+opening_scene_bad = MarkdownFile(path="opening_scene_bad.md")
 
-forward_momentum_good = MarkdownFileWritten(path="forward_momentum_good.md")
-forward_momentum_bad = MarkdownFileWritten(path="forward_momentum_bad.md")
+forward_momentum_good = MarkdownFile(path="forward_momentum_good.md")
+forward_momentum_bad = MarkdownFile(path="forward_momentum_bad.md")
 
-should_force_good = MarkdownFileWritten(path="should_force_good.md")
-should_force_bad = MarkdownFileWritten(path="should_force_bad.md")
+should_force_good = MarkdownFile(path="should_force_good.md")
+should_force_bad = MarkdownFile(path="should_force_bad.md")
 
-must_force_good = MarkdownFileWritten(path="must_force_good.md")
-must_force_bad = MarkdownFileWritten(path="must_force_bad.md")
+must_force_good = MarkdownFile(path="must_force_good.md")
+must_force_bad = MarkdownFile(path="must_force_bad.md")
 
-turning_point_good = MarkdownFileWritten(path="turning_point_good.md")
-turning_point_bad = MarkdownFileWritten(path="turning_point_bad.md")
+turning_point_good = MarkdownFile(path="turning_point_good.md")
+turning_point_bad = MarkdownFile(path="turning_point_bad.md")
 
-reader_scope_good = MarkdownFileWritten(path="reader_scope_good.md")
-reader_scope_bad = MarkdownFileWritten(path="reader_scope_bad.md")
+reader_scope_good = MarkdownFile(path="reader_scope_good.md")
+reader_scope_bad = MarkdownFile(path="reader_scope_bad.md")
 
-concept_described_task = TaskCreated(
-    class_name="ConceptDescribed",
-    parent_class="Task",
+concept_contract = Contract(
+    class_name="Concept",
+    parent_class="BaseContract",
     docstring=(
-        "Represents a concept described for a specific target reader through a "
+        "Represents a concept defined for a specific target reader through a "
         "precise, story-driven explanation."
     ),
     imports=[
         "from pydantic import Field",
-        "from hdr.tasks.std import Task",
-        "from hdr.tasks.coding import MarkdownFileWritten",
+        "from hdr.tasks.std import BaseContract",
+        "from hdr.tasks.coding import MarkdownFile",
     ],
     fields=[
         FieldSpec(
             name="target_reader",
-            type_annotation="MarkdownFileWritten",
+            type_annotation="MarkdownFile",
             description=(
                 "Markdown file describing the shared background the intended "
                 "reader is assumed to already know"
@@ -52,14 +52,14 @@ concept_described_task = TaskCreated(
         ),
         FieldSpec(
             name="description",
-            type_annotation="MarkdownFileWritten",
+            type_annotation="MarkdownFile",
             description="Markdown file that explains the concept to the target reader",
         ),
     ],
     verifies=[
         VerifySpec(
             condition=(
-                "The task describes exactly one concept. The concept name names "
+                "The contract describes exactly one concept. The concept name names "
                 "one atomic idea, and the description makes its membership "
                 "boundaries clear enough that a target reader can usually tell "
                 "what counts as an instance and what does not."
@@ -188,4 +188,4 @@ concept_described_task = TaskCreated(
     ],
 )
 
-print("ConceptDescribed task specification created successfully.")
+print("Concept contract specification created successfully.")

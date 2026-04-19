@@ -1,18 +1,18 @@
 # Harness Done Right
 
-让你的 Agent 把任务形式化定义出来，再**保证完成**。
+让你的 Agent 把合约形式化定义出来，再**保证完成**。
 
 ## 极简示例：文本去 AI 味
 
-### 1. 任务定义
+### 1. 合约定义
 
 你的 Agent 将需求形式化为一个数据结构：
 
 ```python
-from hdr.tasks.std import Task
+from hdr.tasks.std import BaseContract
 from pydantic import Field
 
-class HumanizeText(Task):
+class HumanizeText(BaseContract):
     original: str = Field(description="Original AI-generated text")
     humanized: str = Field(description="Humanized version of the text")
 
@@ -25,7 +25,7 @@ class HumanizeText(Task):
 
 ### 2. 执行
 
-你的 Agent 运行脚本来执行并验证任务：
+你的 Agent 运行脚本来执行并验证合约：
 
 ```python
 # 实例化时会触发 Pydantic 类型检查以及 LLM 验证
@@ -33,7 +33,7 @@ result = HumanizeText(
     original="AI 生成的技术术语...",
     humanized="一个清晰、人性化的解释..."
 )
-print("任务已验证:", result)
+print("合约已验证:", result)
 ```
 
 ## 快速开始

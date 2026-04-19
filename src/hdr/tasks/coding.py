@@ -1,7 +1,7 @@
 """
-Coding tasks for Python-related validation.
+Coding contracts for Python-related validation.
 
-These tasks validate Python files and workspaces, using tools like ruff and pyright.
+These contracts validate Python files and workspaces, using tools like ruff and pyright.
 """
 
 import shutil
@@ -11,13 +11,13 @@ import os
 
 from pydantic import model_validator
 
-from hdr.tasks.std import DirectoryCreated, FileWritten
+from hdr.tasks.std import Directory, File
 
 
-class PythonFileWritten(FileWritten):
+class PythonFile(File):
     """
     Validates that a Python file exists and passes linting and type checking.
-    Inherits all fields from FileWritten.
+    Inherits all fields from File.
 
     Additionally verifies:
     - Path ends with `.py`
@@ -104,10 +104,10 @@ class PythonFileWritten(FileWritten):
             )
 
 
-class MarkdownFileWritten(FileWritten):
+class MarkdownFile(File):
     """
     Validates that a markdown file exists at the given path, auto-formats it, and checks for valid syntax.
-    Inherits all fields from FileWritten.
+    Inherits all fields from File.
 
     Additionally verifies/does:
     - Path ends with `.md`
@@ -172,10 +172,10 @@ class MarkdownFileWritten(FileWritten):
             )
 
 
-class PythonWorkspaceBuilt(DirectoryCreated):
+class PythonWorkspace(Directory):
     """
     Validates a Python workspace is properly configured for linting and type checking.
-    Inherits all fields from DirectoryCreated.
+    Inherits all fields from Directory.
 
     Additionally verifies:
     - ruff is installed (shutil.which)

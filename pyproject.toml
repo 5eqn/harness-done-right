@@ -1,7 +1,7 @@
 [project]
 name = "hdr"
 version = "0.1.0"
-description = "Harness Done Right - Task formalization and execution framework"
+description = "Harness Done Right - Contract formalization and execution framework"
 readme = "SKILL.md"
 requires-python = ">=3.12"
 dependencies = [
