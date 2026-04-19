@@ -11,7 +11,7 @@ import os
 
 from pydantic import model_validator
 
-from hdr.tasks.std import Directory, File
+from hdr.contracts.std import Directory, File
 
 
 class PythonFile(File):

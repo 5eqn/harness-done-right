@@ -1,6 +1,6 @@
 from __future__ import annotations
 
-from hdr.tasks.coding import MarkdownFile
+from hdr.contracts.coding import MarkdownFile
 
 from move import Move
 from move_support import MoveContext, MovePurpose, MoveSnapshot

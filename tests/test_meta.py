@@ -10,7 +10,7 @@ so that neg_condition gets score 1 (matching expected_score=1).
 import pytest
 import os
 from pydantic import ValidationError
-from hdr.tasks.meta import AUTO_GENERATED_FLAG, Contract, FieldSpec, VerifySpec
+from hdr.contracts.meta import AUTO_GENERATED_FLAG, Contract, FieldSpec, VerifySpec
 
 
 def _valid_fields() -> list[FieldSpec]:
@@ -298,7 +298,7 @@ class TestContract:
             docstring="A file contract.",
             imports=[
                 "from pydantic import Field",
-                "from hdr.tasks.std import File",
+                "from hdr.contracts.std import File",
             ],
             fields=[
                 FieldSpec(name="label", type_annotation="str", description="Label"),

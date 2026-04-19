@@ -4,7 +4,7 @@ Tests for HDR verify functionality.
 
 import pytest
 import hdr.config as hdr_config
-from hdr.tasks.std import BaseContract
+from hdr.contracts.std import BaseContract
 from pydantic import Field
 
 

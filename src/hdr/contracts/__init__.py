@@ -2,17 +2,17 @@
 HDR Contracts - Standard library of common contract types.
 """
 
-from hdr.tasks.std import (
+from hdr.contracts.std import (
     Directory,
     File,
 )
-from hdr.tasks.coding import (
+from hdr.contracts.coding import (
     MarkdownFile,
     PythonFile,
     PythonWorkspace,
 )
-from hdr.tasks.meta import Contract, FieldSpec, VerifySpec
-from hdr.tasks.mind import Concept
+from hdr.contracts.meta import Contract, FieldSpec, VerifySpec
+from hdr.contracts.mind import Concept
 
 __all__ = [
     "Concept",

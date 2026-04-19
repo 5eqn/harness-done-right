@@ -1,6 +1,6 @@
 # Meta Contracts
 
-Meta-contract utilities for working with HDR contract definitions themselves. These live in `hdr.tasks.meta`.
+Meta-contract utilities for working with HDR contract definitions themselves. These live in `hdr.contracts.meta`.
 
 ## Contract
 
@@ -22,7 +22,7 @@ Meta-contract for creating well-formed HDR contracts. Validates contract definit
 - `parent_class: str = "BaseContract"` — Parent class to inherit from
 - `docstring: str` — Docstring for the contract class
 - `fields: list[FieldSpec]` — List of field specifications (name, type annotation, description, optional default)
-- `imports: list[str] = ["from pydantic import Field", "from hdr.tasks.std import BaseContract"]` — List of import statements to include at the top of the generated file
+- `imports: list[str] = ["from pydantic import Field", "from hdr.contracts.std import BaseContract"]` — List of import statements to include at the top of the generated file
 - `programmatic_checks: list[str] = []` — Python code snippets for programmatic validations executed before LLM verifies
 - `verifies: list[VerifySpec]` — List of verify specifications with positive and negative examples. Each `VerifySpec` can include `applies_when: str | None`, a Python expression such as `self.mode == "strict"` that guards the generated LLM verify when the semantic rule only applies to some contract instances.
 - `generated_file: PythonFile | None` — The generated Python file instance, available after successful creation (cannot be manually assigned; will always be non-None after successful initialization)
@@ -34,7 +34,7 @@ Meta-contract for creating well-formed HDR contracts. Validates contract definit
 
 **Example Usage:**
 ```python
-from hdr.tasks.meta import Contract
+from hdr.contracts.meta import Contract
 
 # Define a new contract
 contract_spec = Contract(
@@ -42,7 +42,7 @@ contract_spec = Contract(
     docstring="Validates that sentiment analysis has been performed on text.",
     imports=[
         "from pydantic import Field",
-        "from hdr.tasks.std import BaseContract",
+        "from hdr.contracts.std import BaseContract",
     ],
     fields=[
         {

@@ -6,8 +6,8 @@ Uses a fixed temp workspace created via tempfile.mkdtemp.
 import tempfile
 import pytest
 from pydantic import ValidationError
-from hdr.tasks.std import Directory, File
-from hdr.tasks.coding import MarkdownFile
+from hdr.contracts.std import Directory, File
+from hdr.contracts.coding import MarkdownFile
 
 
 class TestFile:

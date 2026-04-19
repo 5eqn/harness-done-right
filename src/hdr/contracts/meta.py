@@ -9,8 +9,8 @@ import ast
 import re
 from typing import Any
 from pydantic import Field, BaseModel, model_validator
-from hdr.tasks.std import BaseContract, Example, quote
-from hdr.tasks.coding import PythonFile
+from hdr.contracts.std import BaseContract, Example, quote
+from hdr.contracts.coding import PythonFile
 
 
 AUTO_GENERATED_FLAG = "# HDR-AUTO-GENERATED: Contract"
@@ -21,7 +21,7 @@ AUTO_GENERATED_HEADER = f"""{AUTO_GENERATED_FLAG}
 """
 DEFAULT_IMPORTS = [
     "from pydantic import Field",
-    "from hdr.tasks.std import BaseContract",
+    "from hdr.contracts.std import BaseContract",
 ]
 
 

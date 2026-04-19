@@ -1,4 +1,4 @@
 interface:
   display_name: "HDR Define"
-  short_description: "Define HDR tasks from plain-language goals"
+  short_description: "Define HDR contracts from plain-language goals"
   default_prompt: "Use $hdr-define to turn this task description into an HDR task definition and starter work script."

@@ -1,5 +1,5 @@
-from hdr.tasks.coding import MarkdownFile
-from hdr.tasks.meta import FieldSpec, Contract, VerifySpec
+from hdr.contracts.coding import MarkdownFile
+from hdr.contracts.meta import FieldSpec, Contract, VerifySpec
 
 from move_support import MoveContext, MovePurpose, MoveSnapshot
 
@@ -47,7 +47,7 @@ move_contract = Contract(
     ),
     imports=[
         "from pydantic import Field",
-        "from hdr.tasks.std import BaseContract",
+        "from hdr.contracts.std import BaseContract",
         "from move_support import MoveContext, MovePurpose",
     ],
     fields=[

@@ -15,14 +15,14 @@ class TestPythonFile:
 
     def test_py_file_not_exists(self):
         """Test PythonFile fails when file does not exist"""
-        from hdr.tasks.coding import PythonFile
+        from hdr.contracts.coding import PythonFile
 
         with pytest.raises(AssertionError, match="does not exist"):
             PythonFile(path="/nonexistent/path/12345.py")
 
     def test_py_file_must_end_with_py(self):
         """Test PythonFile fails when path does not end with .py"""
-        from hdr.tasks.coding import PythonFile
+        from hdr.contracts.coding import PythonFile
 
         with tempfile.TemporaryDirectory() as tmpdir:
             file_path = os.path.join(tmpdir, "test.txt")
@@ -33,7 +33,7 @@ class TestPythonFile:
 
     def test_valid_py_file(self):
         """Test PythonFile passes for a clean Python file"""
-        from hdr.tasks.coding import PythonFile
+        from hdr.contracts.coding import PythonFile
 
         with tempfile.TemporaryDirectory() as tmpdir:
             file_path = os.path.join(tmpdir, "hello.py")
@@ -45,7 +45,7 @@ class TestPythonFile:
 
     def test_py_file_content_reflects_formatted_file(self):
         """Test PythonFile content is read after ruff format mutates disk."""
-        from hdr.tasks.coding import PythonFile
+        from hdr.contracts.coding import PythonFile
 
         with tempfile.TemporaryDirectory() as tmpdir:
             file_path = os.path.join(tmpdir, "formatted.py")
@@ -60,7 +60,7 @@ class TestMarkdownFile:
 
     def test_markdown_runs_non_fix_lint_after_format(self, monkeypatch):
         """Test MarkdownFile runs a plain markdownlint pass after --fix."""
-        from hdr.tasks.coding import MarkdownFile
+        from hdr.contracts.coding import MarkdownFile
 
         calls: list[list[str]] = []
 
@@ -93,7 +93,7 @@ class TestPythonWorkspace:
 
     def test_directory_exists(self):
         """Test PythonWorkspace validation passes when directory exists"""
-        from hdr.tasks.coding import PythonWorkspace
+        from hdr.contracts.coding import PythonWorkspace
 
         with tempfile.TemporaryDirectory() as tmpdir:
             d = PythonWorkspace(path=tmpdir)
@@ -101,7 +101,7 @@ class TestPythonWorkspace:
 
     def test_directory_not_exists(self):
         """Test PythonWorkspace validation fails when directory does not exist"""
-        from hdr.tasks.coding import PythonWorkspace
+        from hdr.contracts.coding import PythonWorkspace
 
         with pytest.raises(AssertionError, match="does not exist"):
             PythonWorkspace(path="/nonexistent/path/12345")

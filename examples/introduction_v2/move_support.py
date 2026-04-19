@@ -2,7 +2,7 @@ from enum import Enum
 
 from pydantic import BaseModel, Field
 
-from hdr.tasks.coding import MarkdownFile
+from hdr.contracts.coding import MarkdownFile
 
 
 class MovePurpose(str, Enum):

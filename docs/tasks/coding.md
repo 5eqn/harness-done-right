@@ -1,6 +1,6 @@
 # Coding Contracts
 
-Coding contract types in `hdr.tasks.coding` for programming-related validation. These contracts validate code files (Python, Markdown) using tools like `ruff`, `pyright`, and `markdownlint-cli2`.
+Coding contract types in `hdr.contracts.coding` for programming-related validation. These contracts validate code files (Python, Markdown) using tools like `ruff`, `pyright`, and `markdownlint-cli2`.
 
 ## PythonFile
 
@@ -17,7 +17,7 @@ Validates that a Python file exists and passes linting and type checking.
 
 **Example:**
 ```python
-from hdr.tasks.coding import PythonFile
+from hdr.contracts.coding import PythonFile
 
 py_file = PythonFile(path="src/my_project/main.py")
 print(py_file.content)  # auto-filled from disk
@@ -38,7 +38,7 @@ Validates that a markdown file exists at the given path, auto-formats it, and ch
 
 **Example:**
 ```python
-from hdr.tasks.coding import MarkdownFile
+from hdr.contracts.coding import MarkdownFile
 
 md_file = MarkdownFile(path="README.md")
 print(md_file.content)  # auto-filled from disk (now formatted!)
@@ -59,7 +59,7 @@ Extends `Directory` — validates a Python workspace is properly configured for 
 
 **Example:**
 ```python
-from hdr.tasks.coding import PythonWorkspace
+from hdr.contracts.coding import PythonWorkspace
 
 workspace = PythonWorkspace(path="src/my_project")
 ```

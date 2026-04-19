@@ -1,4 +1,4 @@
-from hdr.tasks.coding import MarkdownFile
+from hdr.contracts.coding import MarkdownFile
 
 from concept import Concept
 

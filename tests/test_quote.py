@@ -3,7 +3,7 @@ Tests for HDR quote functionality.
 """
 
 import pytest
-from hdr.tasks.std import BaseContract, quote
+from hdr.contracts.std import BaseContract, quote
 from pydantic import BaseModel, Field
 
 

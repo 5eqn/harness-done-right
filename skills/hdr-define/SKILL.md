@@ -1,6 +1,6 @@
 ---
 name: hdr-define
-description: Define a new HDR contract from a plain-language contract description by writing a content-reflecting runner file that instantiates `hdr.tasks.meta.Contract` and generates a content-reflecting contract file. Use when the user asks for `/hdr-define`, wants to formalize a new contract with the installed `hdr` library, or wants a contract type created from requirements instead of writing the class by hand.
+description: Define a new HDR contract from a plain-language contract description by writing a content-reflecting runner file that instantiates `hdr.contracts.meta.Contract` and generates a content-reflecting contract file. Use when the user asks for `/hdr-define`, wants to formalize a new contract with the installed `hdr` library, or wants a contract type created from requirements instead of writing the class by hand.
 ---
 
 # HDR Define
@@ -31,7 +31,7 @@ Contract(
     docstring: str,
     imports: list[str] = [
         "from pydantic import Field",
-        "from hdr.tasks.std import BaseContract",
+        "from hdr.contracts.std import BaseContract",
     ],
     fields: list[FieldSpec],
     programmatic_checks: list[str] = [],
@@ -103,8 +103,8 @@ The generated contract file should already include embedded examples produced by
 For a request like `/hdr-define describe a concept in markdown`, prefer a structure like:
 
 ```python
-from hdr.tasks.meta import FieldSpec, Contract, VerifySpec
-from hdr.tasks.coding import MarkdownFile
+from hdr.contracts.meta import FieldSpec, Contract, VerifySpec
+from hdr.contracts.coding import MarkdownFile
 
 context_file = MarkdownFile(path="framework_context.md")
 good_description = MarkdownFile(path="concept_description.md")
@@ -115,8 +115,8 @@ concept_contract = Contract(
     docstring="Represent a concept defined within a known context.",
     imports=[
         "from pydantic import Field",
-        "from hdr.tasks.std import BaseContract",
-        "from hdr.tasks.coding import MarkdownFile",
+        "from hdr.contracts.std import BaseContract",
+        "from hdr.contracts.coding import MarkdownFile",
     ],
     fields=[
         FieldSpec(name="context", type_annotation="MarkdownFile", description="Context file the reader already knows"),

@@ -1,5 +1,5 @@
-from hdr.tasks.coding import MarkdownFile
-from hdr.tasks.meta import FieldSpec, Contract, VerifySpec
+from hdr.contracts.coding import MarkdownFile
+from hdr.contracts.meta import FieldSpec, Contract, VerifySpec
 
 target_reader = MarkdownFile(path="target_reader.md")
 
@@ -33,8 +33,8 @@ concept_contract = Contract(
     ),
     imports=[
         "from pydantic import Field",
-        "from hdr.tasks.std import BaseContract",
-        "from hdr.tasks.coding import MarkdownFile",
+        "from hdr.contracts.std import BaseContract",
+        "from hdr.contracts.coding import MarkdownFile",
     ],
     fields=[
         FieldSpec(

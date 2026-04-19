@@ -1,6 +1,6 @@
 # Mind & Humanities Contracts
 
-Contract types in `hdr.tasks.mind` for knowledge management, conceptual documentation, and human-centric validation use cases.
+Contract types in `hdr.contracts.mind` for knowledge management, conceptual documentation, and human-centric validation use cases.
 
 ## Concept Contracts
 
@@ -22,8 +22,8 @@ Represents a documented concept within a context, with LLM validation of descrip
 
 **Example:**
 ```python
-from hdr.tasks.coding import MarkdownFile
-from hdr.tasks.mind import Concept
+from hdr.contracts.coding import MarkdownFile
+from hdr.contracts.mind import Concept
 
 concept = Concept(
     context=MarkdownFile(path="context.md"),

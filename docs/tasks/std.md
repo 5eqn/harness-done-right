@@ -1,6 +1,6 @@
 # Standard Contracts
 
-Standard contract types in `hdr.tasks.std` for common use cases. All contracts use relative paths by preference, as they are more portable and make projects easier to share and version control.
+Standard contract types in `hdr.contracts.std` for common use cases. All contracts use relative paths by preference, as they are more portable and make projects easier to share and version control.
 
 ## Base
 
@@ -29,7 +29,7 @@ Validates that a file exists at the given path and optionally reads its content.
 
 **Example:**
 ```python
-from hdr.tasks.std import File
+from hdr.contracts.std import File
 
 file = File(path="config.json")
 print(file.content)  # auto-filled from disk
@@ -51,7 +51,7 @@ Validates that a directory exists and gathers its file content recursively, resp
 
 **Example:**
 ```python
-from hdr.tasks.std import Directory
+from hdr.contracts.std import Directory
 
 directory = Directory(path="src")
 for f in directory.content:

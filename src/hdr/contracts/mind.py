@@ -7,8 +7,8 @@ validation use cases that require qualitative judgment.
 
 from pydantic import Field
 
-from hdr.tasks.std import BaseContract
-from hdr.tasks.coding import MarkdownFile
+from hdr.contracts.std import BaseContract
+from hdr.contracts.coding import MarkdownFile
 
 
 class Concept(BaseContract):

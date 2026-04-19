@@ -9,7 +9,7 @@
 你的 Agent 将需求形式化为一个数据结构：
 
 ```python
-from hdr.tasks.std import BaseContract
+from hdr.contracts.std import BaseContract
 from pydantic import Field
 
 class HumanizeText(BaseContract):

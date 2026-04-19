@@ -59,7 +59,7 @@ When the contract says "choose a suitable name", use these conventions.
 If the user gives `concept.py` containing `Concept`, a runner file such as `finish_concept.py` should look like:
 
 ```python
-from hdr.tasks.coding import MarkdownFile
+from hdr.contracts.coding import MarkdownFile
 from concept import Concept
 
 context = MarkdownFile(path="framework_context.md")
