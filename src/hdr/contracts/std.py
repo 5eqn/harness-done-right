@@ -325,7 +325,6 @@ Then, output your final score using the format: <score>N</score>, N ranges from:
 
 @dataclass(frozen=True, slots=True)
 class _GitignoreRule:
-    base_rel: str
     pattern: str
     directory_only: bool
 
@@ -337,7 +336,8 @@ class File(BaseContract):
     Prefer using relative paths for portability. The path can be absolute
     if needed, but relative paths are recommended for project-agnostic code.
 
-    The `content` field is auto-filled from the actual file content and cannot be manually assigned.
+    The `content` field is auto-filled from disk when omitted. If it is provided
+    manually, it must exactly match the file content on disk.
     """
 
     path: str = Field(description="Path to the file")
@@ -345,29 +345,34 @@ class File(BaseContract):
         init=False,
         frozen=True,
         default="",
-        description="Content of the file, auto-filled from disk (cannot be manually assigned)",
+        description="Content of the file, auto-filled from disk when omitted, or validated against disk when provided",
     )
 
     @model_validator(mode="before")
     @classmethod
     def _fill_content(cls, data: Any) -> Any:
-        """Populate frozen content from disk before model construction."""
+        """Populate content from disk and validate manual content when provided."""
         if not isinstance(data, dict):
             return data
 
         data = dict(data)
-        data.pop("content", None)
         path = data.get("path")
         if not isinstance(path, str):
             return data
         if not os.path.exists(path):
             raise AssertionError(f"File at {path} does not exist")
 
-        content = data.pop("_hdr_content", None)
-        if content is None:
-            content = cls._read_file_content(path)
+        actual_content = data.pop("_hdr_content", None)
+        if actual_content is None:
+            actual_content = cls._read_file_content(path)
 
-        data["content"] = content
+        expected_content = data.pop("content", None)
+        if expected_content is not None and expected_content != actual_content:
+            raise AssertionError(f"Content of {path} does not match the file on disk")
+
+        data["content"] = (
+            actual_content if expected_content is None else expected_content
+        )
         return data
 
     def __init__(self, **data):
@@ -660,14 +665,14 @@ class Directory(BaseContract):
     Validates that a directory exists at the given path using os.path.isdir().
 
     The `content` field must be manually assigned. It is validated against the
-    actual directory content gathered recursively while respecting `.gitignore`
-    patterns, and must match exactly with no missing or extra files.
+    actual directory's immediate files while respecting `.gitignore` patterns,
+    and must match exactly with no missing or extra files.
     """
 
     path: str = Field(description="Path to the directory")
     content: list[File] = Field(
         default_factory=list,
-        description="List of File objects that must exactly match the directory contents after .gitignore filtering",
+        description="List of File objects whose paths must exactly match the directory contents after .gitignore filtering",
     )
 
     def __init__(self, **data):
@@ -678,51 +683,32 @@ class Directory(BaseContract):
         super().__init__(**data)
         if not os.path.isdir(self.path):
             raise AssertionError(f"Directory at {self.path} does not exist")
-        self._validate_content_matches_directory()
+        self._validate_tree_matches_directory()
 
     def _gather_content(self, dir_path: str) -> list[File]:
-        """Gather content from directory as list[File], respecting .gitignore and recursing."""
+        """Gather immediate file content from a directory, respecting .gitignore."""
         files: list[File] = []
-        gitignore_rules: list[_GitignoreRule] = []
+        gitignore_rules = self._load_gitignore_rules(dir_path)
 
-        for root, dirs, filenames in os.walk(dir_path):
-            self._extend_gitignore_rules(dir_path, root, gitignore_rules)
-
-            # Calculate relative path for filtering directories
-            rel_root = os.path.relpath(root, dir_path)
-            # Filter out directories matching gitignore patterns
-            dirs[:] = [
-                d
-                for d in dirs
-                if not self._is_ignored(
-                    self._join_rel(rel_root, d), gitignore_rules, is_dir=True
-                )
-            ]
-
-            for filename in filenames:
-                filepath = os.path.join(root, filename)
-                rel_path = os.path.relpath(filepath, dir_path)
-                # Check if file should be ignored
-                if self._is_ignored(rel_path, gitignore_rules, is_dir=False):
-                    continue
-                try:
-                    files.append(File(path=filepath))
-                except (IOError, OSError):
-                    pass
+        for entry in os.scandir(dir_path):
+            if not entry.is_file():
+                continue
+            if self._is_ignored(entry.name, gitignore_rules, is_dir=False):
+                continue
+            try:
+                files.append(File(path=entry.path))
+            except (IOError, OSError):
+                pass
 
         return files
 
-    def _extend_gitignore_rules(
-        self, dir_path: str, root: str, rules: list[_GitignoreRule]
-    ) -> None:
-        """Load .gitignore rules scoped to the current walked directory."""
-        gitignore_path = os.path.join(root, ".gitignore")
+    def _load_gitignore_rules(self, dir_path: str) -> list[_GitignoreRule]:
+        """Load .gitignore rules from the current directory only."""
+        gitignore_path = os.path.join(dir_path, ".gitignore")
         if not os.path.exists(gitignore_path):
-            return
+            return []
 
-        base_rel = os.path.relpath(root, dir_path)
-        if base_rel == ".":
-            base_rel = ""
+        rules: list[_GitignoreRule] = []
 
         try:
             with open(gitignore_path, "r") as f:
@@ -737,13 +723,14 @@ class Directory(BaseContract):
                     directory_only = pattern.endswith("/")
                     rules.append(
                         _GitignoreRule(
-                            base_rel=base_rel,
                             pattern=pattern.strip("/"),
                             directory_only=directory_only,
                         )
                     )
         except (IOError, OSError):
-            pass
+            return []
+
+        return rules
 
     def _is_ignored(
         self, rel_path: str, rules: list[_GitignoreRule], is_dir: bool
@@ -757,55 +744,22 @@ class Directory(BaseContract):
             if rule.directory_only and not is_dir:
                 continue
 
-            scoped_path = self._path_relative_to_rule_base(
-                normalized_path, rule.base_rel
-            )
-            if scoped_path is None:
-                continue
-
             pattern = rule.pattern
             if "/" in pattern:
-                if fnmatch.fnmatch(scoped_path, pattern):
+                if fnmatch.fnmatch(normalized_path, pattern):
                     return True
-            elif fnmatch.fnmatch(os.path.basename(scoped_path), pattern):
+            elif fnmatch.fnmatch(os.path.basename(normalized_path), pattern):
                 return True
         return False
 
-    @staticmethod
-    def _join_rel(rel_root: str, name: str) -> str:
-        if rel_root == ".":
-            return name
-        return os.path.join(rel_root, name)
-
-    @staticmethod
-    def _path_relative_to_rule_base(rel_path: str, base_rel: str) -> str | None:
-        if not base_rel:
-            return rel_path
-        base_rel = base_rel.replace(os.sep, "/")
-        if rel_path == base_rel:
-            return ""
-        prefix = f"{base_rel}/"
-        if rel_path.startswith(prefix):
-            return rel_path[len(prefix) :]
-        return None
-
-    def _validate_content_matches_directory(self) -> None:
+    def _validate_tree_matches_directory(self) -> None:
         actual_files = self._gather_content(self.path)
-        actual_by_relpath = self._content_by_relpath(actual_files)
-        provided_by_relpath = self._content_by_relpath(self.content)
-
-        actual_paths = set(actual_by_relpath)
-        provided_paths = set(provided_by_relpath)
+        actual_paths = self._relpaths_from_content(actual_files)
+        provided_paths = self._relpaths_from_content(self.content)
 
         missing_paths = sorted(actual_paths - provided_paths)
         extra_paths = sorted(provided_paths - actual_paths)
-        changed_paths = sorted(
-            rel_path
-            for rel_path in actual_paths & provided_paths
-            if actual_by_relpath[rel_path] != provided_by_relpath[rel_path]
-        )
-
-        if not missing_paths and not extra_paths and not changed_paths:
+        if not missing_paths and not extra_paths:
             return
 
         details: list[str] = []
@@ -813,17 +767,15 @@ class Directory(BaseContract):
             details.append(f"missing files: {', '.join(missing_paths)}")
         if extra_paths:
             details.append(f"unexpected files: {', '.join(extra_paths)}")
-        if changed_paths:
-            details.append(f"content mismatch: {', '.join(changed_paths)}")
         raise AssertionError(
-            "Directory content must exactly match the directory after .gitignore filtering ("
+            "Directory content must exactly match the directory tree after .gitignore filtering ("
             + "; ".join(details)
             + ")"
         )
 
-    def _content_by_relpath(self, files: Sequence[File]) -> dict[str, str]:
+    def _relpaths_from_content(self, files: Sequence[File]) -> set[str]:
         directory_path = os.path.abspath(self.path)
-        content_by_relpath: dict[str, str] = {}
+        relpaths: set[str] = set()
 
         for file in files:
             file_path = os.path.abspath(file.path)
@@ -834,10 +786,10 @@ class Directory(BaseContract):
                 )
 
             normalized_rel_path = rel_path.replace(os.sep, "/")
-            if normalized_rel_path in content_by_relpath:
+            if normalized_rel_path in relpaths:
                 raise AssertionError(
                     f"Directory content contains duplicate file entry for {normalized_rel_path}"
                 )
-            content_by_relpath[normalized_rel_path] = file.content
+            relpaths.add(normalized_rel_path)
 
-        return content_by_relpath
+        return relpaths

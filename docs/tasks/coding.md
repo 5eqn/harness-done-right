@@ -56,7 +56,8 @@ Extends `Directory` — validates a Python workspace is properly configured for 
 - `pyright --outputjson` reports zero errors and zero warnings.
 - `ruff check .` reports no lint errors.
 - `ruff format .` runs successfully and may update files.
-- `content` must be manually provided and must exactly match the directory after `.gitignore` filtering.
+- `content` must be manually provided and must exactly match the workspace's immediate files after `.gitignore` filtering.
+- Nested directories are validated separately rather than recursively.
 
 **Example:**
 ```python

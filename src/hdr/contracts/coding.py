@@ -178,7 +178,7 @@ class PythonWorkspace(Directory):
     Inherits all fields from Directory.
 
     Additionally verifies:
-    - content is manually supplied and matches the workspace exactly after .gitignore filtering
+    - content is manually supplied and matches the workspace's immediate file tree after .gitignore filtering
     - ruff is installed (shutil.which)
     - pyright is installed (shutil.which)
     - pyright reports no warnings or errors in the workspace

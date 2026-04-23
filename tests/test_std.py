@@ -14,7 +14,7 @@ class TestFile:
     """Tests for File contract class."""
 
     def test_file_exists(self):
-        """Test File validation passes when file exists"""
+        """Test File validation passes when file exists."""
         with tempfile.TemporaryDirectory() as tmpdir:
             import os
 
@@ -24,6 +24,30 @@ class TestFile:
             f = File(path=file_path)
             assert f.path == file_path
             assert f.content == "hello"
+
+    def test_file_enforces_manual_content_when_provided(self):
+        """Test File validates manual content against disk."""
+        with tempfile.TemporaryDirectory() as tmpdir:
+            import os
+
+            file_path = os.path.join(tmpdir, "test.txt")
+            with open(file_path, "w") as f:
+                f.write("hello")
+
+            f = File(path=file_path, content="hello")
+            assert f.content == "hello"
+
+    def test_file_rejects_mismatched_manual_content(self):
+        """Test File rejects manual content that differs from disk."""
+        with tempfile.TemporaryDirectory() as tmpdir:
+            import os
+
+            file_path = os.path.join(tmpdir, "test.txt")
+            with open(file_path, "w") as f:
+                f.write("hello")
+
+            with pytest.raises(ValidationError, match="does not match"):
+                File(path=file_path, content="goodbye")
 
     def test_content_is_frozen_after_read(self):
         """Test File content cannot be manually assigned after init."""
@@ -117,31 +141,47 @@ class TestDirectory:
                         ],
                     )
 
-    def test_directory_respects_nested_gitignore(self):
-        """Test Directory applies .gitignore files in nested directories."""
+    def test_directory_checks_only_immediate_files(self):
+        """Test Directory ignores nested files because subdirectories validate themselves."""
         with tempfile.TemporaryDirectory() as tmpdir:
             import os
 
             nested = os.path.join(tmpdir, "nested")
             os.mkdir(nested)
-            with open(os.path.join(nested, ".gitignore"), "w") as f:
-                f.write("secret.txt\n")
-            with open(os.path.join(nested, "secret.txt"), "w") as f:
-                f.write("secret")
             with open(os.path.join(nested, "keep.txt"), "w") as f:
                 f.write("keep")
 
             d = Directory(
                 path=tmpdir,
+                content=[],
+            )
+
+            assert d.content == []
+
+    def test_directory_respects_current_directory_gitignore(self):
+        """Test Directory applies the current directory's .gitignore."""
+        with tempfile.TemporaryDirectory() as tmpdir:
+            import os
+
+            with open(os.path.join(tmpdir, ".gitignore"), "w") as f:
+                f.write("secret.txt\n")
+            with open(os.path.join(tmpdir, "secret.txt"), "w") as f:
+                f.write("secret")
+            with open(os.path.join(tmpdir, "keep.txt"), "w") as f:
+                f.write("keep")
+
+            d = Directory(
+                path=tmpdir,
                 content=[
-                    File(path=os.path.join(nested, ".gitignore")),
-                    File(path=os.path.join(nested, "keep.txt")),
+                    File(path=os.path.join(tmpdir, ".gitignore")),
+                    File(path=os.path.join(tmpdir, "keep.txt")),
                 ],
             )
 
             paths = {os.path.relpath(f.path, tmpdir) for f in d.content}
-            assert "nested/keep.txt" in paths
-            assert "nested/secret.txt" not in paths
+            assert ".gitignore" in paths
+            assert "keep.txt" in paths
+            assert "secret.txt" not in paths
 
 
 class TestImage:

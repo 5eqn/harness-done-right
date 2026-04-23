@@ -16,22 +16,23 @@ Base class for all HDR contracts. Extends Pydantic `BaseModel` to provide automa
 
 ### File
 
-Validates that a file exists at the given path and optionally reads its content.
+Validates that a file exists at the given path and enforces its content when provided.
 
 **Fields:**
 - `path: str` — Path to the file (relative paths recommended).
-- `content: str` — Content of the file; auto-filled from disk (cannot be manually assigned).
+- `content: str` — Content of the file; auto-filled from disk when omitted, or validated against disk when provided.
 
 **Validates:**
 - File exists at `path` (`os.path.exists`).
 - File is readable.
-- Content is automatically populated from the actual file content and frozen after initialization.
+- If `content` is provided, it exactly matches the file on disk.
+- Otherwise, `content` is populated from the actual file content and frozen after initialization.
 
 **Example:**
 ```python
 from hdr.contracts.std import File
 
-file = File(path="config.json")
+file = File(path="config.json", content='{"debug": false}\n')
 print(file.content)  # auto-filled from disk
 ```
 
@@ -39,16 +40,17 @@ print(file.content)  # auto-filled from disk
 
 ### Directory
 
-Validates that a directory exists and that a manually supplied file manifest matches the directory exactly after applying `.gitignore` rules recursively.
+Validates that a directory exists and that a manually supplied file manifest matches the directory's immediate file tree after applying that directory's `.gitignore`.
 
 **Fields:**
 - `path: str` — Path to the directory.
-- `content: list[File]` — List of `File` objects that must be manually assigned and must exactly match the directory contents after `.gitignore` filtering.
+- `content: list[File]` — List of `File` objects that must be manually assigned and whose paths must exactly match the directory's immediate files after `.gitignore` filtering.
 
 **Validates:**
 - Directory exists at `path` (`os.path.isdir`).
 - `content` is manually provided.
-- The provided files match the real directory exactly, with no missing or extra files after applying root and nested `.gitignore` files.
+- The provided file paths match the real directory exactly, with no missing or extra files after applying the current directory's `.gitignore`.
+- Nested directories are not traversed; each directory should be validated separately.
 
 **Example:**
 ```python
