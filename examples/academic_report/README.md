@@ -18,10 +18,10 @@ This writes `academic_report_reveal.html`.
 Run from this directory:
 
 ```bash
-uv run python -m http.server 8000
+uv run python build_reveal.py --host
 ```
 
-Then open:
+The `Reveal.host()` API prints local preview information, including the URL:
 
 ```text
 http://localhost:8000/academic_report_reveal.html
@@ -29,4 +29,3 @@ http://localhost:8000/academic_report_reveal.html
 
 The generated HTML loads reveal.js from the jsDelivr CDN, so the browser needs
 network access while previewing.
-

@@ -30,7 +30,13 @@ python_files = ["test_*.py"]
 
 [tool.pyright]
 include = ["src", "tests", "examples"]
-exclude = ["**/__pycache__", ".venv", "**/node_modules", "**/.*"]
+exclude = [
+    "**/__pycache__",
+    ".venv",
+    "**/node_modules",
+    "**/.*",
+    "examples/minimal_mujoco_project/reference",
+]
 typeCheckingMode = "basic"
 pythonVersion = "3.12"
 

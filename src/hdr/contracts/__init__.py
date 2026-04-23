@@ -13,6 +13,7 @@ from hdr.contracts.coding import (
 )
 from hdr.contracts.meta import Contract, FieldSpec, VerifySpec
 from hdr.contracts.mind import Concept
+from hdr.contracts.reveal import Reveal
 
 __all__ = [
     "Concept",
@@ -21,6 +22,7 @@ __all__ = [
     "MarkdownFile",
     "PythonFile",
     "PythonWorkspace",
+    "Reveal",
     "Contract",
     "FieldSpec",
     "VerifySpec",

@@ -3,6 +3,8 @@ title: 人形机器人底层运控：接口如何开放
 author: github@5eqn
 ---
 
+<!-- markdownlint-disable MD025 -->
+
 # 人形机器人底层运控：接口如何开放
 
 从 legged_gym 到 SWITCH、HoloMotion 与 SONIC
@@ -350,4 +352,3 @@ SONIC 的价值在于把 motion tracking 变成多模态机器人系统的共同
 - [SONIC: Supersizing Motion Tracking for Natural Humanoid Whole-Body Control](https://arxiv.org/abs/2511.07820)
 - [GR00T-WholeBodyControl](https://github.com/NVlabs/GR00T-WholeBodyControl)
 - [Training Guide](https://nvlabs.github.io/GR00T-WholeBodyControl/user_guide/training.html)
-
