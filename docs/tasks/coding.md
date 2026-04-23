@@ -55,11 +55,18 @@ Extends `Directory` — validates a Python workspace is properly configured for 
 - `pyright` is installed (`shutil.which("pyright")`).
 - `pyright --outputjson` reports zero errors and zero warnings.
 - `ruff check .` reports no lint errors.
-- `ruff format .` runs successfully and may update files. Directory content is gathered after formatting, so it reflects the final disk content.
+- `ruff format .` runs successfully and may update files.
+- `content` must be manually provided and must exactly match the directory after `.gitignore` filtering.
 
 **Example:**
 ```python
+from hdr.contracts.std import File
 from hdr.contracts.coding import PythonWorkspace
 
-workspace = PythonWorkspace(path="src/my_project")
+workspace = PythonWorkspace(
+    path="src/my_project",
+    content=[
+        File(path="src/my_project/main.py"),
+    ],
+)
 ```

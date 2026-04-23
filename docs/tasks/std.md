@@ -39,21 +39,28 @@ print(file.content)  # auto-filled from disk
 
 ### Directory
 
-Validates that a directory exists and gathers its file content recursively, respecting `.gitignore` patterns.
+Validates that a directory exists and that a manually supplied file manifest matches the directory exactly after applying `.gitignore` rules recursively.
 
 **Fields:**
 - `path: str` — Path to the directory.
-- `content: list[File]` — List of File objects representing files in the directory; auto-filled if not provided.
+- `content: list[File]` — List of `File` objects that must be manually assigned and must exactly match the directory contents after `.gitignore` filtering.
 
 **Validates:**
 - Directory exists at `path` (`os.path.isdir`).
-- Recursively gathers file content, skipping entries matching `.gitignore` patterns, including nested `.gitignore` files.
+- `content` is manually provided.
+- The provided files match the real directory exactly, with no missing or extra files after applying root and nested `.gitignore` files.
 
 **Example:**
 ```python
-from hdr.contracts.std import Directory
+from hdr.contracts.std import Directory, File
 
-directory = Directory(path="src")
+directory = Directory(
+    path="src",
+    content=[
+        File(path="src/main.py"),
+        File(path="src/utils.py"),
+    ],
+)
 for f in directory.content:
     print(f.path, len(f.content))
 ```

@@ -47,22 +47,27 @@ class TestDirectory:
     """Tests for Directory contract class."""
 
     def test_directory_exists(self):
-        """Test Directory validation passes when directory exists"""
+        """Test Directory validation passes when explicit content matches."""
         with tempfile.TemporaryDirectory() as tmpdir:
-            d = Directory(path=tmpdir)
+            d = Directory(path=tmpdir, content=[])
             assert d.path == tmpdir
 
     def test_directory_not_exists(self):
         """Test Directory validation fails when directory does not exist"""
         with pytest.raises(AssertionError, match="does not exist"):
-            Directory(path="/nonexistent/path/12345")
+            Directory(path="/nonexistent/path/12345", content=[])
+
+    def test_directory_requires_manual_content(self):
+        """Test Directory rejects omitted content."""
+        with tempfile.TemporaryDirectory() as tmpdir:
+            with pytest.raises(AssertionError, match="manually assigned"):
+                Directory(path=tmpdir)
 
     def test_directory_with_content(self):
-        """Test Directory accepts explicit content"""
+        """Test Directory accepts explicit content when it matches exactly."""
         with tempfile.TemporaryDirectory() as tmpdir:
             import os
 
-            # Create a file to use with explicit content
             file_path = os.path.join(tmpdir, "a.txt")
             with open(file_path, "w") as f:
                 f.write("custom content")
@@ -75,21 +80,42 @@ class TestDirectory:
             assert len(d.content) == 1
             assert d.content[0].content == "custom content"
 
-    def test_directory_auto_gathers_content(self):
-        """Test Directory auto-fills content from files"""
+    def test_directory_rejects_missing_file_from_content(self):
+        """Test Directory rejects content that omits a tracked file."""
         with tempfile.TemporaryDirectory() as tmpdir:
             import os
 
-            # Create some files
             with open(os.path.join(tmpdir, "a.txt"), "w") as f:
                 f.write("content a")
             with open(os.path.join(tmpdir, "b.txt"), "w") as f:
                 f.write("content b")
-            d = Directory(path=tmpdir)
-            assert len(d.content) == 2
-            contents = [f.content for f in d.content]
-            assert "content a" in contents
-            assert "content b" in contents
+
+            with pytest.raises(AssertionError, match="missing files: b.txt"):
+                Directory(
+                    path=tmpdir,
+                    content=[File(path=os.path.join(tmpdir, "a.txt"))],
+                )
+
+    def test_directory_rejects_extra_file_in_content(self):
+        """Test Directory rejects content that includes a file outside the directory."""
+        with tempfile.TemporaryDirectory() as tmpdir:
+            import os
+
+            with open(os.path.join(tmpdir, "a.txt"), "w") as f:
+                f.write("content a")
+
+            with tempfile.NamedTemporaryFile(suffix=".txt") as external_file:
+                external_file.write(b"external")
+                external_file.flush()
+
+                with pytest.raises(AssertionError, match="is not inside"):
+                    Directory(
+                        path=tmpdir,
+                        content=[
+                            File(path=os.path.join(tmpdir, "a.txt")),
+                            File(path=external_file.name),
+                        ],
+                    )
 
     def test_directory_respects_nested_gitignore(self):
         """Test Directory applies .gitignore files in nested directories."""
@@ -105,7 +131,13 @@ class TestDirectory:
             with open(os.path.join(nested, "keep.txt"), "w") as f:
                 f.write("keep")
 
-            d = Directory(path=tmpdir)
+            d = Directory(
+                path=tmpdir,
+                content=[
+                    File(path=os.path.join(nested, ".gitignore")),
+                    File(path=os.path.join(nested, "keep.txt")),
+                ],
+            )
 
             paths = {os.path.relpath(f.path, tmpdir) for f in d.content}
             assert "nested/keep.txt" in paths

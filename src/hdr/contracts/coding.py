@@ -178,14 +178,13 @@ class PythonWorkspace(Directory):
     Inherits all fields from Directory.
 
     Additionally verifies:
+    - content is manually supplied and matches the workspace exactly after .gitignore filtering
     - ruff is installed (shutil.which)
     - pyright is installed (shutil.which)
     - pyright reports no warnings or errors in the workspace
     - ruff check reports no lint errors in the workspace
     - ruff format runs cleanly in the workspace
     """
-
-    gather_content_on_init = False
 
     def __init__(self, **data):
         super().__init__(**data)
@@ -251,8 +250,3 @@ class PythonWorkspace(Directory):
             raise AssertionError(
                 f"ruff format failed in {self.path}:\n{result_ruff_fmt.stdout}\n{result_ruff_fmt.stderr}"
             )
-
-        if not self.content:
-            self.content = self._gather_content(self.path)
-            total_files = len(self.content)
-            print(f"[Directory] Total files in {self.path}: {total_files}")

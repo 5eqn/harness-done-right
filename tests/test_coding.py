@@ -92,11 +92,11 @@ class TestPythonWorkspace:
     """Tests for PythonWorkspace contract class."""
 
     def test_directory_exists(self):
-        """Test PythonWorkspace validation passes when directory exists"""
+        """Test PythonWorkspace validation passes when content is explicit."""
         from hdr.contracts.coding import PythonWorkspace
 
         with tempfile.TemporaryDirectory() as tmpdir:
-            d = PythonWorkspace(path=tmpdir)
+            d = PythonWorkspace(path=tmpdir, content=[])
             assert d.path == tmpdir
 
     def test_directory_not_exists(self):
@@ -104,7 +104,7 @@ class TestPythonWorkspace:
         from hdr.contracts.coding import PythonWorkspace
 
         with pytest.raises(AssertionError, match="does not exist"):
-            PythonWorkspace(path="/nonexistent/path/12345")
+            PythonWorkspace(path="/nonexistent/path/12345", content=[])
 
 
 if __name__ == "__main__":

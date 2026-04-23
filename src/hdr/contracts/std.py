@@ -659,28 +659,26 @@ class Directory(BaseContract):
     """
     Validates that a directory exists at the given path using os.path.isdir().
 
-    The `content` field is auto-filled from the actual directory content if not specified.
-    Content is a list of File objects representing the files in the directory,
-    gathered recursively and respecting .gitignore patterns.
+    The `content` field must be manually assigned. It is validated against the
+    actual directory content gathered recursively while respecting `.gitignore`
+    patterns, and must match exactly with no missing or extra files.
     """
-
-    gather_content_on_init: ClassVar[bool] = True
 
     path: str = Field(description="Path to the directory")
     content: list[File] = Field(
         default_factory=list,
-        description="List of File objects in the directory, auto-filled if not provided",
+        description="List of File objects that must exactly match the directory contents after .gitignore filtering",
     )
 
     def __init__(self, **data):
+        if "content" not in data:
+            raise AssertionError(
+                "Directory content must be manually assigned and match the directory"
+            )
         super().__init__(**data)
         if not os.path.isdir(self.path):
             raise AssertionError(f"Directory at {self.path} does not exist")
-        # Auto-fill content from actual directory if not provided
-        if self.gather_content_on_init and not self.content:
-            self.content = self._gather_content(self.path)
-            total_files = len(self.content)
-            print(f"[Directory] Total files in {self.path}: {total_files}")
+        self._validate_content_matches_directory()
 
     def _gather_content(self, dir_path: str) -> list[File]:
         """Gather content from directory as list[File], respecting .gitignore and recursing."""
@@ -790,3 +788,56 @@ class Directory(BaseContract):
         if rel_path.startswith(prefix):
             return rel_path[len(prefix) :]
         return None
+
+    def _validate_content_matches_directory(self) -> None:
+        actual_files = self._gather_content(self.path)
+        actual_by_relpath = self._content_by_relpath(actual_files)
+        provided_by_relpath = self._content_by_relpath(self.content)
+
+        actual_paths = set(actual_by_relpath)
+        provided_paths = set(provided_by_relpath)
+
+        missing_paths = sorted(actual_paths - provided_paths)
+        extra_paths = sorted(provided_paths - actual_paths)
+        changed_paths = sorted(
+            rel_path
+            for rel_path in actual_paths & provided_paths
+            if actual_by_relpath[rel_path] != provided_by_relpath[rel_path]
+        )
+
+        if not missing_paths and not extra_paths and not changed_paths:
+            return
+
+        details: list[str] = []
+        if missing_paths:
+            details.append(f"missing files: {', '.join(missing_paths)}")
+        if extra_paths:
+            details.append(f"unexpected files: {', '.join(extra_paths)}")
+        if changed_paths:
+            details.append(f"content mismatch: {', '.join(changed_paths)}")
+        raise AssertionError(
+            "Directory content must exactly match the directory after .gitignore filtering ("
+            + "; ".join(details)
+            + ")"
+        )
+
+    def _content_by_relpath(self, files: Sequence[File]) -> dict[str, str]:
+        directory_path = os.path.abspath(self.path)
+        content_by_relpath: dict[str, str] = {}
+
+        for file in files:
+            file_path = os.path.abspath(file.path)
+            rel_path = os.path.relpath(file_path, directory_path)
+            if rel_path == "." or rel_path.startswith(".."):
+                raise AssertionError(
+                    f"Directory content file {file.path} is not inside {self.path}"
+                )
+
+            normalized_rel_path = rel_path.replace(os.sep, "/")
+            if normalized_rel_path in content_by_relpath:
+                raise AssertionError(
+                    f"Directory content contains duplicate file entry for {normalized_rel_path}"
+                )
+            content_by_relpath[normalized_rel_path] = file.content
+
+        return content_by_relpath
