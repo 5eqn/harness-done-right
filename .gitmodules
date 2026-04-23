@@ -1,0 +1,3 @@
+[submodule "examples/minimal_mujoco_project"]
+	path = examples/minimal_mujoco_project
+	url = https://github.com/5eqn/minimal_mujoco_project
