@@ -47,12 +47,14 @@ When the contract says "choose a suitable name", use these conventions.
 
 ## Implementation Rules
 
-- Prefer relative paths and local artifacts.
+- Choose a consistent working directory, name it in the implementation file, and in the implementation file all path should be relative to that working directory.
+- Always run implementation file in the specified working directory.
 - Satisfy dependencies by constructing the prerequisite contract objects directly in the runner file.
 - If the target contract requires files, create those files with content that actually satisfies the contract's checks.
 - Replace placeholders with completion-quality content before the final instantiation.
 - Treat `ValidationError` and `AssertionError` as feedback on missing work; revise the runner file and rerun.
 - Share clear evidence when the contract definition itself needs revision and align with the user on that contract update.
+- Avoid using deep indent, store temporary object instead.
 
 ## Minimal Example
 
