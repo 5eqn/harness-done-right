@@ -7,8 +7,8 @@ from __future__ import annotations
 import html
 import socket
 import time
-from functools import partial
-from http.server import SimpleHTTPRequestHandler, ThreadingHTTPServer
+from http import HTTPStatus
+from http.server import BaseHTTPRequestHandler, ThreadingHTTPServer
 from pathlib import Path
 
 from hdr.contracts.coding import MarkdownFile
@@ -22,19 +22,29 @@ class Reveal(BaseContract):
 
     markdown: MarkdownFile
 
-    def write_html(self, output_path: str | Path | None = None) -> Path:
+    def host(
+        self,
+        *,
+        bind: str = "127.0.0.1",
+        port: int = 8000,
+    ) -> None:
         """
-        Render the markdown deck to a standalone reveal.js HTML file.
+        Serve the deck with Python's http.server until interrupted.
         """
-        output = self._resolve_output_path(output_path)
-        output.parent.mkdir(parents=True, exist_ok=True)
-        output.write_text(self.build_html(), encoding="utf-8")
-        return output
+        started_at = time.perf_counter()
+        handler = self._request_handler(self._build_html())
 
-    def build_html(self) -> str:
-        """
-        Build the reveal.js HTML document for this markdown deck.
-        """
+        with ThreadingHTTPServer((bind, port), handler) as server:
+            elapsed_ms = int((time.perf_counter() - started_at) * 1000)
+            local_url = self._local_url(bind, server.server_port)
+            network_url = self._network_url(bind, server.server_port)
+            self._print_host_banner(local_url, network_url, elapsed_ms)
+            try:
+                server.serve_forever()
+            except KeyboardInterrupt:
+                print("\nHDR Reveal server stopped.")
+
+    def _build_html(self) -> str:
         metadata, body = self._split_frontmatter(self.markdown.content)
         title = metadata.get("title", Path(self.markdown.path).stem)
         author = metadata.get("author", "")
@@ -142,35 +152,26 @@ class Reveal(BaseContract):
 </html>
 """
 
-    def host(
-        self,
-        output_path: str | Path | None = None,
-        *,
-        bind: str = "127.0.0.1",
-        port: int = 8000,
-    ) -> None:
-        """
-        Render the deck and serve it with Python's http.server until interrupted.
-        """
-        started_at = time.perf_counter()
-        output = self.write_html(output_path)
-        directory = output.parent
-        handler = partial(SimpleHTTPRequestHandler, directory=str(directory))
+    @staticmethod
+    def _request_handler(html_document: str) -> type[BaseHTTPRequestHandler]:
+        encoded = html_document.encode("utf-8")
 
-        with ThreadingHTTPServer((bind, port), handler) as server:
-            elapsed_ms = int((time.perf_counter() - started_at) * 1000)
-            local_url = self._local_url(bind, server.server_port, output.name)
-            network_url = self._network_url(bind, server.server_port, output.name)
-            self._print_host_banner(local_url, network_url, elapsed_ms)
-            try:
-                server.serve_forever()
-            except KeyboardInterrupt:
-                print("\nHDR Reveal server stopped.")
+        class RevealRequestHandler(BaseHTTPRequestHandler):
+            def do_GET(self) -> None:
+                if self.path not in {"/", "/index.html"}:
+                    self.send_error(HTTPStatus.NOT_FOUND)
+                    return
 
-    def _resolve_output_path(self, output_path: str | Path | None) -> Path:
-        if output_path is not None:
-            return Path(output_path)
-        return Path(self.markdown.path).with_suffix(".html")
+                self.send_response(HTTPStatus.OK)
+                self.send_header("Content-Type", "text/html; charset=utf-8")
+                self.send_header("Content-Length", str(len(encoded)))
+                self.end_headers()
+                self.wfile.write(encoded)
+
+            def log_message(self, format: str, *args: object) -> None:
+                return
+
+        return RevealRequestHandler
 
     @staticmethod
     def _split_frontmatter(markdown: str) -> tuple[dict[str, str], str]:
@@ -190,12 +191,12 @@ class Reveal(BaseContract):
         return metadata, parts[2].lstrip()
 
     @staticmethod
-    def _local_url(bind: str, port: int, filename: str) -> str:
+    def _local_url(bind: str, port: int) -> str:
         host = "localhost" if bind in {"", "0.0.0.0", "::"} else bind
-        return f"http://{host}:{port}/{filename}"
+        return f"http://{host}:{port}/"
 
     @staticmethod
-    def _network_url(bind: str, port: int, filename: str) -> str | None:
+    def _network_url(bind: str, port: int) -> str | None:
         if bind not in {"", "0.0.0.0", "::"}:
             return None
 
@@ -205,7 +206,7 @@ class Reveal(BaseContract):
             return None
         if host.startswith("127."):
             return None
-        return f"http://{host}:{port}/{filename}"
+        return f"http://{host}:{port}/"
 
     @staticmethod
     def _print_host_banner(

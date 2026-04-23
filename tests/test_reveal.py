@@ -23,31 +23,22 @@ class TestReveal:
             )
 
             reveal = Reveal(markdown=MarkdownFile(path=str(markdown_path)))
-            html = reveal.build_html()
+            html = reveal._build_html()
 
             assert "<title>Demo Deck</title>" in html
             assert '<meta name="author" content="Ada">' in html
             assert "## Hello &amp; HDR" in html
             assert "title: Demo Deck" not in html
 
-    def test_write_html_defaults_to_markdown_sibling(self):
+    def test_request_handler_serves_html_from_memory(self):
         with tempfile.TemporaryDirectory() as tmpdir:
             markdown_path = _write_deck(tmpdir, "# Deck\n")
 
             reveal = Reveal(markdown=MarkdownFile(path=str(markdown_path)))
-            output = reveal.write_html()
+            handler = reveal._request_handler(reveal._build_html())
 
-            assert output == markdown_path.with_suffix(".html")
-            assert output.exists()
-            assert "Reveal.initialize" in output.read_text(encoding="utf-8")
+            assert handler.__name__ == "RevealRequestHandler"
 
-    def test_write_html_accepts_explicit_output_path(self):
-        with tempfile.TemporaryDirectory() as tmpdir:
-            markdown_path = _write_deck(tmpdir, "# Deck\n")
-            output_path = Path(tmpdir) / "public" / "slides.html"
-
-            reveal = Reveal(markdown=MarkdownFile(path=str(markdown_path)))
-            output = reveal.write_html(output_path)
-
-            assert output == output_path
-            assert output_path.exists()
+    def test_reveal_does_not_expose_write_or_build_html_api(self):
+        assert not hasattr(Reveal, "write_html")
+        assert not hasattr(Reveal, "build_html")

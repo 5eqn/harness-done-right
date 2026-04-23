@@ -1,9 +1,8 @@
 # Academic Report Reveal Deck
 
-This directory contains a reveal.js deck generated from
-`academic_report_reveal.md`.
+This directory contains a reveal.js deck hosted from `academic_report_reveal.md`.
 
-## Generate HTML
+## Preview
 
 Run from this directory:
 
@@ -11,21 +10,11 @@ Run from this directory:
 uv run python build_reveal.py
 ```
 
-This writes `academic_report_reveal.html`.
-
-## Preview
-
-Run from this directory:
-
-```bash
-uv run python build_reveal.py --host
-```
-
 The `Reveal.host()` API prints local preview information, including the URL:
 
 ```text
-http://localhost:8000/academic_report_reveal.html
+http://127.0.0.1:8000/
 ```
 
-The generated HTML loads reveal.js from the jsDelivr CDN, so the browser needs
-network access while previewing.
+The HTML is generated in memory and loads reveal.js from the jsDelivr CDN, so the
+browser needs network access while previewing.
