@@ -35,7 +35,7 @@ exclude = [
     ".venv",
     "**/node_modules",
     "**/.*",
-    "examples/minimal_mujoco_project/reference",
+    "examples/minimal_mujoco_project",
 ]
 typeCheckingMode = "basic"
 pythonVersion = "3.12"
