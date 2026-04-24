@@ -46,7 +46,7 @@ class Move(BaseContract):
         for field_name in ("content", "before", "after"):
             if not getattr(self, field_name).strip():
                 raise AssertionError(f"{field_name} must not be empty")
-        self.verify("""The contrast is exactly one projected axis of opposing qualities. The second side is meaningfully equivalent to 'not the first side' but with sharper taste language. It must not combine two metrics, two unrelated properties, object names, or analogy labels.
+        self.llm_verify("""The contrast is exactly one projected axis of opposing qualities. The second side is meaningfully equivalent to 'not the first side' but with sharper taste language. It must not combine two metrics, two unrelated properties, object names, or analogy labels.
 
 Example that PASSES (score 5):
 Move(
@@ -105,7 +105,7 @@ Move(
   before = 'The reader notices the agent used a lot of tokens.' # Relevant local reader lens before this move, focused only on the dimension the move changes
   after = 'The reader wants a stronger guarantee.' # Relevant local reader lens after this move, focused on the same dimension as before and contrast
 )""")
-        self.verify("""The content, before, and after all operate on the same axis named by contrast. Rich details in content are allowed only when they clarify or intensify that single axis. The move fails if it introduces a second independent contrast.
+        self.llm_verify("""The content, before, and after all operate on the same axis named by contrast. Rich details in content are allowed only when they clarify or intensify that single axis. The move fails if it introduces a second independent contrast.
 
 Example that PASSES (score 5):
 Move(
@@ -164,7 +164,7 @@ Move(
   before = 'The reader thinks prose is fast to write.' # Relevant local reader lens before this move, focused only on the dimension the move changes
   after = 'The reader thinks task objects add setup overhead.' # Relevant local reader lens after this move, focused on the same dimension as before and contrast
 )""")
-        self.verify("""Given context and before, content plausibly causes after without a hidden reasoning step. Before and after must describe the same local reader lens, and after must be a meaningful cognition upgrade rather than a paraphrase, mood change, or unrelated fact.
+        self.llm_verify("""Given context and before, content plausibly causes after without a hidden reasoning step. Before and after must describe the same local reader lens, and after must be a meaningful cognition upgrade rather than a paraphrase, mood change, or unrelated fact.
 
 Example that PASSES (score 5):
 Move(
@@ -223,7 +223,7 @@ Move(
   before = 'The reader treats missing rollback as post-hoc feedback.' # Relevant local reader lens before this move, focused only on the dimension the move changes
   after = 'The reader remembers that Python classes are familiar.' # Relevant local reader lens after this move, focused on the same dimension as before and contrast
 )""")
-        self.verify("""The move is necessary against target_meaning. A strong editor could not delete content from an excellent introduction without reducing tension, precision, inevitability, or comprehension. Vivid but decorative details fail.
+        self.llm_verify("""The move is necessary against target_meaning. A strong editor could not delete content from an excellent introduction without reducing tension, precision, inevitability, or comprehension. Vivid but decorative details fail.
 
 Example that PASSES (score 5):
 Move(
@@ -266,7 +266,7 @@ Move(
   before = 'The reader has no image of the scene.' # Relevant local reader lens before this move, focused only on the dimension the move changes
   after = 'The reader imagines a late-night terminal scene.' # Relevant local reader lens after this move, focused on the same dimension as before and contrast
 )""")
-        self.verify("""The move uses only concepts available from target_reader, prior moves, or concepts it explicitly introduces inside content. It must not rely on unexplained terms, distinctions, metaphors, or framework-specific meanings.
+        self.llm_verify("""The move uses only concepts available from target_reader, prior moves, or concepts it explicitly introduces inside content. It must not rely on unexplained terms, distinctions, metaphors, or framework-specific meanings.
 
 Example that PASSES (score 5):
 Move(
@@ -318,7 +318,7 @@ Move(
   after = 'The reader understands HDR as a proof-theoretic object.' # Relevant local reader lens after this move, focused on the same dimension as before and contrast
 )""")
         if self.purpose == MovePurpose.BUILD:
-            self.verify("""When purpose is BUILD, content creates concrete pressure using a real-looking mechanism, failure tendency, system behavior, or grounded detail that the target reader can immediately recognize. It must not be generic abstraction.
+            self.llm_verify("""When purpose is BUILD, content creates concrete pressure using a real-looking mechanism, failure tendency, system behavior, or grounded detail that the target reader can immediately recognize. It must not be generic abstraction.
 
 Example that PASSES (score 5):
 Move(
@@ -362,7 +362,7 @@ Move(
   after = 'The reader knows validation can help.' # Relevant local reader lens after this move, focused on the same dimension as before and contrast
 )""")
         if self.purpose == MovePurpose.BUILD:
-            self.verify("""When purpose is BUILD, every vivid detail in content is load-bearing. Removing the detail would weaken attention, mechanism understanding, pressure, or preparation for a later shift. Pure atmosphere fails.
+            self.llm_verify("""When purpose is BUILD, every vivid detail in content is load-bearing. Removing the detail would weaken attention, mechanism understanding, pressure, or preparation for a later shift. Pure atmosphere fails.
 
 Example that PASSES (score 5):
 Move(
@@ -406,7 +406,7 @@ Move(
   after = 'The reader imagines a better-formatted markdown plan.' # Relevant local reader lens after this move, focused on the same dimension as before and contrast
 )""")
         if self.purpose == MovePurpose.BUILD:
-            self.verify("""When purpose is BUILD, content must not resolve the target concept too early. It should prepare mental material that makes a later SHIFT needed, not define the whole target concept in advance.
+            self.llm_verify("""When purpose is BUILD, content must not resolve the target concept too early. It should prepare mental material that makes a later SHIFT needed, not define the whole target concept in advance.
 
 Example that PASSES (score 5):
 Move(
@@ -450,7 +450,7 @@ Move(
   after = 'The reader has already received the full HDR definition.' # Relevant local reader lens after this move, focused on the same dimension as before and contrast
 )""")
         if self.purpose == MovePurpose.SHIFT:
-            self.verify("""When purpose is SHIFT, content changes the reader's interpretation of already-built material through the contrast axis. It is not another concrete detail, example, or standalone definition.
+            self.llm_verify("""When purpose is SHIFT, content changes the reader's interpretation of already-built material through the contrast axis. It is not another concrete detail, example, or standalone definition.
 
 Example that PASSES (score 5):
 Move(
@@ -510,7 +510,7 @@ Move(
   after = 'The reader has seen three more missed fields.' # Relevant local reader lens after this move, focused on the same dimension as before and contrast
 )""")
         if self.purpose == MovePurpose.SHIFT:
-            self.verify("""When purpose is SHIFT, any abstraction in content is earned by target_reader or prior BUILD moves. The sentence may name a higher-level lens only when the context has supplied concrete material that makes the lens immediately legible.
+            self.llm_verify("""When purpose is SHIFT, any abstraction in content is earned by target_reader or prior BUILD moves. The sentence may name a higher-level lens only when the context has supplied concrete material that makes the lens immediately legible.
 
 Example that PASSES (score 5):
 Move(
@@ -562,7 +562,7 @@ Move(
   after = 'The reader understands a contract gap.' # Relevant local reader lens after this move, focused on the same dimension as before and contrast
 )""")
         if self.purpose == MovePurpose.SHIFT:
-            self.verify("""When purpose is SHIFT, after is an irreversible cognition upgrade from before. After accepting content, a capable target reader cannot honestly return to before without ignoring the stated distinction.
+            self.llm_verify("""When purpose is SHIFT, after is an irreversible cognition upgrade from before. After accepting content, a capable target reader cannot honestly return to before without ignoring the stated distinction.
 
 Example that PASSES (score 5):
 Move(

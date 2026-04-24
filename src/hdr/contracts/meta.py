@@ -155,13 +155,13 @@ class Contract(BaseContract):
                 f"Given the contract object:\n{pos_quoted}\n\n"
                 f"This condition holds true: {verify_spec.condition}"
             )
-            self.verify(pos_condition, expected_score=5, inject_self_quote=False)
+            self.llm_verify(pos_condition, expected_score=5, inject_self_quote=False)
 
             neg_condition = (
                 f"Given the contract object:\n{neg_quoted}\n\n"
                 f"This condition holds true: {verify_spec.condition}"
             )
-            self.verify(neg_condition, expected_score=1, inject_self_quote=False)
+            self.llm_verify(neg_condition, expected_score=1, inject_self_quote=False)
 
     @classmethod
     def _raise_if_existing_unmarked(cls, data: dict[str, Any]) -> None:
@@ -403,9 +403,9 @@ class Contract(BaseContract):
                 escaped = _escape_multiline(condition_with_examples)
                 if verify_spec.applies_when:
                     lines.append(f"        if {verify_spec.applies_when.strip()}:")
-                    lines.append(f"            self.verify({escaped})")
+                    lines.append(f"            self.llm_verify({escaped})")
                 else:
-                    lines.append(f"        self.verify({escaped})")
+                    lines.append(f"        self.llm_verify({escaped})")
 
         return "\n".join(lines)
 

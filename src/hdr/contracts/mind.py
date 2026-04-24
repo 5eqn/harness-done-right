@@ -25,18 +25,18 @@ class Concept(BaseContract):
     def __init__(self, **data):
         super().__init__(**data)
 
-        self.verify(
+        self.llm_verify(
             "The description is written for readers who understand context but do not yet know name; it neither repeats basics from context nor presumes knowledge of sibling/descendant concepts."
         )
-        self.verify(
+        self.llm_verify(
             "The concept name represents exactly one atomic idea that cannot be meaningfully split into two independent concepts."
         )
-        self.verify(
+        self.llm_verify(
             "The description contains no time-sensitive terms (e.g., 'currently', 'recently', 'as of now') without specifying an exact version or date."
         )
-        self.verify(
+        self.llm_verify(
             "The description identifies (a) a broader category that name belongs to, and (b) a distinguishing property that separates it from other members of that category."
         )
-        self.verify(
+        self.llm_verify(
             "A reader familiar with context can determine for any concrete instance whether it belongs to name, with at most minor edge-case ambiguity."
         )

@@ -261,7 +261,7 @@ Then, output your final score using the format: <score>N</score>, N ranges from:
         # Should never reach here
         raise Exception("Unexpected end of retry loop")
 
-    def verify(
+    def llm_verify(
         self, condition: str, expected_score: int = 5, inject_self_quote: bool = True
     ) -> None:
         """

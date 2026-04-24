@@ -18,9 +18,9 @@ def test_contract_verify_method():
 
     # Verify runs without error in mock mode (default score 5)
     task = TestContract(value=42, name="test")
-    task.verify("value is 42")
-    task.verify("name is 'test'")
-    task.verify("value is a positive integer")
+    task.llm_verify("value is 42")
+    task.llm_verify("name is 'test'")
+    task.llm_verify("value is a positive integer")
 
 
 def test_verify_logs_success_with_score_and_trimmed_condition(capsys):
@@ -31,7 +31,7 @@ def test_verify_logs_success_with_score_and_trimmed_condition(capsys):
 
     task = TestBaseContract(value=42)
 
-    task.verify(
+    task.llm_verify(
         "value is 42 and the explanation should be trimmed onto one line "
         "because this sentence is intentionally long enough to exceed the log preview limit"
     )
@@ -55,21 +55,21 @@ def test_verify_mock_score_parsing():
     task = TestBaseContract(value=42)
 
     # Default mock score is 5, should pass with expected_score=5
-    task.verify("default mock score")
+    task.llm_verify("default mock score")
 
     # Explicit mock score 5 should pass
-    task.verify("explicit 5 <mock>5</mock>")
+    task.llm_verify("explicit 5 <mock>5</mock>")
 
     # Mock score 4 should fail with expected_score=5
     with pytest.raises(AssertionError, match="Mock verification failed with score 4"):
-        task.verify("fail with 4 <mock>4</mock>")
+        task.llm_verify("fail with 4 <mock>4</mock>")
 
     # Mock score 3 should pass if expected_score=3
-    task.verify("pass with 3 <mock>3</mock>", expected_score=3)
+    task.llm_verify("pass with 3 <mock>3</mock>", expected_score=3)
 
     # Mock score 1 should fail with expected_score=2
     with pytest.raises(AssertionError, match="Mock verification failed with score 1"):
-        task.verify("fail with 1 <mock>1</mock>", expected_score=2)
+        task.llm_verify("fail with 1 <mock>1</mock>", expected_score=2)
 
 
 def test_verify_creates_config_template_when_missing(tmp_path, monkeypatch):
@@ -84,7 +84,7 @@ def test_verify_creates_config_template_when_missing(tmp_path, monkeypatch):
     task = TestBaseContract(value=42)
 
     with pytest.raises(EnvironmentError, match="HDR config created at"):
-        task.verify("value is 42")
+        task.llm_verify("value is 42")
 
     config_path = hdr_config.CONFIG_PATH
     assert config_path.exists()
@@ -115,7 +115,7 @@ def test_verify_rejects_blank_token_in_config(tmp_path, monkeypatch):
     task = TestBaseContract(value=42)
 
     with pytest.raises(EnvironmentError, match="anthropic_auth_token is empty"):
-        task.verify("value is 42")
+        task.llm_verify("value is 42")
 
 
 def test_verify_uses_config_values(tmp_path, monkeypatch):
@@ -155,7 +155,7 @@ def test_verify_uses_config_values(tmp_path, monkeypatch):
     monkeypatch.setattr(BaseContract, "_call_llm_with_retry", fake_call_llm_with_retry)
 
     task = TestBaseContract(value=42)
-    task.verify("value is 42")
+    task.llm_verify("value is 42")
 
     assert captured["api_key"] == "test-token"
     assert captured["base_url"] == "https://example.com"
@@ -194,7 +194,7 @@ def test_verify_logs_actual_score_on_non_default_success(tmp_path, monkeypatch, 
     monkeypatch.setattr(BaseContract, "_call_llm_with_retry", fake_call_llm_with_retry)
 
     task = TestBaseContract(value=42)
-    task.verify("value is acceptable", expected_score=3)
+    task.llm_verify("value is acceptable", expected_score=3)
 
     captured = capsys.readouterr()
     assert captured.out == "[verify] score=3 value is acceptable\n"

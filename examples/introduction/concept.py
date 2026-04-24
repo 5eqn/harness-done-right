@@ -21,7 +21,7 @@ class Concept(BaseContract):
 
     def __init__(self, **data):
         super().__init__(**data)
-        self.verify("""The task describes exactly one concept. The concept name names one atomic idea, and the description makes its membership boundaries clear enough that a target reader can usually tell what counts as an instance and what does not.
+        self.llm_verify("""The task describes exactly one concept. The concept name names one atomic idea, and the description makes its membership boundaries clear enough that a target reader can usually tell what counts as an instance and what does not.
 
 Example that PASSES (score 5):
 Concept(
@@ -48,7 +48,7 @@ Concept(
     content = '# Connection Pooling and Query Optimization\\n\\nConnection pooling and query optimization are techniques for making database\\nprograms faster. They both help performance and reliability in production\\nsystems.\\n\\nThe idea here is to improve database behavior in general. Sometimes that means\\nreusing connections, and sometimes it means changing SQL.\\n' # Content of the file, auto-filled from disk (cannot be manually assigned)
   ) # Markdown file that explains the concept to the target reader
 )""")
-        self.verify("""The first 2-3 sentences place the target reader inside a concrete situation with specific details such as numbers, actions, timings, or observable outcomes. They do not open with a generic definition or broad claim.
+        self.llm_verify("""The first 2-3 sentences place the target reader inside a concrete situation with specific details such as numbers, actions, timings, or observable outcomes. They do not open with a generic definition or broad claim.
 
 Example that PASSES (score 5):
 Concept(
@@ -75,7 +75,7 @@ Concept(
     content = '# Connection Pooling\\n\\nConnection pooling is a technique for managing database connections efficiently.\\nIt improves performance and resource utilization in modern software systems.\\n\\nDevelopers often use it when building backend services.\\n' # Content of the file, auto-filled from disk (cannot be manually assigned)
   ) # Markdown file that explains the concept to the target reader
 )""")
-        self.verify("""After the first 2-3 sentences, a target reader should feel a specific unresolved tension and want to know what happens next or how the situation gets resolved. The opening creates forward momentum rather than merely announcing the topic.
+        self.llm_verify("""After the first 2-3 sentences, a target reader should feel a specific unresolved tension and want to know what happens next or how the situation gets resolved. The opening creates forward momentum rather than merely announcing the topic.
 
 Example that PASSES (score 5):
 Concept(
@@ -102,7 +102,7 @@ Concept(
     content = '# Circuit Breaker\\n\\nThe circuit breaker pattern is a resilience pattern used in distributed systems.\\nIt prevents cascading failures by stopping calls to an unhealthy dependency.\\n\\nThis is a useful concept for robust architectures.\\n' # Content of the file, auto-filled from disk (cannot be manually assigned)
   ) # Markdown file that explains the concept to the target reader
 )""")
-        self.verify("""Before introducing the concept as the solution, the description shows the 'should' force: the natural default behavior that feels simple, reasonable, or attractive to the target reader. It depicts why someone would keep doing the default instead of only asserting that the default is bad.
+        self.llm_verify("""Before introducing the concept as the solution, the description shows the 'should' force: the natural default behavior that feels simple, reasonable, or attractive to the target reader. It depicts why someone would keep doing the default instead of only asserting that the default is bad.
 
 Example that PASSES (score 5):
 Concept(
@@ -129,7 +129,7 @@ Concept(
     content = '# Dependency Injection\\n\\nWithout dependency injection, code becomes tightly coupled and difficult to test.\\nDirect construction is bad because it creates hidden dependencies and makes\\nsystems harder to maintain.\\n' # Content of the file, auto-filled from disk (cannot be manually assigned)
   ) # Markdown file that explains the concept to the target reader
 )""")
-        self.verify("""The description also shows the 'must' force: a concrete moment where the default behavior undeniably breaks down. This failure should be more memorable and compelling than the appeal of the 'should' force, so the need for the concept becomes hard to ignore.
+        self.llm_verify("""The description also shows the 'must' force: a concrete moment where the default behavior undeniably breaks down. This failure should be more memorable and compelling than the appeal of the 'should' force, so the need for the concept becomes hard to ignore.
 
 Example that PASSES (score 5):
 Concept(
@@ -156,7 +156,7 @@ Concept(
     content = '# Dependency Injection\\n\\nCreating dependencies directly makes testing difficult. Shared construction logic\\ncan reduce flexibility and make systems less modular over time.\\n' # Content of the file, auto-filled from disk (cannot be manually assigned)
   ) # Markdown file that explains the concept to the target reader
 )""")
-        self.verify("""The concept enters as the turning point that answers the tension between the 'should' and 'must' forces. The description presents the concept as the move that changes the situation, not merely as a feature list or an isolated dictionary definition.
+        self.llm_verify("""The concept enters as the turning point that answers the tension between the 'should' and 'must' forces. The description presents the concept as the move that changes the situation, not merely as a feature list or an isolated dictionary definition.
 
 Example that PASSES (score 5):
 Concept(
@@ -183,7 +183,7 @@ Concept(
     content = '# Connection Pooling\\n\\nConnection pooling is a pattern for efficient connection management. It improves\\nresource utilization, reduces overhead, and supports scalable applications.\\n\\nCommon benefits include better throughput and lower latency.\\n' # Content of the file, auto-filled from disk (cannot be manually assigned)
   ) # Markdown file that explains the concept to the target reader
 )""")
-        self.verify("""The description is written for the stated target reader. It may rely on background explicitly named in target_reader, but it does not use target_reader to sneak in concept-specific content the reader is not already assumed to know. The description itself does the work of introducing the concept.
+        self.llm_verify("""The description is written for the stated target reader. It may rely on background explicitly named in target_reader, but it does not use target_reader to sneak in concept-specific content the reader is not already assumed to know. The description itself does the work of introducing the concept.
 
 Example that PASSES (score 5):
 Concept(
