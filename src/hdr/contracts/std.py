@@ -328,6 +328,9 @@ Then, output your final score using the format: <score>N</score>, N ranges from:
         the `reviewer` will actually review this contract implementation
         based on `metric`, and will provide feedback to whoever implemented
         the contract. So please take `human_expert_review` seriously!
+        Programmatic + LLM verifications are just preliminaries that you
+        have to pass, your final benchmark score will be largely based on
+        human expert review scores!
         """
         pass
 

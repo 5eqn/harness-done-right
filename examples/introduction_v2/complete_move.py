@@ -136,7 +136,7 @@ move_steps = [
     choose_move(
         purpose=MovePurpose.SHIFT,
         content=(
-            "Then semantic self.verify() checks reject missing meaning, turning "
+            "Then semantic self.llm_verify() checks reject missing meaning, turning "
             "the remaining question from 'did the agent sound careful?' into "
             "'does this constructed contract actually satisfy the intended meaning?'"
         ),

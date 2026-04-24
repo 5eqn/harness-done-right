@@ -24,7 +24,7 @@ def test_contract_verify_method():
 
 
 def test_verify_logs_success_with_score_and_trimmed_condition(capsys):
-    """Successful verify() calls log a one-line summary with the actual score."""
+    """Successful llm_verify() calls log a one-line summary with the actual score."""
 
     class TestBaseContract(BaseContract):
         value: int = Field(description="Test value")
@@ -73,7 +73,7 @@ def test_verify_mock_score_parsing():
 
 
 def test_verify_creates_config_template_when_missing(tmp_path, monkeypatch):
-    """verify() should create ~/.hdr/config.yaml and ask the user to fill it in."""
+    """llm_verify() should create ~/.hdr/config.yaml and ask the user to fill it in."""
 
     class TestBaseContract(BaseContract):
         value: int = Field(description="Test value")
@@ -96,7 +96,7 @@ def test_verify_creates_config_template_when_missing(tmp_path, monkeypatch):
 
 
 def test_verify_rejects_blank_token_in_config(tmp_path, monkeypatch):
-    """verify() should fail clearly when the config file exists but token is blank."""
+    """llm_verify() should fail clearly when the config file exists but token is blank."""
 
     class TestBaseContract(BaseContract):
         value: int = Field(description="Test value")
@@ -119,7 +119,7 @@ def test_verify_rejects_blank_token_in_config(tmp_path, monkeypatch):
 
 
 def test_verify_uses_config_values(tmp_path, monkeypatch):
-    """verify() should read API settings from ~/.hdr/config.yaml."""
+    """llm_verify() should read API settings from ~/.hdr/config.yaml."""
 
     class TestBaseContract(BaseContract):
         value: int = Field(description="Test value")
@@ -164,7 +164,7 @@ def test_verify_uses_config_values(tmp_path, monkeypatch):
 
 
 def test_verify_logs_actual_score_on_non_default_success(tmp_path, monkeypatch, capsys):
-    """Successful verify() logs the actual score without an expected score suffix."""
+    """Successful llm_verify() logs the actual score without an expected score suffix."""
 
     class TestBaseContract(BaseContract):
         value: int = Field(description="Test value")

@@ -21,7 +21,7 @@ single failure point that says which requirement was missed.
 HDR is the move of making the harness guide the agent through explicit task
 objects that must successfully instantiate. In Harness Done Right, the contract
 lives as a Python task class: fields name the required evidence, Pydantic checks
-the shape, and `self.verify()` assertions judge semantic conditions against the
+the shape, and `self.llm_verify()` assertions judge semantic conditions against the
 constructed object.
 
 An agent system counts as using HDR only when its harness routes the work

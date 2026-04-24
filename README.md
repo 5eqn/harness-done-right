@@ -19,8 +19,8 @@ class HumanizeText(BaseContract):
     def __init__(self, **data):
         super().__init__(**data)
         # 基于 LLM 的断言验证
-        self.verify("original and humanized convey the same meaning")
-        self.verify("humanized reads like natural human-written text")
+        self.llm_verify("original and humanized convey the same meaning")
+        self.llm_verify("humanized reads like natural human-written text")
 ```
 
 ### 2. 执行
@@ -40,7 +40,7 @@ print("合约已验证:", result)
 
 ### 配置文件
 
-HDR 在第一次调用 `self.verify()` 时会检查 `~/.hdr/config.yaml`：
+HDR 在第一次调用 `self.llm_verify()` 时会检查 `~/.hdr/config.yaml`：
 - 如果文件不存在，会自动创建一个模板文件
 - 你需要在其中填写 `anthropic_auth_token`
 - `anthropic_model` 和 `anthropic_base_url` 默认已经写好，可按需修改

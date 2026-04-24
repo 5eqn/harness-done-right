@@ -1,7 +1,7 @@
 """
 Tests for Contract meta-contract.
 
-In pytest mode, verify() returns mock score 5 by default, or parses
+In pytest mode, llm_verify() returns mock score 5 by default, or parses
 <mock>N</mock> from the condition string. For Contract to pass verify
 in tests, negative examples embed <mock>1</mock> in a string field value
 so that neg_condition gets score 1 (matching expected_score=1).

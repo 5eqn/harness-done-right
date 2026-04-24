@@ -6,11 +6,11 @@ Standard contract types in `hdr.contracts.std` for common use cases. All contrac
 
 ### BaseContract
 
-Base class for all HDR contracts. Extends Pydantic `BaseModel` to provide automatic runtime type checking for all fields. Includes a built-in `self.verify()` method for LLM-powered validation.
+Base class for all HDR contracts. Extends Pydantic `BaseModel` to provide automatic runtime type checking for all fields. Includes a built-in `self.llm_verify()` method for LLM-powered validation.
 
 **Key methods:**
 
-- `self.verify(condition: str) -> None` — Validates a condition against the current contract state using Claude. Automatically includes the full pretty-printed contract object as context. On first use, HDR creates `~/.hdr/config.yaml` if it does not exist; you must fill in `anthropic_auth_token` there before verification can run. The config also supports `verify_cache_dir`, which defaults to `/tmp/claude/hdr_verify_cache`. On success, logs a one-line message with the actual score and a trimmed condition preview. Throws `AssertionError` with reasoning and score if validation fails. Only passes at score 5/5 by default. Results are automatically cached by condition.
+- `self.llm_verify(condition: str) -> None` — Validates a condition against the current contract state using Claude. Automatically includes the full pretty-printed contract object as context. On first use, HDR creates `~/.hdr/config.yaml` if it does not exist; you must fill in `anthropic_auth_token` there before verification can run. The config also supports `verify_cache_dir`, which defaults to `/tmp/claude/hdr_verify_cache`. On success, logs a one-line message with the actual score and a trimmed condition preview. Throws `AssertionError` with reasoning and score if validation fails. Only passes at score 5/5 by default. Results are automatically cached by condition.
 
 ## File Contracts
 

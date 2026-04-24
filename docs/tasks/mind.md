@@ -13,7 +13,7 @@ Represents a documented concept within a context, with LLM validation of descrip
 - `name: str` — Name of the concept.
 - `description: MarkdownFile` — File containing the concept description.
 
-**Validates (via `self.verify`):**
+**Validates (via `self.llm_verify`):**
 - The description is written for readers who understand context but do not yet know the concept name.
 - The concept name represents exactly one atomic idea.
 - The description contains no time-sensitive terms without specifying an exact version or date.

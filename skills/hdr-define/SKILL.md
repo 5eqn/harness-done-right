@@ -16,9 +16,9 @@ Carry these library rules into every contract:
 
 - A completed contract is an instance of a Python class.
 - `BaseContract` extends Pydantic, so field types validate at instantiation.
-- `self.verify(condition)` evaluates semantic conditions against the full contract state.
+- `self.llm_verify(condition)` evaluates semantic conditions against the full contract state.
 - Verification results are cached by condition, so reruns are cheap and stateless.
-- `Contract` creates a concrete contract class, writes the generated Python file, validates the file with `PythonFile`, and embeds positive and negative examples into the generated `verify(...)` strings.
+- `Contract` creates a concrete contract class, writes the generated Python file, validates the file with `PythonFile`, and embeds positive and negative examples into the generated `llm_verify(...)` strings.
 
 ## Contract Interface
 
@@ -83,7 +83,7 @@ VerifySpec(
 - Use `FieldSpec` and `VerifySpec` explicitly instead of raw unstructured dicts when practical.
 - Give every field a concrete description.
 - Prefer relative paths.
-- Keep programmatic checks for deterministic constraints and `verify(...)` conditions for semantic quality constraints.
+- Keep programmatic checks for deterministic constraints and `llm_verify(...)` conditions for semantic quality constraints.
 - Include positive and negative examples that are strong enough for one-shot validation.
 - Reuse the `Contract` structure directly from the interface described in this skill.
 - Name helper files by content so the directory reads clearly.
