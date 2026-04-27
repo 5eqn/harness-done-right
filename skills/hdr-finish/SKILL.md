@@ -85,3 +85,31 @@ python finish_concept.py
 ```
 
 Work in the Python environment where `hdr` is importable.
+
+## About human expert review
+
+For contracts with human expert review, your task will be no longer just fulfulling the contract - your performance will be rated by actual human expert in corresponding domain. This is the API of human expert review:
+
+```py
+def human_expert_review(self, reviewer: str, metric: str):
+    """
+    Whenever this function is called,
+    the `reviewer` will actually review this contract implementation
+    based on `metric`, and will provide feedback to whoever implemented
+    the contract. So please take `human_expert_review` seriously!
+    Programmatic + LLM verifications are just preliminaries that you
+    have to pass, your final benchmark score will be largely based on
+    human expert review scores!
+    """
+    # ... human expert review logic
+```
+
+In the contract definition, this is a typical human expert review:
+
+```py
+self.human_expert_review(subcato.PROFILE, """
+    This proof is grounded to the deepest implementation details
+    and does not miss any single part in logic chain.""")
+```
+
+You can view reviewer profile with python by printing the `PROFILE`.
