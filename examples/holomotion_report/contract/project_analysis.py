@@ -3,10 +3,9 @@ This is the contract of a comprehensive Robot + RL project analysis.
 Finish in `finish_project_analysis.py`, it should be run at working directory
 `../` with command `python contract/finish_project_analysis.py`.
 """
-import os
 from typing import Self  # type: ignore
 
-from pydantic import model_validator, Field
+from pydantic import model_validator
 
 from hdr.contracts.std import BaseContract, File
 from hdr.reviewers import subcato
