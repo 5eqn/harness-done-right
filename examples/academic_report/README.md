@@ -1,20 +1,6 @@
-# Academic Report Reveal Deck
+# 学术报告
 
-This directory contains a reveal.js deck hosted from `academic_report_reveal.md`.
+生成结构化的学术报告，包括验证可访问的链接。
 
-## Preview
-
-Run from this directory:
-
-```bash
-uv run python build_reveal.py
-```
-
-The `Reveal.host()` API prints local preview information, including the URL:
-
-```text
-http://127.0.0.1:8000/
-```
-
-The HTML is generated in memory and loads reveal.js from the jsDelivr CDN, so the
-browser needs network access while previewing.
+- [ ] 在 `academic_report.py` 定义合约，包括链接可访问性验证
+- [x] 在 `complete_academic_report.py` 实现合约
